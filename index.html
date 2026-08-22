@@ -18,6 +18,14 @@
       --text: #ffffff;
       --text-dim: #aaaaaa;
       --border: #333333;
+
+      /* Colores por defecto de marcas */
+      --brand-raw: #b20710;
+      --brand-smackdown: #0055b8;
+      --brand-nxt: #d4a017;
+      --brand-evolve: #7b1fa2;
+      --brand-default: #555555;
+      --gold-end: #ffd700;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding-bottom: 70px; }
@@ -70,40 +78,54 @@
     .filter-badge:hover { background: var(--accent); }
     .filter-badge .close-icon { font-weight: bold; margin-left: 2px; font-size: 0.8rem; }
 
-    /* ESTILOS DE TARJETA E IMAGEN MODIFICADOS */
+    /* ESTILOS DE TARJETA E IMAGEN INTEGRADA CON BORDES DIFUMINADOS */
     .card { 
       background: var(--card-bg); 
       padding: 0;
       padding-right: 12px;
       border-radius: 8px; 
       margin-bottom: 10px; 
-      border: 1px solid var(--border); 
+      border: 2px solid transparent; 
       display: flex; 
       justify-content: space-between; 
-      align-items: center; 
+      align-items: stretch;
       cursor: pointer; 
       overflow: hidden;
+      border-image-slice: 1;
     }
+
+    /* BORDES SEGÚN MARCA (Izquierda a Derecha / Color a Negro) */
+    .card-brand-raw { border-image: linear-gradient(to right, var(--brand-raw), #000000) 1; }
+    .card-brand-smackdown { border-image: linear-gradient(to right, var(--brand-smackdown), #000000) 1; }
+    .card-brand-nxt { border-image: linear-gradient(to right, var(--brand-nxt), #000000) 1; }
+    .card-brand-evolve { border-image: linear-gradient(to right, var(--brand-evolve), #000000) 1; }
+    .card-brand-default { border-image: linear-gradient(to right, var(--brand-default), #000000) 1; }
+
+    /* CAMPEONES: Difuminado hacia DORADO */
+    .card.is-champion.card-brand-raw { border-image: linear-gradient(to right, var(--brand-raw), var(--gold-end)) 1; }
+    .card.is-champion.card-brand-smackdown { border-image: linear-gradient(to right, var(--brand-smackdown), var(--gold-end)) 1; }
+    .card.is-champion.card-brand-nxt { border-image: linear-gradient(to right, var(--brand-nxt), var(--gold-end)) 1; }
+    .card.is-champion.card-brand-evolve { border-image: linear-gradient(to right, var(--brand-evolve), var(--gold-end)) 1; }
+    .card.is-champion.card-brand-default { border-image: linear-gradient(to right, var(--brand-default), var(--gold-end)) 1; }
     
-    .card-left { display: flex; align-items: center; gap: 12px; }
+    .card-left { display: flex; align-items: center; gap: 12px; flex: 1; }
     
     .wrestler-avatar { 
-      width: 70px; 
-      height: 75px; 
-      border-radius: 7px 0 0 7px; 
+      width: 85px; 
+      align-self: stretch;
       object-fit: cover; 
-      border-right: 1px solid var(--border); 
-      background: #2a2a2a; 
+      object-position: top center; 
+      background: transparent; 
       flex-shrink: 0; 
       display: block;
+      border-right: 1px solid var(--border);
     }
     
     .wrestler-avatar-placeholder { 
-      width: 70px; 
-      height: 75px; 
-      border-radius: 7px 0 0 7px; 
-      border-right: 1px solid var(--border); 
-      background: #2a2a2a; 
+      width: 85px; 
+      align-self: stretch;
+      background: transparent; 
+      border-right: 1px solid var(--border);
       display: flex; 
       align-items: center; 
       justify-content: center; 
@@ -118,11 +140,11 @@
     .tags-container { display: flex; flex-wrap: wrap; gap: 4px; }
     .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: bold; text-transform: uppercase; }
     
-    .tag-raw { background: #b20710; color: #fff; }
-    .tag-smackdown { background: #0055b8; color: #fff; }
-    .tag-nxt { background: #d4a017; color: #000; }
-    .tag-evolve { background: #7b1fa2; color: #fff; }
-    .tag-brand-default { background: #555555; color: #fff; }
+    .tag-raw { background: var(--brand-raw); color: #fff; }
+    .tag-smackdown { background: var(--brand-smackdown); color: #fff; }
+    .tag-nxt { background: var(--brand-nxt); color: #000; }
+    .tag-evolve { background: var(--brand-evolve); color: #fff; }
+    .tag-brand-default { background: var(--brand-default); color: #fff; }
     
     .tag-face { background: #2e7d32; color: #fff; }
     .tag-heel { background: #c62828; color: #fff; }
@@ -130,8 +152,9 @@
     .tag-gender { background: #37474f; color: #eceff1; }
     .tag-division { background: #455a64; color: #fff; }
     .tag-team { background: #ff9800; color: #000; font-weight: bold; }
+    .tag-champ { background: #ffd700; color: #000; font-weight: bold; }
 
-    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; }
+    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; align-self: center; }
     .btn-del:hover { color: var(--accent); }
 
     .checkbox-list { max-height: 120px; overflow-y: auto; background: #2a2a2a; border: 1px solid var(--border); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
@@ -321,6 +344,7 @@
   <script>
     let store = JSON.parse(localStorage.getItem('universe_data')) || { roster: [], teams: [], titles: [], matches: [] };
     if(!store.teams) store.teams = [];
+    if(!store.titles) store.titles = [];
 
     store.roster.forEach(r => {
       if (!r.brands) {
@@ -343,9 +367,6 @@
       const placeholder = document.createElement('div');
       placeholder.className = 'wrestler-avatar-placeholder';
       placeholder.innerHTML = '👤';
-      if (img.style.width) placeholder.style.width = img.style.width;
-      if (img.style.height) placeholder.style.height = img.style.height;
-      if (img.style.fontSize) placeholder.style.fontSize = img.style.fontSize;
       img.replaceWith(placeholder);
     }
 
@@ -806,6 +827,9 @@
       renderFilterSelect();
       renderActiveFiltersBar();
 
+      // Lista de campeones actuales para detectar si un luchador tiene un título
+      const championHolders = store.titles.map(t => t.holder.toLowerCase().trim());
+
       let sortedRoster = [...store.roster].sort((a, b) => cleanName(a.name).localeCompare(cleanName(b.name)));
 
       if (filters.brand !== 'ALL') {
@@ -822,6 +846,18 @@
             const teamTagHTML = team ? `<span class="tag tag-team">👥 ${team.name}</span>` : '';
             
             const rBrands = r.brands || (r.brand ? [r.brand] : ['RAW']);
+            const mainBrand = rBrands[0] ? rBrands[0].toLowerCase() : 'default';
+            
+            // Clase de marca para el borde (RAW, SmackDown, NXT, EVOLVE)
+            const cardBrandClass = ['raw', 'smackdown', 'nxt', 'evolve'].includes(mainBrand) 
+              ? `card-brand-${mainBrand}` 
+              : 'card-brand-default';
+
+            // Detección de campeón
+            const isChamp = championHolders.some(holder => holder.length > 0 && r.name.toLowerCase().trim().includes(holder));
+            const champClass = isChamp ? 'is-champion' : '';
+            const champTagHTML = isChamp ? `<span class="tag tag-champ">🏆 CAMPEÓN</span>` : '';
+
             const brandTagsHTML = rBrands.map(b => {
               const bClass = ['raw', 'smackdown', 'nxt', 'evolve'].includes(b.toLowerCase()) ? `tag-${b.toLowerCase()}` : 'tag-brand-default';
               return `<span class="tag ${bClass}">${b}</span>`;
@@ -832,12 +868,13 @@
               : `<div class="wrestler-avatar-placeholder">👤</div>`;
 
             return `
-              <div class="card" onclick="openWrestlerModal(${r.id})">
+              <div class="card ${cardBrandClass} ${champClass}" onclick="openWrestlerModal(${r.id})">
                 <div class="card-left">
                   ${imageHTML}
                   <div class="card-info">
                     <span class="card-title">${r.name}</span>
                     <div class="tags-container">
+                      ${champTagHTML}
                       ${brandTagsHTML}
                       <span class="tag tag-${(r.alignment || 'face').toLowerCase()}">${r.alignment || 'Face'}</span>
                       <span class="tag tag-gender">${r.gender || 'Men'}</span>
