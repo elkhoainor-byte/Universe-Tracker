@@ -22,7 +22,9 @@
     
     header { background: #000; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; letter-spacing: 1px; color: var(--accent); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
     
-    nav { display: flex; justify-content: space-around; background: #1a1a1a; position: fixed; bottom: 0; width: 100%; border-top: 1px solid var(--border); z-index: 100; overflow-x: auto; }
+    /* NAV OCULTO POR DEFECTO EN INICIO */
+    nav { display: none; justify-content: space-around; background: #1a1a1a; position: fixed; bottom: 0; width: 100%; border-top: 1px solid var(--border); z-index: 100; overflow-x: auto; }
+    nav.unlocked { display: flex; }
     nav button { background: none; border: none; color: var(--text-dim); padding: 12px 6px; width: 100%; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
     nav button.active { color: var(--accent); border-top: 2px solid var(--accent); }
     
@@ -265,17 +267,50 @@
     
     .show-logo-img { height: 45px; width: 65px; object-fit: contain; }
 
-    /* ESTILOS DEL CALENDARIO (7 DÍAS: LUN A DOM) */
-    .calendar-header-controls { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px; }
+    /* ESTILOS DEL CALENDARIO UNIFICADO CON TAMAÑO FIJO */
+    .calendar-header-controls { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; }
     .calendar-title-text { font-weight: bold; font-size: 1.1rem; color: var(--accent); }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 15px; }
     .calendar-day-header { text-align: center; font-size: 0.65rem; font-weight: bold; color: var(--text-dim); padding: 5px 0; background: #1a1a1a; border-radius: 4px; border: 1px solid var(--border); }
-    .calendar-cell { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; min-height: 80px; padding: 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 0.65rem; position: relative; }
+    
+    /* CELDAS DE TAMAÑO FIJO E IDÉNTICO */
+    .calendar-cell { 
+      background: var(--card-bg); 
+      border: 1px solid var(--border); 
+      border-radius: 6px; 
+      height: 95px; 
+      padding: 4px; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: flex-start; 
+      gap: 3px; 
+      font-size: 0.65rem; 
+      position: relative; 
+      overflow: hidden;
+    }
     .calendar-cell.has-event { border-color: var(--accent); }
-    .cell-day-num { font-size: 0.6rem; color: var(--text-dim); position: absolute; top: 2px; right: 3px; }
-    .cell-event-badge { padding: 3px 2px; border-radius: 4px; font-weight: bold; font-size: 0.6rem; text-align: center; color: #fff; margin-top: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-    .btn-add-ppv-cell { font-size: 0.55rem; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); border-radius: 4px; padding: 2px 0; cursor: pointer; margin-top: 2px; text-align: center; width: 100%; }
-    .btn-add-ppv-cell:hover { border-color: var(--accent); color: #fff; }
+    .cell-day-num { font-size: 0.65rem; font-weight: bold; color: var(--text-dim); margin-bottom: 2px; text-align: right; width: 100%; display: block; }
+    
+    .cell-events-wrapper { display: flex; flex-direction: column; gap: 3px; width: 100%; overflow-y: auto; flex: 1; }
+    
+    .cell-event-badge { 
+      padding: 3px 2px; 
+      border-radius: 4px; 
+      font-weight: bold; 
+      font-size: 0.58rem; 
+      text-align: center; 
+      color: #fff; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      cursor: pointer; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      flex-shrink: 0;
+    }
+
+    .edit-tab-selector { display: flex; gap: 5px; margin-bottom: 15px; }
+    .edit-tab-btn { flex: 1; padding: 8px; background: #2a2a2a; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+    .edit-tab-btn.active { background: var(--accent); border-color: var(--accent); }
   </style>
 </head>
 <body>
@@ -316,6 +351,8 @@
 
   <!-- TAB: CALENDARIO -->
   <div id="tab-calendar" class="tab-content">
+    <button class="btn-trigger-add" onclick="openCalendarEditModal()">✏️ Editar Calendario / Acontecimiento</button>
+
     <div class="calendar-header-controls">
       <button class="btn-add" style="margin:0; padding:6px 12px;" onclick="prevMonth()">◀ Anter.</button>
       <div class="calendar-title-text" id="calendar-month-year-display">Año 1 - Enero</div>
@@ -391,6 +428,64 @@
     <div id="list-matches"></div>
   </div>
 
+  <!-- MODAL EDITAR / GESTIONAR CALENDARIO UNIFICADO -->
+  <div id="modal-calendar-edit" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">🗓️ Gestión del Calendario</span>
+        <button class="modal-close" onclick="closeCalendarEditModal()">✕</button>
+      </div>
+
+      <div class="edit-tab-selector">
+        <button type="button" class="edit-tab-btn active" id="btn-tab-mode-ple" onclick="switchCalendarEditMode('ple')">Añadir / Editar PLE</button>
+        <button type="button" class="edit-tab-btn" id="btn-tab-mode-show" onclick="switchCalendarEditMode('show')">Añadir / Editar Show</button>
+      </div>
+
+      <!-- FORMULARIO GESTIÓN PLE -->
+      <form id="form-cal-ple" style="margin-bottom:0;">
+        <label style="font-size:0.75rem; color:var(--text-dim);">DÍA DEL MES (1 AL 28 DE ESTE MES)</label>
+        <input type="number" id="cal-ple-day" min="1" max="28" value="1" required onchange="onPLEDaySelectChange()">
+
+        <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL PLE / EVENTO ESPECIAL</label>
+        <input type="text" id="cal-ple-name" placeholder="Ej. Backlash, Royal Rumble..." autocapitalize="words" required>
+        
+        <label style="font-size:0.75rem; color:var(--text-dim);">COLOR REPRESENTATIVO DEL EVENTO:</label>
+        <input type="color" id="cal-ple-color" value="#ffd700" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
+
+        <button type="submit" class="btn-add">Guardar Evento Especial (PLE)</button>
+        <button type="button" id="btn-del-cal-ple" class="btn-delete-show" style="display:none;" onclick="deletePLEFromModal()">Eliminar PLE de este día</button>
+      </form>
+
+      <!-- FORMULARIO GESTIÓN SHOW -->
+      <form id="form-cal-show" style="display:none; margin-bottom:0;">
+        <label style="font-size:0.75rem; color:var(--text-dim);">SELECCIONAR O CREAR SHOW SELECCIONADO</label>
+        <select id="cal-show-select" onchange="onShowSelectChange()">
+          <option value="NEW">-- [Nuevo Show] --</option>
+        </select>
+
+        <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL SHOW</label>
+        <input type="text" id="cal-show-name" placeholder="Ej. RAW, NXT, SmackDown..." autocapitalize="words" required>
+
+        <label style="font-size:0.75rem; color:var(--text-dim);">DÍA DE EMISIÓN SEMANAL:</label>
+        <select id="cal-show-day">
+          <option value="1">Lunes</option>
+          <option value="2">Martes</option>
+          <option value="3">Miércoles</option>
+          <option value="4">Jueves</option>
+          <option value="5">Viernes</option>
+          <option value="6">Sábado</option>
+          <option value="7">Domingo</option>
+        </select>
+
+        <label style="font-size:0.75rem; color:var(--text-dim);">COLOR REPRESENTATIVO:</label>
+        <input type="color" id="cal-show-color" value="#e50914" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
+
+        <button type="submit" class="btn-add">Guardar Show Semanal</button>
+        <button type="button" id="btn-del-cal-show" class="btn-delete-show" style="display:none;" onclick="deleteShowFromModal()">Eliminar Show Semanal</button>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL CONFIGURACIÓN INICIAL MES -->
   <div id="modal-start-month" class="modal-overlay">
     <div class="modal-box" style="margin-top: 50px;">
@@ -416,7 +511,7 @@
     </div>
   </div>
 
-  <!-- MODAL CREAR/EDITAR SHOW -->
+  <!-- MODAL CREAR/EDITAR SHOW DESDE TAB SHOWS -->
   <div id="modal-show" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
@@ -452,29 +547,6 @@
       </form>
 
       <button type="button" id="btn-delete-show" class="btn-delete-show" style="display:none;" onclick="deleteCurrentShow()">Eliminar Show</button>
-    </div>
-  </div>
-
-  <!-- MODAL CREAR/EDITAR PPV -->
-  <div id="modal-ppv" class="modal-overlay">
-    <div class="modal-box">
-      <div class="modal-header">
-        <span class="modal-title" id="modal-ppv-title">Gestionar PLE / Evento</span>
-        <button class="modal-close" onclick="closePPVModal()">✕</button>
-      </div>
-
-      <form id="form-edit-ppv" style="margin-bottom:0;">
-        <input type="hidden" id="ppv-day-index">
-        <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL PLE / EVENTO ESPECIAL</label>
-        <input type="text" id="ppv-name" placeholder="Ej. Wrestlemania, SummerSlam..." autocapitalize="words" required>
-        
-        <label style="font-size:0.75rem; color:var(--text-dim);">COLOR DEL EVENTO:</label>
-        <input type="color" id="ppv-color" value="#ffd700" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
-
-        <button type="submit" class="btn-add">Guardar PLE</button>
-      </form>
-
-      <button type="button" id="btn-delete-ppv" class="btn-delete-show" style="display:none;" onclick="deleteCurrentPPV()">Eliminar PLE</button>
     </div>
   </div>
 
@@ -661,12 +733,17 @@
 
     const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
+    // SHOWS POR DEFECTO ACTUALIZADOS: RAW (LUNES), NXT (MARTES), SMACKDOWN (VIERNES)
     let defaultShows = [
       { id: 'raw', name: 'RAW', color: '#b20710', day: 1 },
       { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2 },
-      { id: 'evolve', name: 'EVOLVE', color: '#7b1fa2', day: 3 },
       { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5 }
     ];
+
+    // PLE POR DEFECTO: BACKLASH EN LA TERCERA SEMANA DE MAYO (DÍA 21 DE MAYO, MES INDEX 4)
+    let defaultPPVs = {
+      "Y1_M4_D21": { name: "Backlash", color: "#ffd700" }
+    };
 
     function createEmptyStore() {
       return { 
@@ -679,7 +756,7 @@
           configured: false,
           startMonth: 0,
           currentMonthIndex: 0,
-          ppvs: {}
+          ppvs: { ...defaultPPVs }
         }
       };
     }
@@ -691,14 +768,13 @@
     if(!store.matches) store.matches = [];
     if(!store.shows || store.shows.length === 0) store.shows = defaultShows;
     if(!store.calendar) {
-      store.calendar = { configured: false, startMonth: 0, currentMonthIndex: 0, ppvs: {} };
+      store.calendar = { configured: false, startMonth: 0, currentMonthIndex: 0, ppvs: { ...defaultPPVs } };
     }
-    if(!store.calendar.ppvs) store.calendar.ppvs = {};
+    if(!store.calendar.ppvs) store.calendar.ppvs = { ...defaultPPVs };
 
     let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
     let activeWrestlerId = null;
     let activeShowId = null;
-    let activePPVDayIndex = null;
     let confirmAction = null;
 
     function handleImgError(img) {
@@ -716,13 +792,13 @@
       render();
     }
 
-    function hideHomeTab() {
-      const homeBtn = document.getElementById('nav-btn-home');
-      if (homeBtn) homeBtn.style.display = 'none';
+    function unlockNav() {
+      const nav = document.getElementById('main-nav');
+      if (nav) nav.classList.add('unlocked');
     }
 
     function continueUniverse() {
-      hideHomeTab();
+      unlockNav();
       const rosterBtn = document.getElementById('nav-btn-roster');
       switchTab('roster', rosterBtn);
     }
@@ -732,6 +808,8 @@
         await clearIndexedDB();
         store = createEmptyStore();
         saveData();
+        unlockNav();
+        document.getElementById('modal-start-month').classList.add('active');
       });
     }
 
@@ -751,8 +829,9 @@
       store.calendar.startMonth = val;
       store.calendar.configured = true;
       document.getElementById('modal-start-month').classList.remove('active');
-      hideHomeTab();
+      unlockNav();
       saveData();
+      switchTab('roster', document.getElementById('nav-btn-roster'));
     }
 
     function onFilterChange(select) {
@@ -829,7 +908,7 @@
       if (radio) radio.checked = true;
     }
 
-    /* CALENDARIO CON CONTEO CORRELATIVO Y SÁBADOS/DOMINGOS */
+    /* RENDER DEL CALENDARIO CON MEDIDAS UNIFORMES */
     function renderCalendar() {
       const startMonth = store.calendar.startMonth || 0;
       const currentMonthIndex = store.calendar.currentMonthIndex || 0;
@@ -840,7 +919,6 @@
 
       document.getElementById('calendar-month-year-display').innerText = `Año ${yearDisplay} - ${MONTH_NAMES[monthDisplayIndex]}`;
 
-      // Calcular conteo previo de shows de meses anteriores
       const globalShowCounts = {};
       store.shows.forEach(s => globalShowCounts[s.id] = 0);
 
@@ -856,10 +934,8 @@
       const daysContainer = document.getElementById('calendar-days-container');
       let html = '';
 
-      // Meses de 28 días exactos (4 semanas completas de 7 días)
       for (let day = 1; day <= 28; day++) {
-        const dayOfWeek = ((day - 1) % 7) + 1; 
-        const weekNum = Math.floor((day - 1) / 7) + 1;
+        const dayOfWeek = ((day - 1) % 7) + 1;
 
         const dayShows = store.shows.filter(s => parseInt(s.day) === dayOfWeek);
         let cellEventsHTML = '';
@@ -868,7 +944,6 @@
           globalShowCounts[s.id]++;
           const showNum = globalShowCounts[s.id];
           const eventLabel = `${s.name} #${showNum}`;
-
           cellEventsHTML += `<div class="cell-event-badge" style="background:${s.color};" onclick="openShowModal('${s.id}')">${eventLabel}</div>`;
         });
 
@@ -876,15 +951,15 @@
         const ppv = store.calendar.ppvs[ppvKey];
 
         if (ppv) {
-          cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openPPVModal(${day}, '${ppvKey}')">🏆 ${ppv.name}</div>`;
-        } else {
-          cellEventsHTML += `<button type="button" class="btn-add-ppv-cell" onclick="openPPVModal(${day}, '${ppvKey}')">+ PLE</button>`;
+          cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openCalendarEditModal(${day}, 'ple')">🏆 ${ppv.name}</div>`;
         }
 
         html += `
           <div class="calendar-cell ${ppv ? 'has-event' : ''}">
             <span class="cell-day-num">Día ${day}</span>
-            ${cellEventsHTML}
+            <div class="cell-events-wrapper">
+              ${cellEventsHTML}
+            </div>
           </div>
         `;
       }
@@ -906,49 +981,154 @@
       saveData();
     }
 
-    function openPPVModal(dayIndex, ppvKey) {
-      activePPVDayIndex = ppvKey;
+    /* MODAL DE EDICIÓN DE CALENDARIO UNIFICADO (AÑADIR / EDITAR / ELIMINAR) */
+    function openCalendarEditModal(targetDay = 1, initialMode = 'ple') {
+      switchCalendarEditMode(initialMode);
+      document.getElementById('cal-ple-day').value = targetDay;
+      onPLEDaySelectChange();
+      populateShowSelect();
+      document.getElementById('modal-calendar-edit').classList.add('active');
+    }
+
+    function closeCalendarEditModal() {
+      document.getElementById('modal-calendar-edit').classList.remove('active');
+    }
+
+    function switchCalendarEditMode(mode) {
+      const btnPle = document.getElementById('btn-tab-mode-ple');
+      const btnShow = document.getElementById('btn-tab-mode-show');
+      const formPle = document.getElementById('form-cal-ple');
+      const formShow = document.getElementById('form-cal-show');
+
+      if (mode === 'ple') {
+        btnPle.classList.add('active');
+        btnShow.classList.remove('active');
+        formPle.style.display = 'flex';
+        formShow.style.display = 'none';
+      } else {
+        btnShow.classList.add('active');
+        btnPle.classList.remove('active');
+        formShow.style.display = 'flex';
+        formPle.style.display = 'none';
+        populateShowSelect();
+      }
+    }
+
+    function getCurrentPPVKey(dayVal) {
+      const startMonth = store.calendar.startMonth || 0;
+      const currentMonthIndex = store.calendar.currentMonthIndex || 0;
+      const absoluteMonth = startMonth + currentMonthIndex;
+      const monthDisplayIndex = absoluteMonth % 12;
+      const yearDisplay = Math.floor(absoluteMonth / 12) + 1;
+      return `Y${yearDisplay}_M${monthDisplayIndex}_D${dayVal}`;
+    }
+
+    function onPLEDaySelectChange() {
+      const day = parseInt(document.getElementById('cal-ple-day').value) || 1;
+      const ppvKey = getCurrentPPVKey(day);
       const ppv = store.calendar.ppvs[ppvKey];
-      const btnDelete = document.getElementById('btn-delete-ppv');
+      const btnDel = document.getElementById('btn-del-cal-ple');
 
       if (ppv) {
-        document.getElementById('modal-ppv-title').innerText = 'Editar Evento Especial';
-        document.getElementById('ppv-name').value = ppv.name;
-        document.getElementById('ppv-color').value = ppv.color || '#ffd700';
-        btnDelete.style.display = 'block';
+        document.getElementById('cal-ple-name').value = ppv.name;
+        document.getElementById('cal-ple-color').value = ppv.color || '#ffd700';
+        btnDel.style.display = 'block';
       } else {
-        document.getElementById('modal-ppv-title').innerText = `Añadir PLE (Día ${dayIndex})`;
-        document.getElementById('ppv-name').value = '';
-        document.getElementById('ppv-color').value = '#ffd700';
-        btnDelete.style.display = 'none';
+        document.getElementById('cal-ple-name').value = '';
+        document.getElementById('cal-ple-color').value = '#ffd700';
+        btnDel.style.display = 'none';
       }
-      document.getElementById('modal-ppv').classList.add('active');
     }
 
-    function closePPVModal() {
-      document.getElementById('modal-ppv').classList.remove('active');
-      activePPVDayIndex = null;
-    }
-
-    document.getElementById('form-edit-ppv').onsubmit = (e) => {
+    document.getElementById('form-cal-ple').onsubmit = (e) => {
       e.preventDefault();
-      if (!activePPVDayIndex) return;
-      const name = document.getElementById('ppv-name').value.trim();
-      const color = document.getElementById('ppv-color').value;
+      const day = parseInt(document.getElementById('cal-ple-day').value);
+      const name = document.getElementById('cal-ple-name').value.trim();
+      const color = document.getElementById('cal-ple-color').value;
 
-      store.calendar.ppvs[activePPVDayIndex] = { name, color };
-      closePPVModal();
+      const ppvKey = getCurrentPPVKey(day);
+      store.calendar.ppvs[ppvKey] = { name, color };
+      closeCalendarEditModal();
       saveData();
     };
 
-    function deleteCurrentPPV() {
-      if (!activePPVDayIndex) return;
-      delete store.calendar.ppvs[activePPVDayIndex];
-      closePPVModal();
+    function deletePLEFromModal() {
+      const day = parseInt(document.getElementById('cal-ple-day').value);
+      const ppvKey = getCurrentPPVKey(day);
+      delete store.calendar.ppvs[ppvKey];
+      closeCalendarEditModal();
       saveData();
     }
 
-    /* GESTIÓN DE SHOWS */
+    function populateShowSelect() {
+      const select = document.getElementById('cal-show-select');
+      select.innerHTML = `<option value="NEW">-- [Añadir Nuevo Show] --</option>` +
+        store.shows.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      onShowSelectChange();
+    }
+
+    function onShowSelectChange() {
+      const selectVal = document.getElementById('cal-show-select').value;
+      const btnDel = document.getElementById('btn-del-cal-show');
+
+      if (selectVal === 'NEW') {
+        document.getElementById('cal-show-name').value = '';
+        document.getElementById('cal-show-day').value = "1";
+        document.getElementById('cal-show-color').value = "#e50914";
+        btnDel.style.display = 'none';
+      } else {
+        const show = store.shows.find(s => s.id === selectVal);
+        if (show) {
+          document.getElementById('cal-show-name').value = show.name;
+          document.getElementById('cal-show-day').value = show.day || 1;
+          document.getElementById('cal-show-color').value = show.color || "#e50914";
+          btnDel.style.display = 'block';
+        }
+      }
+    }
+
+    document.getElementById('form-cal-show').onsubmit = (e) => {
+      e.preventDefault();
+      const selectVal = document.getElementById('cal-show-select').value;
+      const name = document.getElementById('cal-show-name').value.trim();
+      const day = parseInt(document.getElementById('cal-show-day').value);
+      const color = document.getElementById('cal-show-color').value;
+
+      if (selectVal === 'NEW') {
+        const newId = 'show_' + Date.now();
+        store.shows.push({ id: newId, name, day, color });
+      } else {
+        const show = store.shows.find(s => s.id === selectVal);
+        if (show) {
+          const oldName = show.name;
+          show.name = name;
+          show.day = day;
+          show.color = color;
+
+          if (oldName !== name) {
+            store.roster.forEach(r => {
+              if (r.brands) {
+                const idx = r.brands.indexOf(oldName);
+                if (idx !== -1) r.brands[idx] = name;
+              }
+            });
+          }
+        }
+      }
+
+      closeCalendarEditModal();
+      saveData();
+    };
+
+    function deleteShowFromModal() {
+      const selectVal = document.getElementById('cal-show-select').value;
+      if (selectVal !== 'NEW') {
+        deleteItem('shows', selectVal);
+        closeCalendarEditModal();
+      }
+    }
+
+    /* GESTIÓN DE SHOWS (PESTAÑA SHOWS) */
     async function openShowModal(id = null) {
       activeShowId = id;
       document.getElementById('show-logo-file').value = '';
