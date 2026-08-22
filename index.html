@@ -210,7 +210,21 @@
 
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 200; overflow-y: auto; padding: 20px 15px 80px 15px; }
     .modal-overlay.active { display: block; }
-    .modal-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+    
+    /* MODAL CON FONDO NORMAL DE FICHA */
+    .modal-box { 
+      background: var(--card-bg); 
+      border: 1px solid var(--border); 
+      border-radius: 10px; 
+      padding: 15px; 
+      max-width: 500px; 
+      margin: 0 auto; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px; 
+      position: relative;
+    }
+
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     .modal-title-wrapper { display: flex; align-items: center; gap: 10px; }
     .modal-title { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
@@ -765,7 +779,6 @@
             await saveImageToDB('show_bg_' + show.id, base64Bg);
           }
 
-          // Actualizar luchadores pertenecientes a la marca si cambió el nombre
           if (oldName !== name) {
             store.roster.forEach(r => {
               if (r.brands) {
@@ -888,7 +901,6 @@
       const btnSave = document.getElementById('btn-save-wrestler');
       document.getElementById('edit-image-file').value = '';
 
-      // Render checkbox de shows en el modal
       const brandsContainer = document.getElementById('edit-brands-container');
       brandsContainer.innerHTML = store.shows.map(s => 
         `<label class="option-checkbox-item"><input type="checkbox" value="${s.name}"> ${s.name}</label>`
@@ -1159,7 +1171,6 @@
         const mainBrandName = rBrands[0] || '';
         const mainShow = store.shows.find(s => s.name.toLowerCase() === mainBrandName.toLowerCase());
 
-        // Cargar imagen de fondo asignada a la marca/show principal
         let bgStyle = '';
         let borderColor = mainShow ? mainShow.color : 'var(--border)';
         if (mainShow) {
