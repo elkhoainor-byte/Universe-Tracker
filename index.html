@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Universo Tracker</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    :root {
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --accent: #e50914;
+      --text: #ffffff;
+      --text-dim: #aaaaaa;
+      --border: #333333;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 70px; }
+    
+    header { background: #000; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; letter-spacing: 1px; color: var(--accent); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    
+    nav { display: flex; justify-content: space-around; background: #1a1a1a; position: fixed; bottom: 0; width: 100%; border-top: 1px solid var(--border); z-index: 100; }
+    nav button { background: none; border: none; color: var(--text-dim); padding: 12px 0; width: 100%; font-size: 0.85rem; font-weight: 600; }
+    nav button.active { color: var(--accent); border-top: 2px solid var(--accent); }
+    
+    .tab-content { display: none; padding: 15px; }
+    .tab-content.active { display: block; }
+
+    form { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+    input, select, button.btn-add { padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: #fff; font-size: 0.9rem; }
+    button.btn-add { background: var(--accent); font-weight: bold; border: none; margin-top: 5px; cursor: pointer; }
+
+    .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-info { display: flex; flex-direction: column; gap: 4px; }
+    .card-title { font-weight: bold; font-size: 1rem; }
+    .card-sub { font-size: 0.8rem; color: var(--text-dim); }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-right: 4px; }
+    .tag-raw { background: #b20710; color: #fff; }
+    .tag-sd { background: #0055b8; color: #fff; }
+    .tag-ecw { background: #d4a017; color: #000; }
+    .tag-face { background: #2e7d32; color: #fff; }
+    .tag-heel { background: #c62828; color: #fff; }
+
+    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; }
+  </style>
+</head>
+<body>
+
+  <header>🎮 MODO UNIVERSO</header>
+
+  <!-- TAB 1: ROSTER -->
+  <div id="tab-roster" class="tab-content active">
+    <form id="form-roster">
+      <input type="text" id="roster-name" placeholder="Nombre del Superstar" required>
+      <select id="roster-brand">
+        <option value="RAW">RAW</option>
+        <option value="SmackDown">SmackDown</option>
+        <option value="ECW">ECW</option>
+      </select>
+      <select id="roster-alignment">
+        <option value="Face">Face</option>
+        <option value="Heel">Heel</option>
+      </select>
+      <button type="submit" class="btn-add">Añadir a Roster</button>
+    </form>
+    <div id="list-roster"></div>
+  </div>
+
+  <!-- TAB 2: CAMPEONES -->
+  <div id="tab-titles" class="tab-content">
+    <form id="form-titles">
+      <input type="text" id="title-name" placeholder="Nombre del Título (ej. WWE Championship)" required>
+      <input type="text" id="title-holder" placeholder="Campeón Actual" required>
+      <button type="submit" class="btn-add">Añadir Campeón</button>
+    </form>
+    <div id="list-titles"></div>
+  </div>
+
+  <!-- TAB 3: SHOWS / MATCH CARDS -->
+  <div id="tab-matches" class="tab-content">
+    <form id="form-matches">
+      <input type="text" id="match-show" placeholder="Show / PPV (ej. SummerSlam)" required>
+      <input type="text" id="match-card" placeholder="Combate (ej. Cena vs. Orton)" required>
+      <input type="text" id="match-winner" placeholder="Ganador / Resultado">
+      <button type="submit" class="btn-add">Guardar Combate</button>
+    </form>
+    <div id="list-matches"></div>
+  </div>
+
+  <nav>
+    <button class="active" onclick="switchTab('roster', this)">Roster</button>
+    <button onclick="switchTab('titles', this)">Títulos</button>
+    <button onclick="switchTab('matches', this)">Cartelera</button>
+  </nav>
+
+  <script>
+    // Cargar datos guardados
+    let store = JSON.parse(localStorage.getItem('universe_data')) || { roster: [], titles: [], matches: [] };
+
+    function saveData() {
+      localStorage.setItem('universe_data', JSON.stringify(store));
+      render();
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // Handlers para añadir items
+    document.getElementById('form-roster').onsubmit = (e) => {
+      e.preventDefault();
+      store.roster.push({
+        id: Date.now(),
+        name: document.getElementById('roster-name').value,
+        brand: document.getElementById('roster-brand').value,
+        alignment: document.getElementById('roster-alignment').value
+      });
+      e.target.reset();
+      saveData();
+    };
+
+    document.getElementById('form-titles').onsubmit = (e) => {
+      e.preventDefault();
+      store.titles.push({
+        id: Date.now(),
+        title: document.getElementById('title-name').value,
+        holder: document.getElementById('title-holder').value
+      });
+      e.target.reset();
+      saveData();
+    };
+
+    document.getElementById('form-matches').onsubmit = (e) => {
+      e.preventDefault();
+      store.matches.push({
+        id: Date.now(),
+        show: document.getElementById('match-show').value,
+        card: document.getElementById('match-card').value,
+        winner: document.getElementById('match-winner').value || 'Pendiente'
+      });
+      e.target.reset();
+      saveData();
+    };
+
+    function deleteItem(type, id) {
+      store[type] = store[type].filter(item => item.id !== id);
+      saveData();
+    }
+
+    function render() {
+      // Render Roster
+      document.getElementById('list-roster').innerHTML = store.roster.map(r => `
+        <div class="card">
+          <div class="card-info">
+            <span class="card-title">${r.name}</span>
+            <div>
+              <span class="tag tag-${r.brand.toLowerCase()}">${r.brand}</span>
+              <span class="tag tag-${r.alignment.toLowerCase()}">${r.alignment}</span>
+            </div>
+          </div>
+          <button class="btn-del" onclick="deleteItem('roster', ${r.id})">✕</button>
+        </div>
+      `).join('');
+
+      // Render Titles
+      document.getElementById('list-titles').innerHTML = store.titles.map(t => `
+        <div class="card">
+          <div class="card-info">
+            <span class="card-title">${t.title}</span>
+            <span class="card-sub">🏆 ${t.holder}</span>
+          </div>
+          <button class="btn-del" onclick="deleteItem('titles', ${t.id})">✕</button>
+        </div>
+      `).join('');
+
+      // Render Matches
+      document.getElementById('list-matches').innerHTML = store.matches.map(m => `
+        <div class="card">
+          <div class="card-info">
+            <span class="card-title">${m.card}</span>
+            <span class="card-sub">📌 ${m.show} | 👑 Ganador: ${m.winner}</span>
+          </div>
+          <button class="btn-del" onclick="deleteItem('matches', ${m.id})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    render();
+  </script>
+</body>
+</html>
