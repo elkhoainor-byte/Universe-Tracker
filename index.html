@@ -182,6 +182,81 @@
     .card-titles-container { display: flex; align-items: center; gap: 6px; height: 100%; padding-left: 6px; flex-shrink: 0; }
     .title-badge-img { max-height: 60px; max-width: 70px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8)); }
 
+    /* ESTILOS ESPECÍFICOS DE TARJETAS DE TÍTULOS */
+    .title-card {
+      height: 110px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px 0 0;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .title-card-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 100%;
+      flex: 1;
+      overflow: hidden;
+    }
+    .title-card-belt-img {
+      width: 80px;
+      height: 100%;
+      object-fit: contain;
+      padding: 5px;
+      background: rgba(0,0,0,0.3);
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .title-card-champs-avatars {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .title-card-champ-img {
+      width: 55px;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+    .title-card-days-counter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a1a;
+      border: 1px solid var(--gold-end);
+      border-radius: 8px;
+      padding: 6px 10px;
+      flex-shrink: 0;
+      min-width: 65px;
+    }
+    .title-card-days-num {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--gold-end);
+      line-height: 1;
+      text-align: center;
+      width: 100%;
+    }
+    .title-card-days-label {
+      font-size: 0.65rem;
+      font-weight: 900;
+      color: var(--gold-end);
+      letter-spacing: 2px;
+      text-align: center;
+      width: 100%;
+      margin-top: 3px;
+    }
+
     .btn-del { background: none; border: none; color: #aaa; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; align-self: center; }
     .btn-del:hover { color: var(--accent); }
 
@@ -407,13 +482,7 @@
 
   <!-- TAB: CAMPEONES -->
   <div id="tab-titles" class="tab-content">
-    <form id="form-titles">
-      <input type="text" id="title-name" placeholder="Nombre del Título (ej. WWE Championship)" autocapitalize="words" required>
-      <input type="text" id="title-holder" placeholder="Campeón Actual" autocapitalize="words" required>
-      <label style="font-size:0.75rem; color:var(--text-dim);">IMAGEN DEL TÍTULO (DESDE TU DISPOSITIVO):</label>
-      <input type="file" id="title-image-file" accept="image/*">
-      <button type="submit" class="btn-add">Añadir Campeón</button>
-    </form>
+    <button class="btn-trigger-add" onclick="openTitleModal(null)">➕ Añadir Campeonato</button>
     <div id="list-titles"></div>
   </div>
 
@@ -422,10 +491,90 @@
     <form id="form-matches">
       <input type="text" id="match-show" placeholder="Show / PPV (ej. SummerSlam)" autocapitalize="words" required>
       <input type="text" id="match-card" placeholder="Combate (ej. Cena vs. Orton)" autocapitalize="words" required>
+      
+      <div class="option-selector-wrapper">
+        <span class="option-selector-label">¿ES UN COMBATE POR TÍTULO?</span>
+        <select id="match-title-id">
+          <option value="">-- No es por título --</option>
+        </select>
+      </div>
+
       <input type="text" id="match-winner" placeholder="Ganador / Resultado (dejar 'Pendiente' si no se ha jugado)" autocapitalize="words">
       <button type="submit" class="btn-add">Guardar Combate</button>
     </form>
     <div id="list-matches"></div>
+  </div>
+
+  <!-- MODAL CAMPEONATOS (GESTIÓN + HISTORIAL) -->
+  <div id="modal-title" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title-header">Añadir Campeonato</span>
+        <button class="modal-close" onclick="closeTitleModal()">✕</button>
+      </div>
+
+      <form id="form-edit-title" style="margin-bottom:0;">
+        <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL CAMPEONATO</label>
+        <input type="text" id="title-name-input" placeholder="Ej. WWE Championship, Tag Team Championship..." autocapitalize="words" required>
+
+        <label style="font-size:0.75rem; color:var(--text-dim);">TIPO DE TÍTULO</label>
+        <select id="title-type-select" onchange="onTitleTypeChange()">
+          <option value="individual">Individual (1 Campeón)</option>
+          <option value="tag">Por Parejas / Tag Team (2 Campeones)</option>
+        </select>
+
+        <label style="font-size:0.75rem; color:var(--text-dim);">CAMPEÓN 1 (DEL ROSTER)</label>
+        <select id="title-champ1-select" required>
+          <option value="">-- Seleccionar Luchador --</option>
+        </select>
+
+        <div id="champ2-wrapper" style="display:none; flex-direction:column; gap:4px;">
+          <label style="font-size:0.75rem; color:var(--text-dim);">CAMPEÓN 2 (DEL ROSTER)</label>
+          <select id="title-champ2-select">
+            <option value="">-- Seleccionar Luchador --</option>
+          </select>
+        </div>
+
+        <label style="font-size:0.75rem; color:var(--text-dim);">IMAGEN DEL TÍTULO / CINTURÓN</label>
+        <input type="file" id="title-image-file" accept="image/*">
+
+        <button type="submit" class="btn-add" id="btn-save-title">Guardar Campeonato</button>
+      </form>
+
+      <!-- HISTORIAL Y ESTADÍSTICAS DEL TÍTULO -->
+      <div id="title-stats-container" style="display:none; flex-direction:column; gap:12px;">
+        <hr style="border-color:var(--border);">
+        
+        <label style="font-size:0.75rem; color:var(--text-dim);">REINADO ACTUAL</label>
+        <div class="stats-summary">
+          <div class="stat-card">
+            <div class="stat-val" id="title-stat-days" style="color:var(--gold-end);">0</div>
+            <div class="stat-lbl">Días Vigente</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="title-stat-defenses" style="color:#4caf50;">0</div>
+            <div class="stat-lbl">Defensas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="title-stat-reigns" style="color:#2196f3;">1</div>
+            <div class="stat-lbl">Reinados</div>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">DEFENSAS Y COMBATES POR ESTE TÍTULO</label>
+          <div id="title-matches-history" style="max-height:120px; overflow-y:auto; background:#1a1a1a; padding:8px; border-radius:6px; border:1px solid var(--border);"></div>
+        </div>
+
+        <div>
+          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">HISTORIAL DE CAMPEONES</label>
+          <div id="title-champs-history" style="max-height:120px; overflow-y:auto; background:#1a1a1a; padding:8px; border-radius:6px; border:1px solid var(--border);"></div>
+        </div>
+
+        <button type="button" class="btn-delete-show" onclick="deleteCurrentTitle()">Eliminar Campeonato</button>
+      </div>
+
+    </div>
   </div>
 
   <!-- MODAL EDITAR / GESTIONAR CALENDARIO UNIFICADO -->
@@ -733,14 +882,14 @@
 
     const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
-    // SHOWS POR DEFECTO ACTUALIZADOS: RAW (LUNES), NXT (MARTES), SMACKDOWN (VIERNES)
+    // SHOWS POR DEFECTO ACTUALIZADOS
     let defaultShows = [
       { id: 'raw', name: 'RAW', color: '#b20710', day: 1 },
       { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2 },
       { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5 }
     ];
 
-    // PLE POR DEFECTO: BACKLASH EN LA TERCERA SEMANA DE MAYO (DÍA 21 DE MAYO, MES INDEX 4)
+    // PLE POR DEFECTO
     let defaultPPVs = {
       "Y1_M4_D21": { name: "Backlash", color: "#ffd700" }
     };
@@ -775,6 +924,7 @@
     let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
     let activeWrestlerId = null;
     let activeShowId = null;
+    let activeTitleId = null;
     let confirmAction = null;
 
     function handleImgError(img) {
@@ -785,7 +935,7 @@
       img.replaceWith(placeholder);
     }
 
-    function cleanName(str) { return str.replace(/^["'“`«ʼ\s]+/, ''); }
+    function cleanName(str) { return str ? str.replace(/^["'“`«ʼ\s]+/, '') : ''; }
 
     function saveData() {
       localStorage.setItem('universe_data', JSON.stringify(store));
@@ -795,6 +945,8 @@
     function unlockNav() {
       const nav = document.getElementById('main-nav');
       if (nav) nav.classList.add('unlocked');
+      const homeBtn = document.getElementById('nav-btn-home');
+      if (homeBtn) homeBtn.style.display = 'none'; // ELIMINA PESTAÑA INICIO DE LA BARRA
     }
 
     function continueUniverse() {
@@ -911,6 +1063,12 @@
       if (radio) radio.checked = true;
     }
 
+    /* CALCULA LOS DÍAS TRANSCURRIDOS DE MODO UNIVERSO DESDE EL INICIO */
+    function getTotalUniverseDays() {
+      const currentMonthIndex = store.calendar.currentMonthIndex || 0;
+      return currentMonthIndex * 28;
+    }
+
     /* RENDER DEL CALENDARIO CON MEDIDAS UNIFORMES */
     function renderCalendar() {
       const startMonth = store.calendar.startMonth || 0;
@@ -984,7 +1142,7 @@
       saveData();
     }
 
-    /* MODAL DE EDICIÓN DE CALENDARIO UNIFICADO (AÑADIR / EDITAR / ELIMINAR) */
+    /* MODAL DE EDICIÓN DE CALENDARIO UNIFICADO */
     function openCalendarEditModal(targetDay = 1, initialMode = 'ple') {
       switchCalendarEditMode(initialMode);
       document.getElementById('cal-ple-day').value = targetDay;
@@ -1251,34 +1409,204 @@
       saveData();
     };
 
-    document.getElementById('form-titles').onsubmit = async (e) => {
-      e.preventDefault();
-      const titleId = Date.now();
-      const fileInput = document.getElementById('title-image-file');
+    /* NUEVA Y COMPLETA GESTIÓN DE TÍTULOS CON HISTORIAL Y CAMPEONES DEL ROSTER */
+    function onTitleTypeChange() {
+      const type = document.getElementById('title-type-select').value;
+      const champ2Wrapper = document.getElementById('champ2-wrapper');
+      champ2Wrapper.style.display = type === 'tag' ? 'flex' : 'none';
+    }
+
+    function populateRosterDropdowns() {
+      const sorted = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
+      const optionsHTML = `<option value="">-- Seleccionar Luchador --</option>` +
+        sorted.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+
+      document.getElementById('title-champ1-select').innerHTML = optionsHTML;
+      document.getElementById('title-champ2-select').innerHTML = optionsHTML;
+    }
+
+    function openTitleModal(id = null) {
+      activeTitleId = id;
+      populateRosterDropdowns();
+      document.getElementById('title-image-file').value = '';
       
-      if (fileInput.files && fileInput.files[0]) {
-        const base64 = await fileToBase64(fileInput.files[0]);
-        await saveImageToDB('title_' + titleId, base64);
+      const statsContainer = document.getElementById('title-stats-container');
+
+      if (id === null) {
+        document.getElementById('modal-title-header').innerText = 'Añadir Campeonato';
+        document.getElementById('title-name-input').value = '';
+        document.getElementById('title-type-select').value = 'individual';
+        onTitleTypeChange();
+        document.getElementById('title-champ1-select').value = '';
+        document.getElementById('title-champ2-select').value = '';
+        document.getElementById('btn-save-title').innerText = 'Crear Campeonato';
+        statsContainer.style.display = 'none';
+      } else {
+        const title = store.titles.find(t => t.id === id);
+        if (!title) return;
+
+        document.getElementById('modal-title-header').innerText = 'Editar Campeonato';
+        document.getElementById('title-name-input').value = title.name;
+        document.getElementById('title-type-select').value = title.type || 'individual';
+        onTitleTypeChange();
+
+        document.getElementById('title-champ1-select').value = title.champions[0] || '';
+        document.getElementById('title-champ2-select').value = title.champions[1] || '';
+
+        document.getElementById('btn-save-title').innerText = 'Guardar Cambios';
+        statsContainer.style.display = 'flex';
+
+        // CALCULAR DÍAS DE REINADO
+        const currentUniverseDays = getTotalUniverseDays();
+        const startDay = title.reignStartDay || 0;
+        const daysReigning = Math.max(0, currentUniverseDays - startDay);
+
+        document.getElementById('title-stat-days').innerText = daysReigning;
+
+        // CALCULAR DEFENSAS
+        const titleMatches = store.matches.filter(m => m.titleId === id);
+        const defenses = titleMatches.filter(m => m.isDefense === true).length;
+        document.getElementById('title-stat-defenses').innerText = defenses;
+
+        const reigns = title.history ? title.history.length + 1 : 1;
+        document.getElementById('title-stat-reigns').innerText = reigns;
+
+        // RENDER COMBATES POR EL TÍTULO
+        const matchesHTML = titleMatches.map(m => `
+          <div style="font-size:0.75rem; border-bottom:1px dashed #444; padding:4px 0;">
+            <b>${m.show}:</b> ${m.card} <br>
+            <span style="color:var(--text-dim);">👑 Resultado: ${m.winner}</span>
+          </div>
+        `).join('');
+        document.getElementById('title-matches-history').innerHTML = titleMatches.length > 0 ? matchesHTML : '<span style="font-size:0.75rem; color:var(--text-dim);">Sin combates registrados.</span>';
+
+        // RENDER HISTORIAL DE EXCAMPEONES
+        const historyHTML = (title.history || []).map(h => `
+          <div style="font-size:0.75rem; border-bottom:1px dashed #444; padding:4px 0;">
+            👑 <b>${h.champsNames}</b> (${h.days} días)
+          </div>
+        `).join('');
+        document.getElementById('title-champs-history').innerHTML = (title.history && title.history.length > 0) ? historyHTML : '<span style="font-size:0.75rem; color:var(--text-dim);">Este es el reinado inaugural.</span>';
       }
 
-      store.titles.push({
-        id: titleId,
-        title: document.getElementById('title-name').value.trim(),
-        holder: document.getElementById('title-holder').value.trim()
-      });
+      document.getElementById('modal-title').classList.add('active');
+    }
+
+    function closeTitleModal() {
+      document.getElementById('modal-title').classList.remove('active');
+      activeTitleId = null;
+    }
+
+    function deleteCurrentTitle() {
+      if (activeTitleId === null) return;
+      const title = store.titles.find(t => t.id === activeTitleId);
+      if (title) {
+        showConfirmModal(`¿Seguro que quieres eliminar el campeonato "${title.name}"?`, () => {
+          deleteItem('titles', activeTitleId);
+          closeTitleModal();
+        });
+      }
+    }
+
+    document.getElementById('form-edit-title').onsubmit = async (e) => {
+      e.preventDefault();
       
-      e.target.reset();
+      const name = document.getElementById('title-name-input').value.trim();
+      const type = document.getElementById('title-type-select').value;
+      const champ1 = parseInt(document.getElementById('title-champ1-select').value);
+      const champ2 = type === 'tag' ? parseInt(document.getElementById('title-champ2-select').value) : null;
+
+      if (!champ1 || (type === 'tag' && !champ2)) {
+        alert("Por favor selecciona todos los campeones requeridos desde tu Roster.");
+        return;
+      }
+
+      const championsArr = type === 'tag' ? [champ1, champ2] : [champ1];
+      const fileInput = document.getElementById('title-image-file');
+
+      if (activeTitleId === null) {
+        const newId = Date.now();
+        if (fileInput.files && fileInput.files[0]) {
+          const base64 = await fileToBase64(fileInput.files[0]);
+          await saveImageToDB('title_' + newId, base64);
+        }
+
+        store.titles.push({
+          id: newId,
+          name: name,
+          type: type,
+          champions: championsArr,
+          reignStartDay: getTotalUniverseDays(),
+          history: []
+        });
+      } else {
+        const title = store.titles.find(t => t.id === activeTitleId);
+        if (title) {
+          if (fileInput.files && fileInput.files[0]) {
+            const base64 = await fileToBase64(fileInput.files[0]);
+            await saveImageToDB('title_' + title.id, base64);
+          }
+
+          // COMPROBAR SI CAMBIÓ EL CAMPEÓN PARA GUARDAR HISTORIAL
+          const sameChamps = title.champions.length === championsArr.length && title.champions.every((val, index) => val === championsArr[index]);
+          
+          if (!sameChamps) {
+            const currentUniverseDays = getTotalUniverseDays();
+            const daysReigned = Math.max(0, currentUniverseDays - (title.reignStartDay || 0));
+            
+            const prevNames = title.champions.map(cId => {
+              const r = store.roster.find(ros => ros.id === cId);
+              return r ? r.name : 'Desconocido';
+            }).join(' & ');
+
+            if (!title.history) title.history = [];
+            title.history.unshift({
+              champsNames: prevNames,
+              days: daysReigned
+            });
+
+            title.reignStartDay = currentUniverseDays;
+          }
+
+          title.name = name;
+          title.type = type;
+          title.champions = championsArr;
+        }
+      }
+
+      closeTitleModal();
       saveData();
     };
 
     document.getElementById('form-matches').onsubmit = (e) => {
       e.preventDefault();
+      const titleIdVal = document.getElementById('match-title-id').value;
+      const titleId = titleIdVal ? parseInt(titleIdVal) : null;
+      const winner = document.getElementById('match-winner').value.trim() || 'Pendiente';
+
+      let isDefense = false;
+      if (titleId) {
+        const title = store.titles.find(t => t.id === titleId);
+        if (title && winner !== 'Pendiente') {
+          const champsNames = title.champions.map(cId => {
+            const r = store.roster.find(ros => ros.id === cId);
+            return r ? r.name.toLowerCase() : '';
+          });
+
+          // Si el ganador incluye el nombre del campeón actual, es una defensa exitosa
+          isDefense = champsNames.some(cn => cn && winner.toLowerCase().includes(cn));
+        }
+      }
+
       store.matches.push({
         id: Date.now(),
         show: document.getElementById('match-show').value.trim(),
         card: document.getElementById('match-card').value.trim(),
-        winner: document.getElementById('match-winner').value.trim() || 'Pendiente'
+        winner: winner,
+        titleId: titleId,
+        isDefense: isDefense
       });
+      
       e.target.reset();
       saveData();
     };
@@ -1613,7 +1941,8 @@
           }
         }
 
-        const wrestlerTitles = store.titles.filter(t => t.holder.length > 0 && r.name.toLowerCase().trim().includes(t.holder.toLowerCase().trim()));
+        // TÍTULOS DEL LUCHADOR (POR VÍNCULO DE ROSTER)
+        const wrestlerTitles = store.titles.filter(t => t.champions && t.champions.includes(r.id));
         const isChamp = wrestlerTitles.length > 0;
         const champTagHTML = isChamp ? `<span class="tag tag-champ">🏆 CAMPEÓN</span>` : '';
 
@@ -1624,7 +1953,7 @@
         const titleImagesList = await Promise.all(wrestlerTitles.map(async t => {
           const tImg = await getImageFromDB('title_' + t.id);
           if (tImg) {
-            return `<img src="${tImg}" class="title-badge-img" title="${t.title}" alt="${t.title}">`;
+            return `<img src="${tImg}" class="title-badge-img" title="${t.name}" alt="${t.name}">`;
           }
           return '';
         }));
@@ -1723,37 +2052,69 @@
         `;
       }).join('');
 
+      // RENDER PESTAÑA TÍTULOS CON ETIOUETAS, AVATARES Y DÍAS MISMAS MEDIDAS
+      const currentUniverseDays = getTotalUniverseDays();
+
       const titleCardsHTML = await Promise.all(store.titles.map(async t => {
         const titleImg = await getImageFromDB('title_' + t.id);
         const titleImgHTML = titleImg 
-          ? `<img src="${titleImg}" class="title-badge-img" style="max-height:50px; margin-right:10px;" alt="${t.title}">`
-          : '';
+          ? `<img src="${titleImg}" class="title-card-belt-img" alt="${t.name}">`
+          : `<div class="title-card-belt-img" style="display:flex; align-items:center; justify-content:center; font-size:1.5rem;">🏆</div>`;
+
+        const champs = (t.champions || []).map(cId => store.roster.find(r => r.id === cId)).filter(Boolean);
+        const champsNamesText = champs.map(c => c.name).join(' & ') || 'Sin Campeón';
+
+        const champsAvatarsList = await Promise.all(champs.map(async c => {
+          const img = await getImageFromDB('wrestler_' + c.id);
+          return img 
+            ? `<img src="${img}" class="title-card-champ-img" alt="${c.name}">`
+            : `<div class="title-card-champ-img" style="display:flex; align-items:center; justify-content:center; background:#333;">👤</div>`;
+        }));
+
+        const daysReigning = Math.max(0, currentUniverseDays - (t.reignStartDay || 0));
 
         return `
-          <div class="card" style="cursor:default; padding:12px;">
-            <div class="card-left">
+          <div class="title-card" onclick="openTitleModal(${t.id})">
+            <div class="title-card-left">
               ${titleImgHTML}
+              <div class="title-card-champs-avatars">
+                ${champsAvatarsList.join('')}
+              </div>
               <div class="card-info">
-                <span class="card-title">${t.title}</span>
-                <span class="card-sub">🏆 Campeón: ${t.holder}</span>
+                <span class="card-title">${t.name}</span>
+                <span class="card-sub">🏆 ${champsNamesText}</span>
               </div>
             </div>
-            <button class="btn-del" onclick="deleteItem('titles', ${t.id}, event)">✕</button>
+            <div class="title-card-days-counter">
+              <span class="title-card-days-num">${daysReigning}</span>
+              <span class="title-card-days-label">DÍAS</span>
+            </div>
           </div>
         `;
       }));
 
-      document.getElementById('list-titles').innerHTML = titleCardsHTML.join('');
+      document.getElementById('list-titles').innerHTML = titleCardsHTML.length > 0 
+        ? titleCardsHTML.join('')
+        : `<p style="color: var(--text-dim); text-align: center; margin-top: 20px; font-size: 0.9rem;">No hay campeonatos registrados.</p>`;
 
-      document.getElementById('list-matches').innerHTML = store.matches.map(m => `
-        <div class="card" style="cursor:default; padding:12px;">
-          <div class="card-info">
-            <span class="card-title">${m.card}</span>
-            <span class="card-sub">📌 ${m.show} | 👑 Ganador: ${m.winner}</span>
+      // DESPLEGABLE TÍTULOS EN FORMULARIO COMBATES
+      document.getElementById('match-title-id').innerHTML = `<option value="">-- No es por título --</option>` +
+        store.titles.map(t => `<option value="${t.id}">🏆 ${t.name}</option>`).join('');
+
+      document.getElementById('list-matches').innerHTML = store.matches.map(m => {
+        const title = store.titles.find(t => t.id === m.titleId);
+        const titleBadge = title ? `<span class="tag tag-champ" style="margin-left:5px;">🏆 ${title.name}</span>` : '';
+
+        return `
+          <div class="card" style="cursor:default; padding:12px;">
+            <div class="card-info">
+              <span class="card-title">${m.card} ${titleBadge}</span>
+              <span class="card-sub">📌 ${m.show} | 👑 Ganador: ${m.winner}</span>
+            </div>
+            <button class="btn-del" onclick="deleteItem('matches', ${m.id}, event)">✕</button>
           </div>
-          <button class="btn-del" onclick="deleteItem('matches', ${m.id}, event)">✕</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
   </script>
 </body>
