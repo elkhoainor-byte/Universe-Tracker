@@ -37,7 +37,7 @@
     .filter-btn { background: #2a2a2a; color: var(--text-dim); border: 1px solid var(--border); padding: 5px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: bold; cursor: pointer; white-space: nowrap; }
     .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-    .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .card-info { display: flex; flex-direction: column; gap: 6px; }
     .card-title { font-weight: bold; font-size: 1rem; }
     .card-sub { font-size: 0.8rem; color: var(--text-dim); }
@@ -58,7 +58,29 @@
     .tag-gender { background: #37474f; color: #eceff1; }
     .tag-division { background: #455a64; color: #fff; }
 
-    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; }
+    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; }
+    .btn-del:hover { color: var(--accent); }
+
+    /* Modales */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 200; overflow-y: auto; padding: 20px 15px 80px 15px; }
+    .modal-overlay.active { display: block; }
+    .modal-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .modal-title { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
+    .modal-close { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; }
+    
+    /* Stats Bar & H2H */
+    .stats-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+    .stat-card { background: #2a2a2a; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
+    .stat-val { font-size: 1.1rem; font-weight: bold; }
+    .stat-lbl { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; }
+    
+    .h2h-section { background: #252525; padding: 10px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+    .h2h-header { font-size: 0.85rem; font-weight: bold; color: var(--text-dim); }
+    .match-item { background: #1a1a1a; padding: 8px; border-radius: 4px; font-size: 0.8rem; border-left: 3px solid var(--border); margin-bottom: 6px; }
+    .match-item.win { border-left-color: #2e7d32; }
+    .match-item.loss { border-left-color: #c62828; }
+    .match-item.draw { border-left-color: #d4a017; }
   </style>
 </head>
 <body>
@@ -91,7 +113,7 @@
       <button type="submit" class="btn-add">Añadir a Roster</button>
     </form>
 
-    <!-- Filtros Simulatenos de Roster -->
+    <!-- Filtros Simultáneos de Roster -->
     <div class="filters-wrapper">
       <!-- Marca -->
       <div class="filter-group" id="filter-brand-group">
@@ -100,6 +122,13 @@
         <button class="filter-btn" onclick="setFilter('brand', 'SmackDown', this)">SmackDown</button>
         <button class="filter-btn" onclick="setFilter('brand', 'NXT', this)">NXT</button>
         <button class="filter-btn" onclick="setFilter('brand', 'EVOLVE', this)">EVOLVE</button>
+      </div>
+
+      <!-- Alineación (Heel/Face) -->
+      <div class="filter-group" id="filter-alignment-group">
+        <button class="filter-btn active" onclick="setFilter('alignment', 'ALL', this)">Todas las Alineaciones</button>
+        <button class="filter-btn" onclick="setFilter('alignment', 'Face', this)">Face</button>
+        <button class="filter-btn" onclick="setFilter('alignment', 'Heel', this)">Heel</button>
       </div>
 
       <!-- Género -->
@@ -136,10 +165,82 @@
     <form id="form-matches">
       <input type="text" id="match-show" placeholder="Show / PPV (ej. SummerSlam)" required>
       <input type="text" id="match-card" placeholder="Combate (ej. Cena vs. Orton)" required>
-      <input type="text" id="match-winner" placeholder="Ganador / Resultado">
+      <input type="text" id="match-winner" placeholder="Ganador / Resultado (dejar 'Pendiente' si no se ha jugado)">
       <button type="submit" class="btn-add">Guardar Combate</button>
     </form>
     <div id="list-matches"></div>
+  </div>
+
+  <!-- MODAL FICHA Y EDICIÓN DE LUCHADOR -->
+  <div id="modal-wrestler" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-wrestler-title">Ficha de Luchador</span>
+        <button class="modal-close" onclick="closeWrestlerModal()">✕</button>
+      </div>
+
+      <!-- Formulario de Edición -->
+      <form id="form-edit-wrestler" style="margin-bottom:0;">
+        <label style="font-size:0.75rem; color:var(--text-dim);">DATOS GENERALES</label>
+        <input type="text" id="edit-name" placeholder="Nombre" required>
+        <select id="edit-brand">
+          <option value="RAW">RAW</option>
+          <option value="SmackDown">SmackDown</option>
+          <option value="NXT">NXT</option>
+          <option value="EVOLVE">EVOLVE</option>
+        </select>
+        <select id="edit-alignment">
+          <option value="Face">Face</option>
+          <option value="Heel">Heel</option>
+        </select>
+        <select id="edit-gender">
+          <option value="Men">Men</option>
+          <option value="Women">Women</option>
+        </select>
+        <select id="edit-division">
+          <option value="Main Eventer">Main Eventer</option>
+          <option value="Midcarder">Midcarder</option>
+          <option value="Tag Team">Tag Team</option>
+        </select>
+        <button type="submit" class="btn-add" style="background:#2e7d32;">Guardar Cambios</button>
+      </form>
+
+      <!-- Estadísticas de Combates -->
+      <div>
+        <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">RÉCORD GLOBAL</label>
+        <div class="stats-summary">
+          <div class="stat-card">
+            <div class="stat-val" id="stat-wins" style="color:#4caf50;">0</div>
+            <div class="stat-lbl">Victorias</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="stat-losses" style="color:#f44336;">0</div>
+            <div class="stat-lbl">Derrotas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="stat-draws" style="color:#ffeb3b;">0</div>
+            <div class="stat-lbl">Emp/Pend</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparador Head to Head (H2H) -->
+      <div class="h2h-section">
+        <span class="h2h-header">⚔️ COMPARADOR HEAD-TO-HEAD (H2H)</span>
+        <select id="h2h-opponent" onchange="renderH2H()">
+          <option value="">-- Selecciona un rival --</option>
+        </select>
+        <div id="h2h-result" style="font-size:0.85rem; color:var(--text-dim); text-align:center;">
+          Selecciona un rival para ver el historial cara a cara.
+        </div>
+      </div>
+
+      <!-- Historial de Combates Completo -->
+      <div>
+        <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">HISTORIAL DE COMBATES</label>
+        <div id="wrestler-history-list"></div>
+      </div>
+    </div>
   </div>
 
   <nav>
@@ -155,9 +256,12 @@
     // Estado de filtros activos
     let filters = {
       brand: 'ALL',
+      alignment: 'ALL',
       gender: 'ALL',
       division: 'ALL'
     };
+
+    let activeWrestlerId = null;
 
     function saveData() {
       localStorage.setItem('universe_data', JSON.stringify(store));
@@ -174,7 +278,6 @@
     function setFilter(type, value, btn) {
       filters[type] = value;
       
-      // Actualizar botón activo en el grupo correspondiente
       const group = btn.parentElement;
       group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -187,7 +290,7 @@
       e.preventDefault();
       store.roster.push({
         id: Date.now(),
-        name: document.getElementById('roster-name').value,
+        name: document.getElementById('roster-name').value.trim(),
         brand: document.getElementById('roster-brand').value,
         alignment: document.getElementById('roster-alignment').value,
         gender: document.getElementById('roster-gender').value || 'Men',
@@ -201,8 +304,8 @@
       e.preventDefault();
       store.titles.push({
         id: Date.now(),
-        title: document.getElementById('title-name').value,
-        holder: document.getElementById('title-holder').value
+        title: document.getElementById('title-name').value.trim(),
+        holder: document.getElementById('title-holder').value.trim()
       });
       e.target.reset();
       saveData();
@@ -212,26 +315,166 @@
       e.preventDefault();
       store.matches.push({
         id: Date.now(),
-        show: document.getElementById('match-show').value,
-        card: document.getElementById('match-card').value,
-        winner: document.getElementById('match-winner').value || 'Pendiente'
+        show: document.getElementById('match-show').value.trim(),
+        card: document.getElementById('match-card').value.trim(),
+        winner: document.getElementById('match-winner').value.trim() || 'Pendiente'
       });
       e.target.reset();
       saveData();
     };
 
-    function deleteItem(type, id) {
+    function deleteItem(type, id, e) {
+      if(e) e.stopPropagation();
       store[type] = store[type].filter(item => item.id !== id);
       saveData();
+    }
+
+    // Modal y Edición de Luchador
+    function openWrestlerModal(id) {
+      activeWrestlerId = id;
+      const wrestler = store.roster.find(r => r.id === id);
+      if(!wrestler) return;
+
+      // Cargar Formulario
+      document.getElementById('modal-wrestler-title').innerText = wrestler.name;
+      document.getElementById('edit-name').value = wrestler.name;
+      document.getElementById('edit-brand').value = wrestler.brand;
+      document.getElementById('edit-alignment').value = wrestler.alignment;
+      document.getElementById('edit-gender').value = wrestler.gender || 'Men';
+      document.getElementById('edit-division').value = wrestler.division || 'Midcarder';
+
+      // Cargar Selección H2H (excluyendo al propio luchador)
+      const opponentSelect = document.getElementById('h2h-opponent');
+      opponentSelect.innerHTML = `<option value="">-- Selecciona un rival --</option>` +
+        store.roster
+          .filter(r => r.id !== id)
+          .sort((a,b) => a.name.localeCompare(b.name))
+          .map(r => `<option value="${r.id}">${r.name}</option>`)
+          .join('');
+
+      document.getElementById('h2h-result').innerHTML = 'Selecciona un rival para ver el historial cara a cara.';
+
+      // Procesar Combates e Historial
+      updateWrestlerStats(wrestler);
+
+      document.getElementById('modal-wrestler').classList.add('active');
+    }
+
+    function closeWrestlerModal() {
+      document.getElementById('modal-wrestler').classList.remove('active');
+      activeWrestlerId = null;
+    }
+
+    document.getElementById('form-edit-wrestler').onsubmit = (e) => {
+      e.preventDefault();
+      const wrestler = store.roster.find(r => r.id === activeWrestlerId);
+      if(wrestler) {
+        wrestler.name = document.getElementById('edit-name').value.trim();
+        wrestler.brand = document.getElementById('edit-brand').value;
+        wrestler.alignment = document.getElementById('edit-alignment').value;
+        wrestler.gender = document.getElementById('edit-gender').value;
+        wrestler.division = document.getElementById('edit-division').value;
+        saveData();
+        openWrestlerModal(activeWrestlerId); // Re-renderizar modal con nuevos datos
+      }
+    };
+
+    function updateWrestlerStats(wrestler) {
+      const name = wrestler.name.toLowerCase();
+      const matches = store.matches.filter(m => m.card.toLowerCase().includes(name));
+
+      let wins = 0, losses = 0, draws = 0;
+
+      const historyHTML = matches.map(m => {
+        const winner = m.winner.toLowerCase();
+        let outcomeClass = 'draw';
+        let outcomeLabel = 'Pendiente / Empate';
+
+        if (winner.includes(name)) {
+          wins++;
+          outcomeClass = 'win';
+          outcomeLabel = 'Victoria';
+        } else if (winner !== 'pendiente' && winner !== '' && winner !== 'empate') {
+          losses++;
+          outcomeClass = 'loss';
+          outcomeLabel = 'Derrota';
+        } else {
+          draws++;
+        }
+
+        return `
+          <div class="match-item ${outcomeClass}">
+            <strong>${m.show}:</strong> ${m.card}<br>
+            <span style="color:var(--text-dim); font-size:0.75rem;">Resultado: ${m.winner} (${outcomeLabel})</span>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('stat-wins').innerText = wins;
+      document.getElementById('stat-losses').innerText = losses;
+      document.getElementById('stat-draws').innerText = draws;
+
+      document.getElementById('wrestler-history-list').innerHTML = matches.length > 0 
+        ? historyHTML 
+        : `<p style="font-size:0.8rem; color:var(--text-dim);">No se han registrado combates para este luchador.</p>`;
+    }
+
+    // Renderizado H2H
+    function renderH2H() {
+      const wrestler = store.roster.find(r => r.id === activeWrestlerId);
+      const opponentId = parseInt(document.getElementById('h2h-opponent').value);
+      const opponent = store.roster.find(r => r.id === opponentId);
+
+      if (!wrestler || !opponent) {
+        document.getElementById('h2h-result').innerHTML = 'Selecciona un rival para ver el historial cara a cara.';
+        return;
+      }
+
+      const wName = wrestler.name.toLowerCase();
+      const oName = opponent.name.toLowerCase();
+
+      // Buscar combates donde participen AMBOS luchadores
+      const sharedMatches = store.matches.filter(m => {
+        const card = m.card.toLowerCase();
+        return card.includes(wName) && card.includes(oName);
+      });
+
+      let wWins = 0, oWins = 0, draws = 0;
+
+      const matchesList = sharedMatches.map(m => {
+        const winner = m.winner.toLowerCase();
+        let resText = 'Empate / Sin Resultado';
+        if (winner.includes(wName)) {
+          wWins++;
+          resText = `Ganó ${wrestler.name}`;
+        } else if (winner.includes(oName)) {
+          oWins++;
+          resText = `Ganó ${opponent.name}`;
+        } else {
+          draws++;
+        }
+        return `<div style="font-size:0.75rem; border-bottom:1px dashed #444; padding:3px 0;">📌 ${m.show}: ${m.card} (<b>${resText}</b>)</div>`;
+      }).join('');
+
+      document.getElementById('h2h-result').innerHTML = `
+        <div style="font-weight:bold; font-size:1rem; margin-bottom:5px; color:#fff;">
+          ${wrestler.name} <span style="color:var(--accent);">${wWins} - ${oWins}</span> ${opponent.name}
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">Empates / Pendientes: ${draws}</div>
+        ${sharedMatches.length > 0 ? matchesList : '<div style="font-size:0.75rem;">Sin combates registrados entre ellos.</div>'}
+      `;
     }
 
     function render() {
       // 1. Ordenar roster alfabéticamente
       let sortedRoster = [...store.roster].sort((a, b) => a.name.localeCompare(b.name));
 
-      // 2. Aplicar filtros simultáneos (Marca, Género, División)
+      // 2. Aplicar filtros simultáneos (Marca, Alineación, Género, División)
       if (filters.brand !== 'ALL') {
         sortedRoster = sortedRoster.filter(r => r.brand === filters.brand);
+      }
+      if (filters.alignment !== 'ALL') {
+        sortedRoster = sortedRoster.filter(r => r.alignment === filters.alignment);
       }
       if (filters.gender !== 'ALL') {
         sortedRoster = sortedRoster.filter(r => (r.gender || 'Men') === filters.gender);
@@ -243,7 +486,7 @@
       // 3. Render Roster
       document.getElementById('list-roster').innerHTML = sortedRoster.length > 0 
         ? sortedRoster.map(r => `
-            <div class="card">
+            <div class="card" onclick="openWrestlerModal(${r.id})">
               <div class="card-info">
                 <span class="card-title">${r.name}</span>
                 <div class="tags-container">
@@ -253,30 +496,30 @@
                   <span class="tag tag-division">${r.division || 'Midcarder'}</span>
                 </div>
               </div>
-              <button class="btn-del" onclick="deleteItem('roster', ${r.id})">✕</button>
+              <button class="btn-del" onclick="deleteItem('roster', ${r.id}, event)">✕</button>
             </div>
           `).join('')
         : `<p style="color: var(--text-dim); text-align: center; margin-top: 20px; font-size: 0.9rem;">No hay Superstars que cumplan estos filtros.</p>`;
 
       // Render Titles
       document.getElementById('list-titles').innerHTML = store.titles.map(t => `
-        <div class="card">
+        <div class="card" style="cursor:default;">
           <div class="card-info">
             <span class="card-title">${t.title}</span>
             <span class="card-sub">🏆 ${t.holder}</span>
           </div>
-          <button class="btn-del" onclick="deleteItem('titles', ${t.id})">✕</button>
+          <button class="btn-del" onclick="deleteItem('titles', ${t.id}, event)">✕</button>
         </div>
       `).join('');
 
       // Render Matches
       document.getElementById('list-matches').innerHTML = store.matches.map(m => `
-        <div class="card">
+        <div class="card" style="cursor:default;">
           <div class="card-info">
             <span class="card-title">${m.card}</span>
             <span class="card-sub">📌 ${m.show} | 👑 Ganador: ${m.winner}</span>
           </div>
-          <button class="btn-del" onclick="deleteItem('matches', ${m.id})">✕</button>
+          <button class="btn-del" onclick="deleteItem('matches', ${m.id}, event)">✕</button>
         </div>
       `).join('');
     }
