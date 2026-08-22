@@ -31,6 +31,10 @@
     input, select, button.btn-add { padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: #fff; font-size: 0.9rem; }
     button.btn-add { background: var(--accent); font-weight: bold; border: none; margin-top: 5px; cursor: pointer; }
 
+    /* Barra de Búsqueda de Roster */
+    .search-box { width: 100%; margin-bottom: 10px; }
+    .search-box input { width: 100%; }
+
     /* Filtros Avanzados mediante Desplegables */
     .filters-wrapper { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
     .filter-header { font-size: 0.8rem; font-weight: bold; color: var(--text-dim); text-transform: uppercase; margin-bottom: 2px; }
@@ -132,6 +136,11 @@
       <div class="active-filters-bar" id="active-filters-container">
         <!-- Renderizado dinámico de filtros activos -->
       </div>
+    </div>
+
+    <!-- Barra de Búsqueda por Nombre -->
+    <div class="search-box">
+      <input type="text" id="roster-search" placeholder="🔎 Buscar luchador por nombre..." oninput="onSearchInput(this.value)">
     </div>
 
     <div id="list-roster"></div>
@@ -265,7 +274,8 @@
       brand: 'ALL',
       alignment: 'ALL',
       gender: 'ALL',
-      division: 'ALL'
+      division: 'ALL',
+      search: ''
     };
 
     let activeWrestlerId = null;
@@ -288,9 +298,19 @@
       render();
     }
 
+    function onSearchInput(value) {
+      filters.search = value.toLowerCase().trim();
+      render();
+    }
+
     // Función para eliminar un filtro activo haciendo clic en su etiqueta
     function clearFilter(filterType) {
-      filters[filterType] = 'ALL';
+      if (filterType === 'search') {
+        filters.search = '';
+        document.getElementById('roster-search').value = '';
+      } else {
+        filters[filterType] = 'ALL';
+      }
       render();
     }
 
@@ -358,6 +378,7 @@
       if (filters.alignment !== 'ALL') activeBadges.push({ type: 'alignment', label: `Alineación: ${filters.alignment}` });
       if (filters.gender !== 'ALL') activeBadges.push({ type: 'gender', label: `Género: ${filters.gender}` });
       if (filters.division !== 'ALL') activeBadges.push({ type: 'division', label: `División: ${filters.division}` });
+      if (filters.search !== '') activeBadges.push({ type: 'search', label: `Nombre: "${filters.search}"` });
 
       if (activeBadges.length === 0) {
         container.innerHTML = `<span class="active-filters-label">Filtrado por:</span> <span style="color: var(--text-dim); font-size: 0.75rem;">Ninguno (Mostrando todos)</span>`;
@@ -610,6 +631,7 @@
       if (filters.alignment !== 'ALL') sortedRoster = sortedRoster.filter(r => r.alignment === filters.alignment);
       if (filters.gender !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.gender || 'Men') === filters.gender);
       if (filters.division !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.division || 'Midcarder') === filters.division);
+      if (filters.search !== '') sortedRoster = sortedRoster.filter(r => r.name.toLowerCase().includes(filters.search));
 
       // Render Roster
       document.getElementById('list-roster').innerHTML = sortedRoster.length > 0 
