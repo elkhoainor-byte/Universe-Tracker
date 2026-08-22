@@ -70,13 +70,49 @@
     .filter-badge:hover { background: var(--accent); }
     .filter-badge .close-icon { font-weight: bold; margin-left: 2px; font-size: 0.8rem; }
 
-    .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    /* ESTILOS DE TARJETA E IMAGEN MODIFICADOS */
+    .card { 
+      background: var(--card-bg); 
+      padding: 0;
+      padding-right: 12px;
+      border-radius: 8px; 
+      margin-bottom: 10px; 
+      border: 1px solid var(--border); 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      cursor: pointer; 
+      overflow: hidden;
+    }
     
     .card-left { display: flex; align-items: center; gap: 12px; }
-    .wrestler-avatar { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: #2a2a2a; flex-shrink: 0; }
-    .wrestler-avatar-placeholder { width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--border); background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--text-dim); flex-shrink: 0; }
+    
+    .wrestler-avatar { 
+      width: 70px; 
+      height: 75px; 
+      border-radius: 7px 0 0 7px; 
+      object-fit: cover; 
+      border-right: 1px solid var(--border); 
+      background: #2a2a2a; 
+      flex-shrink: 0; 
+      display: block;
+    }
+    
+    .wrestler-avatar-placeholder { 
+      width: 70px; 
+      height: 75px; 
+      border-radius: 7px 0 0 7px; 
+      border-right: 1px solid var(--border); 
+      background: #2a2a2a; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 1.4rem; 
+      color: var(--text-dim); 
+      flex-shrink: 0; 
+    }
 
-    .card-info { display: flex; flex-direction: column; gap: 6px; }
+    .card-info { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; }
     .card-title { font-weight: bold; font-size: 1rem; }
     .card-sub { font-size: 0.8rem; color: var(--text-dim); }
     .tags-container { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -320,7 +356,6 @@
     function cleanImageUrl(url) {
       if (!url) return '';
       let cleaned = url.trim();
-      // Elimina sufijos de redimensionado común en wikis/fandoms que rompen peticiones directas de PNG
       if (cleaned.includes('/revision/latest')) {
         cleaned = cleaned.split('/revision/latest')[0];
       }
@@ -541,7 +576,7 @@
         document.getElementById('edit-name').value = '';
         document.getElementById('edit-image').value = '';
         
-        avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; font-size:1rem;">👤</div>`;
+        avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; border-radius: 50%; font-size:1rem;">👤</div>`;
         
         document.querySelectorAll('#edit-brands-container input[type="checkbox"]').forEach(cb => {
           cb.checked = (cb.value === 'RAW');
@@ -567,9 +602,9 @@
         document.getElementById('edit-image').value = wrestler.imageUrl || '';
 
         if (wrestler.imageUrl) {
-          avatarContainer.innerHTML = `<img src="${wrestler.imageUrl}" class="wrestler-avatar" style="width:40px; height:40px;" alt="${wrestler.name}" referrerpolicy="no-referrer" onerror="handleImgError(this)">`;
+          avatarContainer.innerHTML = `<img src="${wrestler.imageUrl}" class="wrestler-avatar" style="width:40px; height:40px; border-radius:50%;" alt="${wrestler.name}" referrerpolicy="no-referrer" onerror="handleImgError(this)">`;
         } else {
-          avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; font-size:1rem;">👤</div>`;
+          avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; border-radius:50%; font-size:1rem;">👤</div>`;
         }
 
         const wrestlerBrands = wrestler.brands || (wrestler.brand ? [wrestler.brand] : []);
@@ -837,7 +872,7 @@
           .join(' & ');
 
         return `
-          <div class="card" style="cursor:default;">
+          <div class="card" style="cursor:default; padding:12px;">
             <div class="card-info">
               <span class="card-title">👥 ${t.name}</span>
               <span class="card-sub">Miembros: ${membersList || 'Sin miembros asignados'}</span>
@@ -848,7 +883,7 @@
       }).join('');
 
       document.getElementById('list-titles').innerHTML = store.titles.map(t => `
-        <div class="card" style="cursor:default;">
+        <div class="card" style="cursor:default; padding:12px;">
           <div class="card-info">
             <span class="card-title">${t.title}</span>
             <span class="card-sub">🏆 ${t.holder}</span>
@@ -858,7 +893,7 @@
       `).join('');
 
       document.getElementById('list-matches').innerHTML = store.matches.map(m => `
-        <div class="card" style="cursor:default;">
+        <div class="card" style="cursor:default; padding:12px;">
           <div class="card-info">
             <span class="card-title">${m.card}</span>
             <span class="card-sub">📌 ${m.show} | 👑 Ganador: ${m.winner}</span>
