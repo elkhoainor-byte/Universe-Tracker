@@ -674,7 +674,6 @@
         "1 contra 1": 2
       },
       "3 Stages of Hell": {
-        // Caso especial: se maneja con stages[]
         "special": true
       },
       "I Quit": {
@@ -729,15 +728,72 @@
         "Sumisión 1 contra 1": 2,
         "No Holds Barred 1 contra 1": 2
       },
-      "Underground": { "1 contra 1": 2 },
-      "Reglas de Bloodline": { "1 contra 1": 2 },
-      "Hell in a Cell": { "1 contra 1": 2 },
-      "Steel Cage": { "1 contra 1": 2 },
-      "Elimination Chamber": { "6 participantes": 6 },
-      "Tables": { "1 contra 1": 2 },
-      "Ladder": { "1 contra 1": 2 },
-      "TLC": { "1 contra 1": 2 },
-      "Gauntlet": { "Gauntlet": 2 },
+      "Underground": {
+        "1 contra 1": 2
+      },
+      "Reglas de Bloodline": {
+        "4 vs 4 (Principal + 3 aliados por bando)": 8
+      },
+      "Hell in a Cell": {
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "5-Way": 5,
+        "6-Way": 6,
+        "2 contra 2": 4,
+        "3 contra 3": 6,
+        "Triple Threat Tornado por parejas": 6
+      },
+      "Steel Cage": {
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "2 contra 2": 4
+      },
+      "Elimination Chamber": {
+        "6 participantes": 6
+      },
+      "Tables": {
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "5-Way": 5,
+        "2 contra 2": 4,
+        "3 contra 3": 6,
+        "6-Way": 6,
+        "Triple Threat Tornado por parejas": 6
+      },
+      "Ladder": {
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "5-Way": 5,
+        "6-Way": 6,
+        "8-Way": 8,
+        "2 contra 2": 4,
+        "3 contra 3": 6,
+        "4 contra 4": 8,
+        "Triple Threat Tornado por parejas": 6,
+        "4-Way Tornado por parejas": 8
+      },
+      "TLC": {
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "5-Way": 5,
+        "2 contra 2": 4,
+        "3 contra 3": 6,
+        "Triple Threat Tornado por parejas": 6
+      },
+      "Gauntlet": {
+        "4 participantes": 4,
+        "5 participantes": 5,
+        "6 participantes": 6,
+        "8 participantes": 8,
+        "10 participantes": 10,
+        "20 participantes": 20,
+        "30 participantes": 30
+      },
       "Turmoil Gauntlet": { "Turmoil Gauntlet": 2 },
       "Eliminator Gauntlet": { "Eliminator Gauntlet": 2 },
       "Sumisión": { "1 contra 1": 2 },
@@ -1311,7 +1367,7 @@
             type: null,
             matchType: null,
             subType: null,
-            stages: [null, null, null],   // para 3 Stages of Hell
+            stages: [null, null, null],
             participants: [],
             winner: '',
             titleId: null
