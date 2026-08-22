@@ -55,7 +55,7 @@
 
     .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     
-    /* Nueva estructura para Tarjeta con Imagen */
+    /* Estructura para Tarjeta con Imagen */
     .card-left { display: flex; align-items: center; gap: 12px; }
     .wrestler-avatar { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: #2a2a2a; flex-shrink: 0; }
     .wrestler-avatar-placeholder { width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--border); background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--text-dim); flex-shrink: 0; }
@@ -232,7 +232,7 @@
       <form id="form-edit-wrestler" style="margin-bottom:0;">
         <label style="font-size:0.75rem; color:var(--text-dim);">DATOS GENERALES</label>
         <input type="text" id="edit-name" placeholder="Nombre" autocapitalize="words" required>
-        <input type="url" id="edit-image" placeholder="URL de la Imagen (https://...)">
+        <input type="url" id="edit-image" placeholder="URL de la Imagen (https...)">
         
         <div class="option-selector-wrapper">
           <span class="option-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
@@ -347,6 +347,18 @@
     };
 
     let activeWrestlerId = null;
+
+    // Función global para manejar errores de carga de imágenes de forma limpia
+    function handleImgError(img) {
+      img.onerror = null;
+      const placeholder = document.createElement('div');
+      placeholder.className = 'wrestler-avatar-placeholder';
+      placeholder.innerHTML = '👤';
+      if (img.style.width) placeholder.style.width = img.style.width;
+      if (img.style.height) placeholder.style.height = img.style.height;
+      if (img.style.fontSize) placeholder.style.fontSize = img.style.fontSize;
+      img.replaceWith(placeholder);
+    }
 
     // Función para limpiar caracteres especiales al ordenar
     function cleanName(str) {
@@ -617,7 +629,7 @@
 
       const avatarContainer = document.getElementById('modal-avatar-container');
       if (wrestler.imageUrl) {
-        avatarContainer.innerHTML = `<img src="${wrestler.imageUrl}" class="wrestler-avatar" style="width:40px; height:40px;" alt="${wrestler.name}">`;
+        avatarContainer.innerHTML = `<img src="${wrestler.imageUrl}" class="wrestler-avatar" style="width:40px; height:40px;" alt="${wrestler.name}" onerror="handleImgError(this)">`;
       } else {
         avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; font-size:1rem;">👤</div>`;
       }
@@ -812,7 +824,7 @@
             }).join(' ');
 
             const imageHTML = r.imageUrl 
-              ? `<img src="${r.imageUrl}" class="wrestler-avatar" alt="${r.name}" onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\\'wrestler-avatar-placeholder\\'>👤</div>';">`
+              ? `<img src="${r.imageUrl}" class="wrestler-avatar" alt="${r.name}" onerror="handleImgError(this)">`
               : `<div class="wrestler-avatar-placeholder">👤</div>`;
 
             return `
