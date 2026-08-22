@@ -70,7 +70,7 @@
     .filter-badge:hover { background: var(--accent); }
     .filter-badge .close-icon { font-weight: bold; margin-left: 2px; font-size: 0.8rem; }
 
-    /* ESTILOS DE TARJETA E IMAGEN MODIFICADOS */
+    /* ESTILOS DE TARJETA E IMAGEN INTEGRADA */
     .card { 
       background: var(--card-bg); 
       padding: 0;
@@ -80,30 +80,29 @@
       border: 1px solid var(--border); 
       display: flex; 
       justify-content: space-between; 
-      align-items: center; 
+      align-items: stretch; /* Extiende la imagen a toda la altura de la tarjeta */
       cursor: pointer; 
       overflow: hidden;
     }
     
-    .card-left { display: flex; align-items: center; gap: 12px; }
+    .card-left { display: flex; align-items: center; gap: 12px; flex: 1; }
     
     .wrestler-avatar { 
-      width: 70px; 
-      height: 75px; 
-      border-radius: 7px 0 0 7px; 
+      width: 85px; 
+      align-self: stretch;
       object-fit: cover; 
-      border-right: 1px solid var(--border); 
-      background: #2a2a2a; 
+      object-position: top center; /* Maximiza y enfoca el encuadre en la cara (parte superior) */
+      background: transparent; 
       flex-shrink: 0; 
       display: block;
+      border-right: 1px solid var(--border);
     }
     
     .wrestler-avatar-placeholder { 
-      width: 70px; 
-      height: 75px; 
-      border-radius: 7px 0 0 7px; 
-      border-right: 1px solid var(--border); 
-      background: #2a2a2a; 
+      width: 85px; 
+      align-self: stretch;
+      background: transparent; 
+      border-right: 1px solid var(--border);
       display: flex; 
       align-items: center; 
       justify-content: center; 
@@ -131,7 +130,7 @@
     .tag-division { background: #455a64; color: #fff; }
     .tag-team { background: #ff9800; color: #000; font-weight: bold; }
 
-    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; }
+    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; align-self: center; }
     .btn-del:hover { color: var(--accent); }
 
     .checkbox-list { max-height: 120px; overflow-y: auto; background: #2a2a2a; border: 1px solid var(--border); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
@@ -343,9 +342,6 @@
       const placeholder = document.createElement('div');
       placeholder.className = 'wrestler-avatar-placeholder';
       placeholder.innerHTML = '👤';
-      if (img.style.width) placeholder.style.width = img.style.width;
-      if (img.style.height) placeholder.style.height = img.style.height;
-      if (img.style.fontSize) placeholder.style.fontSize = img.style.fontSize;
       img.replaceWith(placeholder);
     }
 
