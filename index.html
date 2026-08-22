@@ -94,6 +94,13 @@
       border-image-slice: 1;
     }
 
+    /* TAMAÑO UNIFORME PARA CAJAS DEL ROSTER (2 FILAS DE FICHAS CONSERVADAS) */
+    #list-roster .card {
+      height: 110px;
+      min-height: 110px;
+      max-height: 110px;
+    }
+
     /* BORDES SEGÚN MARCA (Izquierda a Derecha / Color a Negro) */
     .card-brand-raw { border-image: linear-gradient(to right, var(--brand-raw), #000000) 1; }
     .card-brand-smackdown { border-image: linear-gradient(to right, var(--brand-smackdown), #000000) 1; }
@@ -108,10 +115,11 @@
     .card.is-champion.card-brand-evolve { border-image: linear-gradient(to right, var(--brand-evolve), var(--gold-end)) 1; }
     .card.is-champion.card-brand-default { border-image: linear-gradient(to right, var(--brand-default), var(--gold-end)) 1; }
     
-    .card-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+    .card-left { display: flex; align-items: center; gap: 12px; flex: 1; height: 100%; overflow: hidden; }
     
     .wrestler-avatar { 
       width: 85px; 
+      height: 100%;
       align-self: stretch;
       object-fit: cover; 
       object-position: top center; 
@@ -123,6 +131,7 @@
     
     .wrestler-avatar-placeholder { 
       width: 85px; 
+      height: 100%;
       align-self: stretch;
       background: transparent; 
       border-right: 1px solid var(--border);
@@ -134,10 +143,10 @@
       flex-shrink: 0; 
     }
 
-    .card-info { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; }
-    .card-title { font-weight: bold; font-size: 1rem; }
+    .card-info { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; justify-content: center; overflow: hidden; height: 100%; }
+    .card-title { font-weight: bold; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .card-sub { font-size: 0.8rem; color: var(--text-dim); }
-    .tags-container { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tags-container { display: flex; flex-wrap: wrap; gap: 4px; max-height: 68px; overflow: hidden; }
     .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: bold; text-transform: uppercase; }
     
     .tag-raw { background: var(--brand-raw); color: #fff; }
