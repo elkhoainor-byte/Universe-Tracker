@@ -15,13 +15,6 @@
       --text: #ffffff;
       --text-dim: #aaaaaa;
       --border: #333333;
-
-      /* Colores por defecto de marcas */
-      --brand-raw: #b20710;
-      --brand-smackdown: #0055b8;
-      --brand-nxt: #d4a017;
-      --brand-evolve: #7b1fa2;
-      --brand-default: #555555;
       --gold-end: #ffd700;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -29,17 +22,36 @@
     
     header { background: #000; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; letter-spacing: 1px; color: var(--accent); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
     
-    nav { display: flex; justify-content: space-around; background: #1a1a1a; position: fixed; bottom: 0; width: 100%; border-top: 1px solid var(--border); z-index: 100; }
-    nav button { background: none; border: none; color: var(--text-dim); padding: 12px 0; width: 100%; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+    nav { display: flex; justify-content: space-around; background: #1a1a1a; position: fixed; bottom: 0; width: 100%; border-top: 1px solid var(--border); z-index: 100; overflow-x: auto; }
+    nav button { background: none; border: none; color: var(--text-dim); padding: 12px 6px; width: 100%; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
     nav button.active { color: var(--accent); border-top: 2px solid var(--accent); }
     
     .tab-content { display: none; padding: 15px; }
     .tab-content.active { display: block; }
 
+    /* ESTILOS PESTAÑA INICIO */
+    .hero-welcome {
+      background: linear-gradient(135deg, rgba(229,9,20,0.2) 0%, rgba(18,18,18,1) 100%), var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .hero-welcome h1 { font-size: 1.8rem; margin-bottom: 8px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .hero-welcome p { color: var(--text-dim); font-size: 0.95rem; }
+    
+    .quick-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+    .quick-stat-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; text-align: center; }
+    .quick-stat-num { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
+    .quick-stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; margin-top: 4px; }
+
+    /* FORMULARIOS */
     form { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
     input, select, button.btn-add { padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: #fff; font-size: 0.9rem; }
     input[type="file"] { font-size: 0.8rem; background: #1a1a1a; cursor: pointer; }
-    button.btn-add { background: var(--accent); font-weight: bold; border: none; margin-top: 5px; cursor: pointer; }
+    button.btn-add { background: var(--accent); font-weight: bold; border: none; margin-top: 5px; cursor: pointer; color: #fff; }
 
     .btn-trigger-add {
       width: 100%;
@@ -76,9 +88,12 @@
     .filter-badge:hover { background: var(--accent); }
     .filter-badge .close-icon { font-weight: bold; margin-left: 2px; font-size: 0.8rem; }
 
-    /* ESTILOS DE TARJETA E IMAGEN INTEGRADA CON BORDES DIFUMINADOS */
+    /* TARJETAS CON FONDO DE MARCA PERSONALIZADO */
     .card { 
-      background: var(--card-bg); 
+      background-color: var(--card-bg); 
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       padding: 0;
       padding-right: 12px;
       border-radius: 8px; 
@@ -93,6 +108,20 @@
       position: relative;
     }
 
+    /* Capa oscura superpuesta para asegurar legibilidad en tarjetas con fondo */
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(18,18,18,0.7) 60%, rgba(0,0,0,0.85) 100%);
+      z-index: 1;
+    }
+
+    .card > * {
+      position: relative;
+      z-index: 2;
+    }
+
     /* TAMAÑO UNIFORME PARA CAJAS DEL ROSTER */
     #list-roster .card {
       height: 110px;
@@ -100,20 +129,6 @@
       max-height: 110px;
     }
 
-    /* BORDES SEGÚN MARCA */
-    .card-brand-raw { border-image: linear-gradient(to right, var(--brand-raw), #000000) 1; }
-    .card-brand-smackdown { border-image: linear-gradient(to right, var(--brand-smackdown), #000000) 1; }
-    .card-brand-nxt { border-image: linear-gradient(to right, var(--brand-nxt), #000000) 1; }
-    .card-brand-evolve { border-image: linear-gradient(to right, var(--brand-evolve), #000000) 1; }
-    .card-brand-default { border-image: linear-gradient(to right, var(--brand-default), #000000) 1; }
-
-    /* CAMPEONES: Difuminado hacia DORADO */
-    .card.is-champion.card-brand-raw { border-image: linear-gradient(to right, var(--brand-raw), var(--gold-end)) 1; }
-    .card.is-champion.card-brand-smackdown { border-image: linear-gradient(to right, var(--brand-smackdown), var(--gold-end)) 1; }
-    .card.is-champion.card-brand-nxt { border-image: linear-gradient(to right, var(--brand-nxt), var(--gold-end)) 1; }
-    .card.is-champion.card-brand-evolve { border-image: linear-gradient(to right, var(--brand-evolve), var(--gold-end)) 1; }
-    .card.is-champion.card-brand-default { border-image: linear-gradient(to right, var(--brand-default), var(--gold-end)) 1; }
-    
     .card-left { display: flex; align-items: center; gap: 12px; flex: 1; height: 100%; overflow: hidden; }
     
     .wrestler-avatar { 
@@ -143,16 +158,10 @@
     }
 
     .card-info { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; justify-content: center; overflow: hidden; height: 100%; flex: 1; }
-    .card-title { font-weight: bold; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-title { font-weight: bold; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px #000; }
     .card-sub { font-size: 0.8rem; color: var(--text-dim); }
     .tags-container { display: flex; flex-wrap: wrap; gap: 4px; max-height: 68px; overflow: hidden; }
-    .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: bold; text-transform: uppercase; }
-    
-    .tag-raw { background: var(--brand-raw); color: #fff; }
-    .tag-smackdown { background: var(--brand-smackdown); color: #fff; }
-    .tag-nxt { background: var(--brand-nxt); color: #000; }
-    .tag-evolve { background: var(--brand-evolve); color: #fff; }
-    .tag-brand-default { background: var(--brand-default); color: #fff; }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: bold; text-transform: uppercase; text-shadow: none; }
     
     .tag-face { background: #2e7d32; color: #fff; }
     .tag-heel { background: #c62828; color: #fff; }
@@ -162,7 +171,6 @@
     .tag-team { background: #ff9800; color: #000; font-weight: bold; }
     .tag-champ { background: #ffd700; color: #000; font-weight: bold; }
 
-    /* IMAGEN DEL TÍTULO EN LA FICHA */
     .card-titles-container {
       display: flex;
       align-items: center;
@@ -179,10 +187,9 @@
       filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));
     }
 
-    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; align-self: center; }
+    .btn-del { background: none; border: none; color: #aaa; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; align-self: center; }
     .btn-del:hover { color: var(--accent); }
 
-    /* BOTÓN DESPEDIR LUCHADOR (EN GRIS) */
     .btn-dismiss {
       width: 100%;
       padding: 10px;
@@ -196,10 +203,7 @@
       margin-top: 15px;
       transition: background 0.2s, color 0.2s;
     }
-    .btn-dismiss:hover {
-      background: #444444;
-      color: #ffffff;
-    }
+    .btn-dismiss:hover { background: #444444; color: #ffffff; }
 
     .checkbox-list { max-height: 120px; overflow-y: auto; background: #2a2a2a; border: 1px solid var(--border); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
     .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
@@ -224,7 +228,7 @@
     .match-item.loss { border-left-color: #c62828; }
     .match-item.draw { border-left-color: #d4a017; }
 
-    /* ESTILOS DE POPUP EMERGENTE PERSONALIZADO */
+    /* POPUP CONFIRMACIÓN */
     .confirm-modal-overlay {
       display: none;
       position: fixed;
@@ -251,35 +255,45 @@
     }
     .confirm-text { font-size: 1rem; color: #fff; line-height: 1.4; }
     .confirm-actions { display: flex; justify-content: center; gap: 10px; }
-    .btn-confirm-accept {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      flex: 1;
-    }
-    .btn-confirm-cancel {
-      background: #444;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      flex: 1;
-    }
+    .btn-confirm-accept { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; }
+    .btn-confirm-cancel { background: #444; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; }
+    
+    .show-logo-img { height: 45px; width: 65px; object-fit: contain; }
   </style>
 </head>
 <body>
 
   <header>🎮 MODO UNIVERSO</header>
 
+  <!-- TAB 0: PRINCIPAL / INICIO -->
+  <div id="tab-home" class="tab-content active">
+    <div class="hero-welcome">
+      <h1>Bienvenido a tu modo universo</h1>
+      <p>Gestiona tu roster, personaliza shows, registra tus campeonatos e historiales de combates en un solo lugar.</p>
+    </div>
+
+    <div class="quick-stats-grid">
+      <div class="quick-stat-box">
+        <div class="quick-stat-num" id="stat-total-roster">0</div>
+        <div class="quick-stat-label">Superstars</div>
+      </div>
+      <div class="quick-stat-box">
+        <div class="quick-stat-num" id="stat-total-shows">0</div>
+        <div class="quick-stat-label">Shows / Marcas</div>
+      </div>
+      <div class="quick-stat-box">
+        <div class="quick-stat-num" id="stat-total-titles">0</div>
+        <div class="quick-stat-label">Títulos</div>
+      </div>
+      <div class="quick-stat-box">
+        <div class="quick-stat-num" id="stat-total-matches">0</div>
+        <div class="quick-stat-label">Combates</div>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB 1: ROSTER -->
-  <div id="tab-roster" class="tab-content active">
-    
+  <div id="tab-roster" class="tab-content">
     <button class="btn-trigger-add" onclick="openWrestlerModal(null)">➕ Añadir Luchador</button>
 
     <!-- Filtros -->
@@ -289,7 +303,7 @@
       <div class="active-filters-bar" id="active-filters-container"></div>
     </div>
 
-    <!-- Barra de Búsqueda -->
+    <!-- Búsqueda -->
     <div class="search-box">
       <input type="text" id="roster-search" placeholder="🔎 Buscar luchador por nombre..." autocapitalize="words" oninput="onSearchInput(this.value)">
     </div>
@@ -297,7 +311,13 @@
     <div id="list-roster"></div>
   </div>
 
-  <!-- TAB 2: TAG TEAMS -->
+  <!-- TAB PERSONALIZAR SHOWS -->
+  <div id="tab-shows" class="tab-content">
+    <button class="btn-trigger-add" onclick="openShowModal(null)">➕ Añadir Nuevo Show</button>
+    <div id="list-shows"></div>
+  </div>
+
+  <!-- TAB: TAG TEAMS -->
   <div id="tab-teams" class="tab-content">
     <form id="form-teams">
       <input type="text" id="team-name" placeholder="Nombre del Tag Team / Ficción" autocapitalize="words" required>
@@ -308,7 +328,7 @@
     <div id="list-teams"></div>
   </div>
 
-  <!-- TAB 3: CAMPEONES -->
+  <!-- TAB: CAMPEONES -->
   <div id="tab-titles" class="tab-content">
     <form id="form-titles">
       <input type="text" id="title-name" placeholder="Nombre del Título (ej. WWE Championship)" autocapitalize="words" required>
@@ -320,7 +340,7 @@
     <div id="list-titles"></div>
   </div>
 
-  <!-- TAB 4: SHOWS / MATCH CARDS -->
+  <!-- TAB: CARTELERA -->
   <div id="tab-matches" class="tab-content">
     <form id="form-matches">
       <input type="text" id="match-show" placeholder="Show / PPV (ej. SummerSlam)" autocapitalize="words" required>
@@ -329,6 +349,32 @@
       <button type="submit" class="btn-add">Guardar Combate</button>
     </form>
     <div id="list-matches"></div>
+  </div>
+
+  <!-- MODAL CREAR/EDITAR SHOW -->
+  <div id="modal-show" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-show-title">Personalizar Show</span>
+        <button class="modal-close" onclick="closeShowModal()">✕</button>
+      </div>
+
+      <form id="form-edit-show" style="margin-bottom:0;">
+        <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL SHOW</label>
+        <input type="text" id="show-name" placeholder="Ej. RAW, SmackDown..." autocapitalize="words" required>
+        
+        <label style="font-size:0.75rem; color:var(--text-dim);">COLOR REPRESENTATIVO:</label>
+        <input type="color" id="show-color" value="#e50914" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
+
+        <label style="font-size:0.75rem; color:var(--text-dim);">LOGO DEL SHOW (IMAGEN):</label>
+        <input type="file" id="show-logo-file" accept="image/*">
+
+        <label style="font-size:0.75rem; color:var(--text-dim);">FONDO DEL SHOW (PARA FICHAS Y TARJETAS):</label>
+        <input type="file" id="show-bg-file" accept="image/*">
+
+        <button type="submit" id="btn-save-show" class="btn-add">Guardar Show</button>
+      </form>
+    </div>
   </div>
 
   <!-- MODAL FICHA / AÑADIR / EDICIÓN DE LUCHADOR -->
@@ -351,12 +397,7 @@
         
         <div class="option-selector-wrapper">
           <span class="option-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
-          <div class="option-checkboxes" id="edit-brands-container">
-            <label class="option-checkbox-item"><input type="checkbox" value="RAW"> RAW</label>
-            <label class="option-checkbox-item"><input type="checkbox" value="SmackDown"> SmackDown</label>
-            <label class="option-checkbox-item"><input type="checkbox" value="NXT"> NXT</label>
-            <label class="option-checkbox-item"><input type="checkbox" value="EVOLVE"> EVOLVE</label>
-          </div>
+          <div class="option-checkboxes" id="edit-brands-container"></div>
         </div>
 
         <div class="option-selector-wrapper">
@@ -426,14 +467,13 @@
           <div id="wrestler-history-list"></div>
         </div>
 
-        <!-- BOTÓN EN GRIS PARA DESPEDIR LUCHADOR -->
         <button type="button" class="btn-dismiss" onclick="dismissCurrentWrestler()">Despedir luchador</button>
       </div>
 
     </div>
   </div>
 
-  <!-- POPUP PERSONALIZADO DE CONFIRMACIÓN -->
+  <!-- POPUP CONFIRMACIÓN -->
   <div id="modal-confirm" class="confirm-modal-overlay">
     <div class="confirm-box">
       <div class="confirm-text" id="confirm-modal-text">¿Seguro que quieres realizar esta acción?</div>
@@ -445,16 +485,17 @@
   </div>
 
   <nav>
-    <button class="active" onclick="switchTab('roster', this)">Roster</button>
+    <button class="active" onclick="switchTab('home', this)">Inicio</button>
+    <button onclick="switchTab('roster', this)">Roster</button>
+    <button onclick="switchTab('shows', this)">Shows</button>
     <button onclick="switchTab('teams', this)">Tag Teams</button>
     <button onclick="switchTab('titles', this)">Títulos</button>
     <button onclick="switchTab('matches', this)">Cartelera</button>
   </nav>
 
   <script>
-    // Configuración de IndexedDB para almacenamiento persistente de imágenes
     let db;
-    const request = indexedDB.open("UniversoTrackerDB", 1);
+    const request = indexedDB.open("UniversoTrackerDB", 2);
     
     request.onupgradeneeded = (e) => {
       db = e.target.result;
@@ -496,7 +537,6 @@
       tx.objectStore("images").delete(key);
     }
 
-    // Utilidad para convertir la imagen subida desde el dispositivo a Base64
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         if (!file) { resolve(null); return; }
@@ -507,9 +547,18 @@
       });
     }
 
-    let store = JSON.parse(localStorage.getItem('universe_data')) || { roster: [], teams: [], titles: [], matches: [] };
+    let defaultShows = [
+      { id: 'raw', name: 'RAW', color: '#b20710' },
+      { id: 'smackdown', name: 'SmackDown', color: '#0055b8' },
+      { id: 'nxt', name: 'NXT', color: '#d4a017' },
+      { id: 'evolve', name: 'EVOLVE', color: '#7b1fa2' }
+    ];
+
+    let store = JSON.parse(localStorage.getItem('universe_data')) || { roster: [], teams: [], titles: [], matches: [], shows: defaultShows };
     if(!store.teams) store.teams = [];
     if(!store.titles) store.titles = [];
+    if(!store.matches) store.matches = [];
+    if(!store.shows || store.shows.length === 0) store.shows = defaultShows;
 
     store.roster.forEach(r => {
       if (!r.brands) {
@@ -526,6 +575,7 @@
     };
 
     let activeWrestlerId = null;
+    let activeShowId = null;
     let confirmAction = null;
 
     function handleImgError(img) {
@@ -544,7 +594,7 @@
       const input = document.getElementById(inputId);
       if(!input) return;
 
-      input.addEventListener('input', (e) => {
+      input.addEventListener('input', () => {
         const value = input.value;
         if (value.length > 0) {
           const capitalized = value.split(' ').map(word => {
@@ -566,6 +616,7 @@
     setupAutoCapitalize('team-name');
     setupAutoCapitalize('title-name');
     setupAutoCapitalize('title-holder');
+    setupAutoCapitalize('show-name');
 
     function saveData() {
       localStorage.setItem('universe_data', JSON.stringify(store));
@@ -600,50 +651,18 @@
       render();
     }
 
-    const filterGroupsConfig = [
-      {
-        type: 'brand',
-        label: 'Marca',
-        options: [
-          { val: 'ALL', text: 'Todas las marcas' },
-          { val: 'RAW', text: 'RAW' },
-          { val: 'SmackDown', text: 'SmackDown' },
-          { val: 'NXT', text: 'NXT' },
-          { val: 'EVOLVE', text: 'EVOLVE' }
-        ]
-      },
-      {
-        type: 'alignment',
-        label: 'Alineación',
-        options: [
-          { val: 'ALL', text: 'Todas las alineaciones' },
-          { val: 'Face', text: 'Face' },
-          { val: 'Heel', text: 'Heel' }
-        ]
-      },
-      {
-        type: 'gender',
-        label: 'Género',
-        options: [
-          { val: 'ALL', text: 'Todos los géneros' },
-          { val: 'Men', text: 'Men' },
-          { val: 'Women', text: 'Women' }
-        ]
-      },
-      {
-        type: 'division',
-        label: 'División',
-        options: [
-          { val: 'ALL', text: 'Todas las divisiones' },
-          { val: 'Main Eventer', text: 'Main Eventer' },
-          { val: 'Midcarder', text: 'Midcarder' },
-          { val: 'Tag Team', text: 'Tag Team' },
-          { val: 'Inactivo', text: 'Inactivo' }
-        ]
-      }
-    ];
-
     function renderFilterSelect() {
+      const brandOptions = [{ val: 'ALL', text: 'Todas las marcas' }].concat(
+        store.shows.map(s => ({ val: s.name, text: s.name }))
+      );
+
+      const filterGroupsConfig = [
+        { type: 'brand', label: 'Marca', options: brandOptions },
+        { type: 'alignment', label: 'Alineación', options: [{ val: 'ALL', text: 'Todas' }, { val: 'Face', text: 'Face' }, { val: 'Heel', text: 'Heel' }] },
+        { type: 'gender', label: 'Género', options: [{ val: 'ALL', text: 'Todos' }, { val: 'Men', text: 'Men' }, { val: 'Women', text: 'Women' }] },
+        { type: 'division', label: 'División', options: [{ val: 'ALL', text: 'Todas' }, { val: 'Main Eventer', text: 'Main Eventer' }, { val: 'Midcarder', text: 'Midcarder' }, { val: 'Tag Team', text: 'Tag Team' }, { val: 'Inactivo', text: 'Inactivo' }] }
+      ];
+
       const select = document.getElementById('filter-select-all');
       select.innerHTML = filterGroupsConfig.map(group => {
         const optionsHTML = group.options.map(opt => {
@@ -684,6 +703,83 @@
       const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
       if (radio) radio.checked = true;
     }
+
+    /* GESTIÓN DE SHOWS */
+    async function openShowModal(id = null) {
+      activeShowId = id;
+      document.getElementById('show-logo-file').value = '';
+      document.getElementById('show-bg-file').value = '';
+
+      if (id === null) {
+        document.getElementById('modal-show-title').innerText = 'Añadir Nuevo Show';
+        document.getElementById('show-name').value = '';
+        document.getElementById('show-color').value = '#e50914';
+      } else {
+        const show = store.shows.find(s => s.id === id);
+        if (!show) return;
+        document.getElementById('modal-show-title').innerText = 'Editar Show';
+        document.getElementById('show-name').value = show.name;
+        document.getElementById('show-color').value = show.color || '#e50914';
+      }
+      document.getElementById('modal-show').classList.add('active');
+    }
+
+    function closeShowModal() {
+      document.getElementById('modal-show').classList.remove('active');
+      activeShowId = null;
+    }
+
+    document.getElementById('form-edit-show').onsubmit = async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('show-name').value.trim();
+      const color = document.getElementById('show-color').value;
+
+      const logoFile = document.getElementById('show-logo-file').files[0];
+      const bgFile = document.getElementById('show-bg-file').files[0];
+
+      if (activeShowId === null) {
+        const newId = 'show_' + Date.now();
+        if (logoFile) {
+          const base64Logo = await fileToBase64(logoFile);
+          await saveImageToDB('show_logo_' + newId, base64Logo);
+        }
+        if (bgFile) {
+          const base64Bg = await fileToBase64(bgFile);
+          await saveImageToDB('show_bg_' + newId, base64Bg);
+        }
+
+        store.shows.push({ id: newId, name, color });
+      } else {
+        const show = store.shows.find(s => s.id === activeShowId);
+        if (show) {
+          const oldName = show.name;
+          show.name = name;
+          show.color = color;
+
+          if (logoFile) {
+            const base64Logo = await fileToBase64(logoFile);
+            await saveImageToDB('show_logo_' + show.id, base64Logo);
+          }
+          if (bgFile) {
+            const base64Bg = await fileToBase64(bgFile);
+            await saveImageToDB('show_bg_' + show.id, base64Bg);
+          }
+
+          // Actualizar luchadores pertenecientes a la marca si cambió el nombre
+          if (oldName !== name) {
+            store.roster.forEach(r => {
+              if (r.brands) {
+                const idx = r.brands.indexOf(oldName);
+                if (idx !== -1) r.brands[idx] = name;
+              }
+            });
+          }
+        }
+      }
+
+      closeShowModal();
+      saveData();
+    };
 
     document.getElementById('form-teams').onsubmit = (e) => {
       e.preventDefault();
@@ -748,17 +844,16 @@
           if (r.teamId === id) r.teamId = null;
         });
       }
-      if(type === 'titles') {
-        deleteImageFromDB('title_' + id);
-      }
-      if(type === 'roster') {
-        deleteImageFromDB('wrestler_' + id);
+      if(type === 'titles') deleteImageFromDB('title_' + id);
+      if(type === 'roster') deleteImageFromDB('wrestler_' + id);
+      if(type === 'shows') {
+        deleteImageFromDB('show_logo_' + id);
+        deleteImageFromDB('show_bg_' + id);
       }
       store[type] = store[type].filter(item => item.id !== id);
       saveData();
     }
 
-    /* SISTEMA DE CONFIRMACIÓN CON POPUP */
     function showConfirmModal(text, onAccept) {
       document.getElementById('confirm-modal-text').innerText = text;
       confirmAction = onAccept;
@@ -793,14 +888,19 @@
       const btnSave = document.getElementById('btn-save-wrestler');
       document.getElementById('edit-image-file').value = '';
 
+      // Render checkbox de shows en el modal
+      const brandsContainer = document.getElementById('edit-brands-container');
+      brandsContainer.innerHTML = store.shows.map(s => 
+        `<label class="option-checkbox-item"><input type="checkbox" value="${s.name}"> ${s.name}</label>`
+      ).join('');
+
       if (id === null) {
         document.getElementById('modal-wrestler-title').innerText = 'Añadir Luchador';
         document.getElementById('edit-name').value = '';
-        
         avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; border-radius: 50%; font-size:1rem;">👤</div>`;
         
-        document.querySelectorAll('#edit-brands-container input[type="checkbox"]').forEach(cb => {
-          cb.checked = (cb.value === 'RAW');
+        document.querySelectorAll('#edit-brands-container input[type="checkbox"]').forEach((cb, idx) => {
+          cb.checked = (idx === 0);
         });
 
         setRadioValue('edit-alignment', 'Face');
@@ -1032,6 +1132,12 @@
     }
 
     async function render() {
+      // Actualizar Estadísticas de Inicio
+      document.getElementById('stat-total-roster').innerText = store.roster.length;
+      document.getElementById('stat-total-shows').innerText = store.shows.length;
+      document.getElementById('stat-total-titles').innerText = store.titles.length;
+      document.getElementById('stat-total-matches').innerText = store.matches.length;
+
       renderFilterSelect();
       renderActiveFiltersBar();
 
@@ -1050,18 +1156,27 @@
         const teamTagHTML = team ? `<span class="tag tag-team">👥 ${team.name}</span>` : '';
         
         const rBrands = r.brands || (r.brand ? [r.brand] : ['RAW']);
-        const mainBrand = rBrands[0] ? rBrands[0].toLowerCase() : 'default';
-        
-        const cardBrandClass = ['raw', 'smackdown', 'nxt', 'evolve'].includes(mainBrand) 
-          ? `card-brand-${mainBrand}` 
-          : 'card-brand-default';
+        const mainBrandName = rBrands[0] || '';
+        const mainShow = store.shows.find(s => s.name.toLowerCase() === mainBrandName.toLowerCase());
+
+        // Cargar imagen de fondo asignada a la marca/show principal
+        let bgStyle = '';
+        let borderColor = mainShow ? mainShow.color : 'var(--border)';
+        if (mainShow) {
+          const showBg = await getImageFromDB('show_bg_' + mainShow.id);
+          if (showBg) {
+            bgStyle = `background-image: url('${showBg}');`;
+          }
+        }
 
         const wrestlerTitles = store.titles.filter(t => t.holder.length > 0 && r.name.toLowerCase().trim().includes(t.holder.toLowerCase().trim()));
         const isChamp = wrestlerTitles.length > 0;
-        const champClass = isChamp ? 'is-champion' : '';
         const champTagHTML = isChamp ? `<span class="tag tag-champ">🏆 CAMPEÓN</span>` : '';
 
-        // Obtener imágenes asignadas a los títulos en la tarjeta del luchador
+        const borderStyle = isChamp 
+          ? `border-image: linear-gradient(to right, ${borderColor}, var(--gold-end)) 1;` 
+          : `border-image: linear-gradient(to right, ${borderColor}, #000000) 1;`;
+
         const titleImagesList = await Promise.all(wrestlerTitles.map(async t => {
           const tImg = await getImageFromDB('title_' + t.id);
           if (tImg) {
@@ -1072,18 +1187,18 @@
         const titleImagesHTML = titleImagesList.join('');
 
         const brandTagsHTML = rBrands.map(b => {
-          const bClass = ['raw', 'smackdown', 'nxt', 'evolve'].includes(b.toLowerCase()) ? `tag-${b.toLowerCase()}` : 'tag-brand-default';
-          return `<span class="tag ${bClass}">${b}</span>`;
+          const bShow = store.shows.find(s => s.name.toLowerCase() === b.toLowerCase());
+          const bColor = bShow ? bShow.color : 'var(--border)';
+          return `<span class="tag" style="background:${bColor}; color:#fff;">${b}</span>`;
         }).join(' ');
 
-        // Carga de la imagen del luchador guardada en la BD local
         const imgData = await getImageFromDB('wrestler_' + r.id);
         const imageHTML = imgData 
           ? `<img src="${imgData}" class="wrestler-avatar" alt="${r.name}" onerror="handleImgError(this)">`
           : `<div class="wrestler-avatar-placeholder">👤</div>`;
 
         return `
-          <div class="card ${cardBrandClass} ${champClass}" onclick="openWrestlerModal(${r.id})">
+          <div class="card" style="${bgStyle} ${borderStyle}" onclick="openWrestlerModal(${r.id})">
             <div class="card-left">
               ${imageHTML}
               <div class="card-info">
@@ -1106,6 +1221,30 @@
       document.getElementById('list-roster').innerHTML = rosterCardsHTML.length > 0 
         ? rosterCardsHTML.join('')
         : `<p style="color: var(--text-dim); text-align: center; margin-top: 20px; font-size: 0.9rem;">No hay Superstars que cumplan estos filtros.</p>`;
+
+      // Render Pestaña Shows
+      const showsCardsHTML = await Promise.all(store.shows.map(async s => {
+        const logo = await getImageFromDB('show_logo_' + s.id);
+        const bg = await getImageFromDB('show_bg_' + s.id);
+        
+        const logoHTML = logo ? `<img src="${logo}" class="show-logo-img" alt="${s.name}">` : `<div style="font-size:1.5rem;">📺</div>`;
+        const bgStyle = bg ? `background-image: url('${bg}');` : '';
+
+        return `
+          <div class="card" style="${bgStyle} border-left: 6px solid ${s.color}; padding:12px;" onclick="openShowModal('${s.id}')">
+            <div class="card-left">
+              ${logoHTML}
+              <div class="card-info">
+                <span class="card-title" style="font-size:1.1rem;">${s.name}</span>
+                <span class="card-sub">Color: <span style="display:inline-block; width:12px; height:12px; background:${s.color}; border-radius:50%; vertical-align:middle;"></span> ${s.color}</span>
+              </div>
+            </div>
+            <button class="btn-del" onclick="deleteItem('shows', '${s.id}', event)">✕</button>
+          </div>
+        `;
+      }));
+
+      document.getElementById('list-shows').innerHTML = showsCardsHTML.join('');
 
       const sortedFullRoster = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
       document.getElementById('team-members-select').innerHTML = sortedFullRoster.length > 0
@@ -1169,7 +1308,6 @@
         </div>
       `).join('');
     }
-
   </script>
 </body>
 </html>
