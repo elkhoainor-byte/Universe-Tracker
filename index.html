@@ -6,6 +6,10 @@
   <title>Universo Tracker</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- Evita el bloqueo de Hotlinking / CORS para imágenes externas (PNG, JPG, AVIF, WebP) -->
+  <meta name="referrer" content="no-referrer">
+
   <style>
     :root {
       --bg: #121212;
@@ -125,7 +129,6 @@
   <!-- TAB 1: ROSTER -->
   <div id="tab-roster" class="tab-content active">
     
-    <!-- Botón único para abrir modal de añadir -->
     <button class="btn-trigger-add" onclick="openWrestlerModal(null)">➕ Añadir Luchador</button>
 
     <!-- Filtros -->
@@ -186,11 +189,10 @@
         <button class="modal-close" onclick="closeWrestlerModal()">✕</button>
       </div>
 
-      <!-- Formulario de Edición / Creación -->
       <form id="form-edit-wrestler" style="margin-bottom:0;">
         <label style="font-size:0.75rem; color:var(--text-dim);">DATOS GENERALES</label>
         <input type="text" id="edit-name" placeholder="Nombre" autocapitalize="words" required>
-        <input type="url" id="edit-image" placeholder="URL de la Imagen (https...)">
+        <input type="url" id="edit-image" placeholder="URL de la Imagen (.png, .jpg, .avif...)">
         
         <div class="option-selector-wrapper">
           <span class="option-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
@@ -235,7 +237,6 @@
         <button type="submit" id="btn-save-wrestler" class="btn-add" style="background:#2e7d32;">Guardar Cambios</button>
       </form>
 
-      <!-- Bloque de estadísticas y H2H (Solo visible en modo edición) -->
       <div id="modal-extra-stats">
         <div style="margin-bottom:12px;">
           <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">RÉCORD GLOBAL</label>
@@ -314,6 +315,16 @@
 
     function cleanName(str) {
       return str.replace(/^["'“`«ʼ\s]+/, '');
+    }
+
+    function cleanImageUrl(url) {
+      if (!url) return '';
+      let cleaned = url.trim();
+      // Elimina sufijos de redimensionado común en wikis/fandoms que rompen peticiones directas de PNG
+      if (cleaned.includes('/revision/latest')) {
+        cleaned = cleaned.split('/revision/latest')[0];
+      }
+      return cleaned;
     }
 
     function setupAutoCapitalize(inputId) {
@@ -519,7 +530,6 @@
       saveData();
     }
 
-    // Modal Único: Soporta Crear (id = null) y Editar (id)
     function openWrestlerModal(id = null) {
       activeWrestlerId = id;
       const avatarContainer = document.getElementById('modal-avatar-container');
@@ -527,7 +537,6 @@
       const btnSave = document.getElementById('btn-save-wrestler');
 
       if (id === null) {
-        // Modo Crear
         document.getElementById('modal-wrestler-title').innerText = 'Añadir Luchador';
         document.getElementById('edit-name').value = '';
         document.getElementById('edit-image').value = '';
@@ -550,7 +559,6 @@
         btnSave.style.background = 'var(--accent)';
         extraStats.style.display = 'none';
       } else {
-        // Modo Edición
         const wrestler = store.roster.find(r => r.id === id);
         if(!wrestler) return;
 
@@ -559,7 +567,7 @@
         document.getElementById('edit-image').value = wrestler.imageUrl || '';
 
         if (wrestler.imageUrl) {
-          avatarContainer.innerHTML = `<img src="${wrestler.imageUrl}" class="wrestler-avatar" style="width:40px; height:40px;" alt="${wrestler.name}" onerror="handleImgError(this)">`;
+          avatarContainer.innerHTML = `<img src="${wrestler.imageUrl}" class="wrestler-avatar" style="width:40px; height:40px;" alt="${wrestler.name}" referrerpolicy="no-referrer" onerror="handleImgError(this)">`;
         } else {
           avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; font-size:1rem;">👤</div>`;
         }
@@ -606,7 +614,8 @@
       e.preventDefault();
       
       const newName = document.getElementById('edit-name').value.trim();
-      const newImage = document.getElementById('edit-image').value.trim();
+      const rawImage = document.getElementById('edit-image').value;
+      const newImage = cleanImageUrl(rawImage);
       const checkedBrands = Array.from(document.querySelectorAll('#edit-brands-container input[type="checkbox"]:checked')).map(cb => cb.value);
 
       if (checkedBrands.length === 0) {
@@ -617,7 +626,6 @@
       const newTeamId = document.getElementById('edit-team').value ? parseInt(document.getElementById('edit-team').value) : null;
 
       if (activeWrestlerId === null) {
-        // Guardar Nuevo Luchador
         const duplicate = store.roster.find(r => r.name.toLowerCase() === newName.toLowerCase());
         if (duplicate && !confirm(`⚠️ ¡Atención! Ya existe un luchador registrado como "${duplicate.name}".\n\n¿Deseas añadirlo de todos modos?`)) {
           return;
@@ -641,7 +649,6 @@
         }
 
       } else {
-        // Actualizar Luchador Existente
         const wrestler = store.roster.find(r => r.id === activeWrestlerId);
         if(wrestler) {
           const duplicate = store.roster.find(r => r.id !== activeWrestlerId && r.name.toLowerCase() === newName.toLowerCase());
@@ -785,9 +792,8 @@
               return `<span class="tag ${bClass}">${b}</span>`;
             }).join(' ');
 
-            // Renderizado robusto de la imagen o placeholder con onerror integrado
             const imageHTML = r.imageUrl 
-              ? `<img src="${r.imageUrl}" class="wrestler-avatar" alt="${r.name}" onerror="handleImgError(this)">`
+              ? `<img src="${r.imageUrl}" class="wrestler-avatar" alt="${r.name}" referrerpolicy="no-referrer" onerror="handleImgError(this)">`
               : `<div class="wrestler-avatar-placeholder">👤</div>`;
 
             return `
