@@ -1,1809 +1,287 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import {
-  Trophy, Users, Flame, CalendarDays, Plus, X, Pencil, Swords,
-  Crown, ChevronRight, ShieldCheck, History, LayoutGrid, Trash2,
-  ArrowUpRight, Loader2, RotateCcw, Check, AlertTriangle, Download,
-  Upload, SkipForward, Repeat
-} from "lucide-react";
-
-// ---------------------------------------------------------------------------
-// Tema visual — inspirado en la iluminación de arena y las placas de cinturón
-// ---------------------------------------------------------------------------
-const C = {
-  bg: "#0B0B0D",
-  surface: "#151318",
-  surface2: "#1D1A21",
-  line: "#2B2731",
-  gold: "#D9A441",
-  goldBright: "#F0C05A",
-  red: "#C6203A",
-  blue: "#3B6FE0",
-  purple: "#9D5CE0",
-  green: "#4CAF6D",
-  teal: "#3FBFA6",
-  orange: "#E08A3F",
-  text: "#F2EFE9",
-  textMuted: "#938F9A",
-  textFaint: "#5C5763",
-};
-
-const SHOW_PALETTE = [C.red, C.blue, C.gold, C.purple, C.green, C.teal, C.orange];
-
-const WEEKDAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-
-const SHOW_DEFAULTS = [
-  { id: "raw", name: "RAW", color: C.red, weekday: 0 },
-  { id: "nxt", name: "NXT", color: C.gold, weekday: 1 },
-  { id: "evolve", name: "Evolve", color: C.purple, weekday: 2 },
-  { id: "smackdown", name: "SmackDown", color: C.blue, weekday: 4 },
-];
-
-const uid = () => Math.random().toString(36).slice(2, 10);
-
-// Calendario ficticio del Universe Mode: años continuos ("Año 1", "Año 2"...),
-// 12 meses por año, 4 semanas por mes. No hay fecha real: el usuario controla
-// en qué semana está su partida mediante data.currentDate.
-const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-const WEEKS_PER_MONTH = 4;
-const MONTHS_PER_YEAR = 12;
-const DEFAULT_DATE = { year: 1, month: 1, week: 1 };
-
-const dateOrdinal = (d) => (d.year - 1) * MONTHS_PER_YEAR * WEEKS_PER_MONTH + (d.month - 1) * WEEKS_PER_MONTH + (d.week - 1);
-const compareDates = (a, b) => dateOrdinal(a) - dateOrdinal(b);
-const weeksBetween = (start, end) => Math.max(0, dateOrdinal(end) - dateOrdinal(start));
-const shiftWeeks = (d, delta) => {
-  const ord = Math.max(0, dateOrdinal(d) + delta);
-  const perYear = MONTHS_PER_YEAR * WEEKS_PER_MONTH;
-  return {
-    year: Math.floor(ord / perYear) + 1,
-    month: Math.floor((ord % perYear) / WEEKS_PER_MONTH) + 1,
-    week: (ord % WEEKS_PER_MONTH) + 1,
-  };
-};
-const fmtDate = (d) => (d ? `Año ${d.year} · ${MONTH_NAMES[d.month - 1]} · Semana ${d.week}` : "—");
-
-// Combates: "participants" es texto libre tipo "A vs B" o "A & B vs C & D".
-// Estos helpers extraen los nombres de cada bando para poder cruzar estadísticas.
-const splitNames = (str) =>
-  (str || "").split(/,|&|\/| y | and /i).map((s) => s.trim()).filter(Boolean);
-
-const parseMatchSides = (participantsStr) =>
-  (participantsStr || "")
-    .split(/\bvs\.?\b/i)
-    .map((side) => splitNames(side))
-    .filter((arr) => arr.length);
-
-const sideOf = (sides, name) => sides.findIndex((side) => side.some((n) => n.toLowerCase() === name.toLowerCase()));
-
-const matchIncludesWrestler = (match, name) => sideOf(parseMatchSides(match.participants), name) !== -1;
-
-const isWinner = (match, name) => {
-  if (!match.winner) return false;
-  return splitNames(match.winner).some((n) => n.toLowerCase() === name.toLowerCase());
-};
-
-// Compara dos "A & B" sin que importe el orden de los nombres
-const sameNames = (a, b) => {
-  const A = splitNames(a).map((n) => n.toLowerCase()).sort();
-  const B = splitNames(b).map((n) => n.toLowerCase()).sort();
-  return A.length > 0 && A.length === B.length && A.every((n, i) => n === B[i]);
-};
-
-// Recorre todos los eventos y calcula luchados/ganados/perdidos para un luchador
-function computeWrestlerStats(name, events) {
-  let fought = 0, won = 0, lost = 0;
-  const log = [];
-  events.forEach((ev) => {
-    ev.matches.forEach((m) => {
-      if (!matchIncludesWrestler(m, name)) return;
-      fought++;
-      const win = isWinner(m, name);
-      if (win) won++;
-      else if (m.winner) lost++;
-      log.push({ eventName: ev.name, date: ev.date, participants: m.participants, winner: m.winner, result: win ? "win" : m.winner ? "loss" : "sin resultado" });
-    });
-  });
-  log.sort((a, b) => compareDates(b.date, a.date));
-  return { fought, won, lost, log };
-}
-
-// Cara a cara entre dos luchadores: cuántas veces se han enfrentado (en bandos distintos) y quién ganó
-function computeHeadToHead(nameA, nameB, events) {
-  let encounters = 0, winsA = 0, winsB = 0;
-  const log = [];
-  events.forEach((ev) => {
-    ev.matches.forEach((m) => {
-      const sides = parseMatchSides(m.participants);
-      const sideA = sideOf(sides, nameA);
-      const sideB = sideOf(sides, nameB);
-      if (sideA === -1 || sideB === -1 || sideA === sideB) return;
-      encounters++;
-      const aWon = isWinner(m, nameA);
-      const bWon = isWinner(m, nameB);
-      if (aWon) winsA++;
-      if (bWon) winsB++;
-      log.push({ eventName: ev.name, date: ev.date, participants: m.participants, winner: m.winner });
-    });
-  });
-  log.sort((a, b) => compareDates(b.date, a.date));
-  return { encounters, winsA, winsB, log };
-}
-
-// Historial de un título: reconstruye, para cada combate que tuvo ese título en juego,
-// quién era el campeón al entrar y si el combate fue una retención o un cambio de título.
-function computeTitleMatchLog(champ, events) {
-  const timeline = [
-    ...champ.history.map((h) => ({ holder: h.holder, start: h.start })),
-    { holder: champ.holder, start: champ.reignStart },
-  ]
-    .filter((r) => r.holder)
-    .sort((a, b) => compareDates(a.start, b.start));
-
-  const holderBefore = (date) => {
-    let result = null;
-    for (const reign of timeline) {
-      if (compareDates(reign.start, date) <= 0) result = reign.holder;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Universo Tracker</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    :root {
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --accent: #e50914;
+      --text: #ffffff;
+      --text-dim: #aaaaaa;
+      --border: #333333;
     }
-    return result;
-  };
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 70px; }
+    
+    header { background: #000; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; letter-spacing: 1px; color: var(--accent); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    
+    nav { display: flex; justify-content: space-around; background: #1a1a1a; position: fixed; bottom: 0; width: 100%; border-top: 1px solid var(--border); z-index: 100; }
+    nav button { background: none; border: none; color: var(--text-dim); padding: 12px 0; width: 100%; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    nav button.active { color: var(--accent); border-top: 2px solid var(--accent); }
+    
+    .tab-content { display: none; padding: 15px; }
+    .tab-content.active { display: block; }
 
-  const log = [];
-  events.forEach((ev) => {
-    ev.matches.forEach((m) => {
-      if (m.titleId !== champ.id) return;
-      const prevHolder = holderBefore(ev.date);
-      let outcome = "sin-resultado";
-      if (m.winner) outcome = prevHolder && sameNames(m.winner, prevHolder) ? "retuvo" : "cambio";
-      log.push({ eventName: ev.name, date: ev.date, participants: m.participants, winner: m.winner, outcome });
-    });
-  });
-  log.sort((a, b) => compareDates(b.date, a.date));
-  return log;
-}
+    form { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+    input, select, button.btn-add { padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: #fff; font-size: 0.9rem; }
+    button.btn-add { background: var(--accent); font-weight: bold; border: none; margin-top: 5px; cursor: pointer; }
 
-// Orden semanal de shows: solo los que tienen día asignado, ordenados Lunes -> Domingo
-const getWeekOrder = (shows) =>
-  shows.filter((s) => s.weekday !== null && s.weekday !== undefined).slice().sort((a, b) => a.weekday - b.weekday);
+    /* Filtros Avanzados (Multicriterio) */
+    .filters-wrapper { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
+    .filter-group { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+    .filter-btn { background: #2a2a2a; color: var(--text-dim); border: 1px solid var(--border); padding: 5px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: bold; cursor: pointer; white-space: nowrap; }
+    .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-const sortByName = (list) => [...list].sort((a, b) => a.name.localeCompare(b.name, "es"));
+    .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-info { display: flex; flex-direction: column; gap: 6px; }
+    .card-title { font-weight: bold; font-size: 1rem; }
+    .card-sub { font-size: 0.8rem; color: var(--text-dim); }
+    .tags-container { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: bold; text-transform: uppercase; }
+    
+    /* Colores de Marcas */
+    .tag-raw { background: #b20710; color: #fff; }
+    .tag-smackdown { background: #0055b8; color: #fff; }
+    .tag-nxt { background: #d4a017; color: #000; }
+    .tag-evolve { background: #7b1fa2; color: #fff; }
+    
+    /* Colores de Alineación */
+    .tag-face { background: #2e7d32; color: #fff; }
+    .tag-heel { background: #c62828; color: #fff; }
 
-// Renombra un luchador en todo el resto de datos (combates, rivalidades, campeonatos)
-// para que un cambio de nombre no rompa las estadísticas ya registradas.
-function applyRename(d, oldName, newName) {
-  const renameSide = (str) => splitNames(str).map((n) => (n.toLowerCase() === oldName.toLowerCase() ? newName : n)).join(" & ");
-  const renameParticipants = (str) =>
-    parseMatchSides(str).map((side) => side.map((n) => (n.toLowerCase() === oldName.toLowerCase() ? newName : n)).join(" & ")).join(" vs ");
+    /* Colores de Género y Estatus */
+    .tag-gender { background: #37474f; color: #eceff1; }
+    .tag-division { background: #455a64; color: #fff; }
 
-  return {
-    ...d,
-    events: d.events.map((ev) => ({
-      ...ev,
-      matches: ev.matches.map((m) => ({
-        ...m,
-        participants: renameParticipants(m.participants),
-        winner: m.winner ? renameSide(m.winner) : m.winner,
-      })),
-    })),
-    rivalries: d.rivalries.map((r) => {
-      if (!r.participants || !r.participants.some((n) => n.toLowerCase() === oldName.toLowerCase())) return r;
-      const newParticipants = r.participants.map((n) => (n.toLowerCase() === oldName.toLowerCase() ? newName : n));
-      return { ...r, participants: newParticipants, name: newParticipants.join(" vs ") };
-    }),
-    championships: d.championships.map((c) => ({
-      ...c,
-      holder: c.holder ? renameSide(c.holder) : c.holder,
-      history: c.history.map((h) => ({ ...h, holder: h.holder ? renameSide(h.holder) : h.holder })),
-    })),
-  };
-}
+    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
 
-const DEFAULT_DATA = {
-  shows: SHOW_DEFAULTS,
-  championships: [],
-  roster: [],
-  rivalries: [],
-  events: [],
-  currentDate: DEFAULT_DATE,
-  nextShowPointer: 0,
-};
+  <header>🎮 MODO UNIVERSO</header>
 
-// ---------------------------------------------------------------------------
-// Estilos globales inyectados (tipografía + utilidades no cubiertas por Tailwind)
-// ---------------------------------------------------------------------------
-function GlobalStyle() {
-  return (
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
-      .f-display { font-family: 'Anton', 'Arial Narrow', sans-serif; letter-spacing: 0.02em; }
-      .f-body { font-family: 'Inter', system-ui, sans-serif; }
-      .f-mono { font-family: 'JetBrains Mono', monospace; }
-      .belt-plate {
-        clip-path: polygon(7% 0%, 93% 0%, 100% 22%, 100% 78%, 93% 100%, 7% 100%, 0% 78%, 0% 22%);
-      }
-      .scrollbar-none::-webkit-scrollbar { display: none; }
-      .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
-      @keyframes pulseGold {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(217,164,65,0.35); }
-        50% { box-shadow: 0 0 0 6px rgba(217,164,65,0); }
-      }
-      @keyframes spinSlow { from { opacity: 0.4; } 50% { opacity: 1; } to { opacity: 0.4; } }
-      .champ-glow { animation: pulseGold 2.4s ease-in-out infinite; }
-      .save-pulse { animation: spinSlow 1.2s ease-in-out infinite; }
-      input, select, textarea { outline: none; }
-      input::placeholder, textarea::placeholder { color: ${C.textFaint}; }
-    `}</style>
-  );
-}
+  <!-- TAB 1: ROSTER -->
+  <div id="tab-roster" class="tab-content active">
+    <form id="form-roster">
+      <input type="text" id="roster-name" placeholder="Nombre del Superstar" required>
+      <select id="roster-brand">
+        <option value="RAW">RAW</option>
+        <option value="SmackDown">SmackDown</option>
+        <option value="NXT">NXT</option>
+        <option value="EVOLVE">EVOLVE</option>
+      </select>
+      <select id="roster-alignment">
+        <option value="Face">Face</option>
+        <option value="Heel">Heel</option>
+      </select>
+      <select id="roster-gender">
+        <option value="Men">Men</option>
+        <option value="Women">Women</option>
+      </select>
+      <select id="roster-division">
+        <option value="Main Eventer">Main Eventer</option>
+        <option value="Midcarder">Midcarder</option>
+        <option value="Tag Team">Tag Team</option>
+      </select>
+      <button type="submit" class="btn-add">Añadir a Roster</button>
+    </form>
 
-// ---------------------------------------------------------------------------
-// Componentes reutilizables
-// ---------------------------------------------------------------------------
-function Field({ label, children }) {
-  return (
-    <label className="flex flex-col gap-1.5 text-left">
-      <span className="text-[11px] uppercase tracking-wider f-body font-semibold" style={{ color: C.textMuted }}>
-        {label}
-      </span>
-      {children}
-    </label>
-  );
-}
-
-const inputStyle = {
-  background: C.bg,
-  border: `1px solid ${C.line}`,
-  color: C.text,
-};
-
-function TextInput(props) {
-  return (
-    <input
-      {...props}
-      className={"rounded-md px-3 py-2 text-sm f-body w-full " + (props.className || "")}
-      style={inputStyle}
-    />
-  );
-}
-
-function Select({ children, ...props }) {
-  return (
-    <select {...props} className="rounded-md px-3 py-2 text-sm f-body w-full" style={inputStyle}>
-      {children}
-    </select>
-  );
-}
-
-function IconBtn({ onClick, children, title, danger }) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      className="p-1.5 rounded-md transition-colors"
-      style={{ color: danger ? C.red : C.textMuted }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = C.surface2)}
-      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-    >
-      {children}
-    </button>
-  );
-}
-
-function PrimaryBtn({ onClick, children, style }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold f-body transition-transform active:scale-95"
-      style={{ background: C.gold, color: "#181215", ...style }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function GhostBtn({ onClick, children }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold f-body border transition-colors"
-      style={{ borderColor: C.line, color: C.text }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function ShowDot({ color }) {
-  return <span className="inline-block w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />;
-}
-
-function EmptyState({ icon: Icon, title, hint }) {
-  return (
-    <div
-      className="flex flex-col items-center justify-center text-center gap-2 rounded-xl py-12 px-6"
-      style={{ border: `1px dashed ${C.line}` }}
-    >
-      <Icon size={22} style={{ color: C.textFaint }} />
-      <p className="f-body text-sm font-semibold" style={{ color: C.textMuted }}>{title}</p>
-      <p className="f-body text-xs max-w-[220px]" style={{ color: C.textFaint }}>{hint}</p>
-    </div>
-  );
-}
-
-// Desplegable que selecciona UN luchador ya añadido al roster (en vez de escribirlo)
-function WrestlerSelect({ roster, value, onChange, allowEmpty = "Vacante" }) {
-  if (!roster.length) {
-    return <p className="f-body text-xs" style={{ color: C.textFaint }}>Añade luchadores en la pestaña Roster primero.</p>;
-  }
-  const sorted = sortByName(roster);
-  return (
-    <Select value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">{allowEmpty}</option>
-      {sorted.map((w) => <option key={w.id} value={w.name}>{w.name}</option>)}
-    </Select>
-  );
-}
-
-// Chips que seleccionan VARIOS luchadores ya añadidos al roster (ordenados A-Z)
-function WrestlerChips({ roster, shows, selected, onToggle, disabledNames = [] }) {
-  if (!roster.length) {
-    return <p className="f-body text-xs" style={{ color: C.textFaint }}>Añade luchadores en la pestaña Roster primero.</p>;
-  }
-  const sorted = sortByName(roster);
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {sorted.map((w) => {
-        const active = selected.includes(w.name);
-        const disabled = disabledNames.includes(w.name) && !active;
-        const show = shows.find((s) => s.id === w.showId);
-        return (
-          <button
-            type="button"
-            key={w.id}
-            disabled={disabled}
-            onClick={() => onToggle(w.name)}
-            className="f-body text-xs font-semibold px-2.5 py-1.5 rounded-full flex items-center gap-1.5 transition-colors"
-            style={{
-              background: active ? C.gold : C.bg,
-              color: active ? "#181215" : disabled ? C.textFaint : C.textMuted,
-              border: `1px solid ${active ? C.gold : C.line}`,
-              opacity: disabled ? 0.4 : 1,
-            }}
-          >
-            <ShowDot color={active ? "#181215" : show?.color || C.textFaint} /> {w.name}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-// Selector de fecha ficticia del Universe Mode: Año / Mes / Semana (sin calendario real)
-function FictionalDatePicker({ value, onChange, maxYear = 30 }) {
-  const v = value || DEFAULT_DATE;
-  const years = Array.from({ length: Math.max(maxYear, v.year + 3) }, (_, i) => i + 1);
-  return (
-    <div className="grid grid-cols-3 gap-2">
-      <Select value={v.year} onChange={(e) => onChange({ ...v, year: Number(e.target.value) })}>
-        {years.map((y) => <option key={y} value={y}>Año {y}</option>)}
-      </Select>
-      <Select value={v.month} onChange={(e) => onChange({ ...v, month: Number(e.target.value) })}>
-        {MONTH_NAMES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-      </Select>
-      <Select value={v.week} onChange={(e) => onChange({ ...v, week: Number(e.target.value) })}>
-        {[1, 2, 3, 4].map((w) => <option key={w} value={w}>Semana {w}</option>)}
-      </Select>
-    </div>
-  );
-}
-
-function BeltPlate({ champ, show, large }) {
-  return (
-    <div className="belt-plate p-4" style={{ background: `linear-gradient(135deg, ${C.goldBright}, ${C.gold} 55%, #8a6420)` }}>
-      <div className="flex items-center gap-1.5 mb-1">
-        <ShowDot color={show?.color || C.textFaint} />
-        <span className="f-body text-[10px] font-bold uppercase tracking-wider" style={{ color: "#241a08" }}>
-          {show?.name || "Sin marca"}
-        </span>
-      </div>
-      <p className={"f-display leading-tight " + (large ? "text-xl" : "text-lg")} style={{ color: "#1a1206" }}>{champ.name}</p>
-      <div className="flex items-baseline gap-2 mt-1">
-        <Crown size={14} style={{ color: "#1a1206" }} />
-        <span className="f-body text-sm font-bold" style={{ color: "#1a1206" }}>{champ.holder || "Vacante"}</span>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tab: Dashboard
-// ---------------------------------------------------------------------------
-function Dashboard({ data, update, setTab }) {
-  const [editingDate, setEditingDate] = useState(false);
-  const activeRivalries = data.rivalries.filter((r) => r.status === "active");
-  const weekOrder = getWeekOrder(data.shows);
-  const showPointer = weekOrder.length ? (data.nextShowPointer || 0) % weekOrder.length : 0;
-  const nextShow = weekOrder[showPointer];
-
-  const nextEvent = useMemo(() => {
-    const upcoming = data.events
-      .filter((e) => compareDates(e.date, data.currentDate) >= 0)
-      .sort((a, b) => compareDates(a.date, b.date));
-    return upcoming[0] || null;
-  }, [data.events, data.currentDate]);
-
-  const longestReign = useMemo(() => {
-    if (!data.championships.length) return null;
-    return [...data.championships].sort(
-      (a, b) => weeksBetween(b.reignStart, data.currentDate) - weeksBetween(a.reignStart, data.currentDate)
-    )[0];
-  }, [data.championships, data.currentDate]);
-
-  const stats = [
-    { label: "Campeonatos", value: data.championships.length, icon: Trophy, tab: "titles" },
-    { label: "Roster", value: data.roster.length, icon: Users, tab: "roster" },
-    { label: "Rivalidades activas", value: activeRivalries.length, icon: Flame, tab: "rivalries" },
-    { label: "Eventos", value: data.events.length, icon: CalendarDays, tab: "events" },
-  ];
-
-  const setCurrentDate = (v) => update((d) => ({ ...d, currentDate: v }));
-  const nudgeWeek = (delta) => update((d) => ({ ...d, currentDate: shiftWeeks(d.currentDate, delta) }));
-  const advanceShow = () =>
-    update((d) => {
-      const order = getWeekOrder(d.shows);
-      if (!order.length) return d;
-      const p = (d.nextShowPointer || 0) % order.length;
-      const np = (p + 1) % order.length;
-      return { ...d, nextShowPointer: np, currentDate: np === 0 ? shiftWeeks(d.currentDate, 1) : d.currentDate };
-    });
-
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.gold}55` }}>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="f-body text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: C.textMuted }}>
-            <CalendarDays size={13} style={{ color: C.gold }} /> Semana actual de tu Universe Mode
-          </h3>
-          <button onClick={() => setEditingDate((v) => !v)} className="f-body text-[11px] font-semibold" style={{ color: C.gold }}>
-            {editingDate ? "Cerrar" : "Ajustar"}
-          </button>
-        </div>
-
-        {editingDate ? (
-          <FictionalDatePicker value={data.currentDate} onChange={setCurrentDate} />
-        ) : (
-          <div className="flex items-center justify-between">
-            <button onClick={() => nudgeWeek(-1)} className="p-2 rounded-md" style={{ border: `1px solid ${C.line}` }}>
-              <ChevronRight size={15} style={{ color: C.textMuted, transform: "rotate(180deg)" }} />
-            </button>
-            <p className="f-display text-lg" style={{ color: C.text }}>{fmtDate(data.currentDate)}</p>
-            <button onClick={() => nudgeWeek(1)} className="p-2 rounded-md" style={{ border: `1px solid ${C.line}` }}>
-              <ChevronRight size={15} style={{ color: C.textMuted }} />
-            </button>
-          </div>
-        )}
+    <!-- Filtros Simulatenos de Roster -->
+    <div class="filters-wrapper">
+      <!-- Marca -->
+      <div class="filter-group" id="filter-brand-group">
+        <button class="filter-btn active" onclick="setFilter('brand', 'ALL', this)">Todas las Marcas</button>
+        <button class="filter-btn" onclick="setFilter('brand', 'RAW', this)">RAW</button>
+        <button class="filter-btn" onclick="setFilter('brand', 'SmackDown', this)">SmackDown</button>
+        <button class="filter-btn" onclick="setFilter('brand', 'NXT', this)">NXT</button>
+        <button class="filter-btn" onclick="setFilter('brand', 'EVOLVE', this)">EVOLVE</button>
       </div>
 
-      <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-        <h3 className="f-body text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: C.textMuted }}>
-          <Repeat size={13} style={{ color: C.gold }} /> Próximo show
-        </h3>
-        {nextShow ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <ShowDot color={nextShow.color} />
-              <div className="min-w-0">
-                <p className="f-display text-base leading-tight truncate" style={{ color: C.text }}>{nextShow.name}</p>
-                <p className="f-body text-[11px]" style={{ color: C.textFaint }}>{WEEKDAY_NAMES[nextShow.weekday]}</p>
-              </div>
-            </div>
-            <GhostBtn onClick={advanceShow}><SkipForward size={14} /> Siguiente</GhostBtn>
-          </div>
-        ) : (
-          <p className="f-body text-xs" style={{ color: C.textFaint }}>
-            Asigna un día de la semana a tus shows en la pestaña Shows para activar el calendario semanal.
-          </p>
-        )}
+      <!-- Género -->
+      <div class="filter-group" id="filter-gender-group">
+        <button class="filter-btn active" onclick="setFilter('gender', 'ALL', this)">Todos los Géneros</button>
+        <button class="filter-btn" onclick="setFilter('gender', 'Men', this)">Men</button>
+        <button class="filter-btn" onclick="setFilter('gender', 'Women', this)">Women</button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {stats.map((s) => (
-          <button
-            key={s.label}
-            onClick={() => setTab(s.tab)}
-            className="rounded-xl p-4 text-left flex flex-col gap-3 transition-transform active:scale-95"
-            style={{ background: C.surface, border: `1px solid ${C.line}` }}
-          >
-            <s.icon size={18} style={{ color: C.gold }} />
-            <div>
-              <div className="f-display text-2xl leading-none" style={{ color: C.text }}>{s.value}</div>
-              <div className="f-body text-[11px] mt-1" style={{ color: C.textMuted }}>{s.label}</div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-        <div className="flex items-center gap-2 mb-3">
-          <CalendarDays size={15} style={{ color: C.gold }} />
-          <h3 className="f-body text-xs font-bold uppercase tracking-wider" style={{ color: C.textMuted }}>
-            Próximo evento
-          </h3>
-        </div>
-        {nextEvent ? (
-          <div>
-            <p className="f-display text-lg" style={{ color: C.text }}>{nextEvent.name}</p>
-            <p className="f-body text-xs mt-1" style={{ color: C.textMuted }}>
-              {fmtDate(nextEvent.date)} · {nextEvent.matches.length} combate{nextEvent.matches.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-        ) : (
-          <p className="f-body text-sm" style={{ color: C.textFaint }}>No hay eventos programados todavía.</p>
-        )}
-      </div>
-
-      {longestReign && (
-        <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <div className="flex items-center gap-2 mb-3">
-            <Crown size={15} style={{ color: C.gold }} />
-            <h3 className="f-body text-xs font-bold uppercase tracking-wider" style={{ color: C.textMuted }}>
-              Reinado más largo activo
-            </h3>
-          </div>
-          <p className="f-display text-lg" style={{ color: C.text }}>{longestReign.holder || "Vacante"}</p>
-          <p className="f-body text-xs mt-1" style={{ color: C.textMuted }}>
-            {longestReign.name} · {weeksBetween(longestReign.reignStart, data.currentDate)} semanas
-          </p>
-        </div>
-      )}
-
-      {activeRivalries.length > 0 && (
-        <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <div className="flex items-center gap-2 mb-3">
-            <Flame size={15} style={{ color: C.red }} />
-            <h3 className="f-body text-xs font-bold uppercase tracking-wider" style={{ color: C.textMuted }}>
-              Rivalidades calientes
-            </h3>
-          </div>
-          <div className="flex flex-col gap-2">
-            {activeRivalries.slice(0, 3).map((r) => (
-              <div key={r.id} className="f-body text-sm" style={{ color: C.text }}>
-                {r.name}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Perfil de título — historial de reinados + historial de combates por el título
-// ---------------------------------------------------------------------------
-const OUTCOME_LABEL = { retuvo: "Retuvo el título", cambio: "Cambio de título", "sin-resultado": "Sin resultado" };
-const OUTCOME_COLOR = { retuvo: C.green, cambio: C.gold, "sin-resultado": C.textFaint };
-
-function TitleProfile({ champ, data, onBack, onAddDefense, onChangeChampion, onDelete }) {
-  const [changing, setChanging] = useState(false);
-  const [holders, setHolders] = useState([]);
-  const [reignStart, setReignStart] = useState({ ...data.currentDate });
-  const show = data.shows.find((s) => s.id === champ.showId);
-  const matchLog = useMemo(() => computeTitleMatchLog(champ, data.events), [champ, data.events]);
-
-  const startChange = () => {
-    setHolders([]);
-    setReignStart({ ...data.currentDate });
-    setChanging(true);
-  };
-  const confirmChange = () => {
-    if (holders.length === 0) return;
-    onChangeChampion(holders, reignStart);
-    setChanging(false);
-  };
-
-  return (
-    <div className="flex flex-col gap-4">
-      <button onClick={onBack} className="flex items-center gap-1 f-body text-xs font-semibold w-fit" style={{ color: C.textMuted }}>
-        <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} /> Volver a Títulos
-      </button>
-
-      <BeltPlate champ={champ} show={show} large />
-
-      <div className="flex items-center justify-between">
-        <div className="f-mono text-xs" style={{ color: C.textMuted }}>
-          <span style={{ color: C.gold }}>{weeksBetween(champ.reignStart, data.currentDate)}</span> semanas como campeón · {champ.defenses} defensa{champ.defenses !== 1 ? "s" : ""}
-        </div>
-        <IconBtn onClick={onDelete} danger title="Eliminar campeonato"><Trash2 size={15} /></IconBtn>
-      </div>
-
-      <div className="flex gap-2">
-        <GhostBtn onClick={onAddDefense}><ShieldCheck size={15} /> Registrar defensa</GhostBtn>
-        <GhostBtn onClick={startChange}><ArrowUpRight size={15} /> Cambio de título</GhostBtn>
-      </div>
-
-      {changing && (
-        <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <Field label="Nuevo(s) campeón(es) — elige 1 para título individual o 2 para parejas">
-            <WrestlerChips
-              roster={data.roster}
-              shows={data.shows}
-              selected={holders}
-              onToggle={(name) => setHolders((h) => (h.includes(name) ? h.filter((n) => n !== name) : [...h, name]))}
-            />
-          </Field>
-          <Field label="Semana del cambio">
-            <FictionalDatePicker value={reignStart} onChange={setReignStart} />
-          </Field>
-          <div className="flex gap-2">
-            <PrimaryBtn onClick={confirmChange} style={{ flex: 1 }}>Confirmar</PrimaryBtn>
-            <GhostBtn onClick={() => setChanging(false)}>Cancelar</GhostBtn>
-          </div>
-        </div>
-      )}
-
-      {champ.history.length > 0 && (
-        <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <h3 className="f-body text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: C.textMuted }}>
-            <History size={13} /> Historial de reinados
-          </h3>
-          <div className="flex flex-col gap-2">
-            {champ.history.map((h, i) => (
-              <div key={i} className="f-body text-xs flex items-center justify-between" style={{ color: C.textMuted }}>
-                <div>
-                  <div style={{ color: C.text }}>{h.holder}</div>
-                  <div style={{ color: C.textFaint }}>{fmtDate(h.start)} → {fmtDate(h.end)}</div>
-                </div>
-                <span style={{ color: C.textFaint }}>{h.weeks} sem. · {h.defenses} def.</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-        <h3 className="f-body text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: C.textMuted }}>
-          <Swords size={13} /> Historial de combates por el título
-        </h3>
-        {matchLog.length === 0 ? (
-          <p className="f-body text-xs" style={{ color: C.textFaint }}>
-            Todavía no hay combates de la Cartelera con este título en juego.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {matchLog.map((m, i) => (
-              <div key={i} className="rounded-lg p-3" style={{ background: C.bg, border: `1px solid ${C.line}` }}>
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="f-body text-sm font-semibold" style={{ color: C.text }}>{m.participants}</p>
-                    <p className="f-body text-[11px] mt-0.5" style={{ color: C.textFaint }}>{m.eventName} · {fmtDate(m.date)}</p>
-                  </div>
-                  <span
-                    className="f-body text-[10px] font-bold uppercase px-2 py-0.5 rounded-full flex-shrink-0 text-right"
-                    style={{ color: OUTCOME_COLOR[m.outcome], border: `1px solid ${OUTCOME_COLOR[m.outcome]}55` }}
-                  >
-                    {OUTCOME_LABEL[m.outcome]}
-                  </span>
-                </div>
-                {m.winner && (
-                  <p className="f-body text-xs mt-1.5 font-semibold" style={{ color: C.green }}>Campeón: {m.winner}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+      <!-- División / Estatus -->
+      <div class="filter-group" id="filter-division-group">
+        <button class="filter-btn active" onclick="setFilter('division', 'ALL', this)">Todas las Divisiones</button>
+        <button class="filter-btn" onclick="setFilter('division', 'Main Eventer', this)">Main Eventer</button>
+        <button class="filter-btn" onclick="setFilter('division', 'Midcarder', this)">Midcarder</button>
+        <button class="filter-btn" onclick="setFilter('division', 'Tag Team', this)">Tag Team</button>
       </div>
     </div>
-  );
-}
 
-// ---------------------------------------------------------------------------
-// Tab: Campeonatos
-// ---------------------------------------------------------------------------
-function ChampionshipsTab({ data, update }) {
-  const [selectedId, setSelectedId] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", showId: data.shows[0]?.id || "", holders: [], reignStart: { ...data.currentDate } });
-
-  const addChampionship = () => {
-    if (!form.name.trim()) return;
-    update((d) => ({
-      ...d,
-      championships: [
-        ...d.championships,
-        { id: uid(), name: form.name.trim(), showId: form.showId, holder: form.holders.join(" & "), reignStart: form.reignStart, defenses: 0, history: [] },
-      ],
-    }));
-    setForm({ name: "", showId: data.shows[0]?.id || "", holders: [], reignStart: { ...data.currentDate } });
-    setShowForm(false);
-  };
-
-  const removeChampionship = (id) => {
-    update((d) => ({ ...d, championships: d.championships.filter((c) => c.id !== id) }));
-    setSelectedId(null);
-  };
-
-  const addDefense = (id) => {
-    update((d) => ({
-      ...d,
-      championships: d.championships.map((c) => (c.id === id ? { ...c, defenses: c.defenses + 1 } : c)),
-    }));
-  };
-
-  const changeChampion = (id, holders, reignStart) => {
-    update((d) => ({
-      ...d,
-      championships: d.championships.map((ch) => {
-        if (ch.id !== id) return ch;
-        const newHolder = holders.join(" & ");
-        const historyEntry = ch.holder
-          ? { holder: ch.holder, start: ch.reignStart, end: reignStart, weeks: weeksBetween(ch.reignStart, reignStart), defenses: ch.defenses }
-          : null;
-        return { ...ch, holder: newHolder, reignStart, defenses: 0, history: historyEntry ? [historyEntry, ...ch.history] : ch.history };
-      }),
-    }));
-  };
-
-  const selected = data.championships.find((c) => c.id === selectedId);
-  if (selected) {
-    return (
-      <TitleProfile
-        champ={selected}
-        data={data}
-        onBack={() => setSelectedId(null)}
-        onAddDefense={() => addDefense(selected.id)}
-        onChangeChampion={(holders, reignStart) => changeChampion(selected.id, holders, reignStart)}
-        onDelete={() => removeChampionship(selected.id)}
-      />
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <PrimaryBtn onClick={() => setShowForm((v) => !v)}>
-        {showForm ? <X size={15} /> : <Plus size={15} />}
-        {showForm ? "Cancelar" : "Nuevo campeonato"}
-      </PrimaryBtn>
-
-      {showForm && (
-        <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <Field label="Nombre del título">
-            <TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ej. Campeonato Mundial" />
-          </Field>
-          <Field label="Marca">
-            <Select value={form.showId} onChange={(e) => setForm({ ...form, showId: e.target.value })}>
-              {data.shows.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </Select>
-          </Field>
-          <Field label="Campeón(es) actual(es) — elige 1 para individual o 2 para parejas (opcional)">
-            <WrestlerChips
-              roster={data.roster}
-              shows={data.shows}
-              selected={form.holders}
-              onToggle={(name) => setForm((f) => ({ ...f, holders: f.holders.includes(name) ? f.holders.filter((n) => n !== name) : [...f.holders, name] }))}
-            />
-          </Field>
-          <Field label="Semana en que ganó el título">
-            <FictionalDatePicker value={form.reignStart} onChange={(v) => setForm({ ...form, reignStart: v })} />
-          </Field>
-          <PrimaryBtn onClick={addChampionship}>Guardar campeonato</PrimaryBtn>
-        </div>
-      )}
-
-      {data.championships.length === 0 ? (
-        <EmptyState icon={Trophy} title="Sin campeonatos todavía" hint="Añade los títulos de tu Universe Mode para llevar el registro de los reinados." />
-      ) : (
-        <div className="flex flex-col gap-3">
-          {data.championships.map((c) => {
-            const show = data.shows.find((s) => s.id === c.showId);
-            return (
-              <button key={c.id} onClick={() => setSelectedId(c.id)} className="text-left w-full transition-transform active:scale-95">
-                <BeltPlate champ={c} show={show} />
-                <div className="flex items-center justify-between mt-1.5 px-1">
-                  <span className="f-mono text-[11px]" style={{ color: C.textMuted }}>
-                    {weeksBetween(c.reignStart, data.currentDate)} semanas · {c.defenses} defensa{c.defenses !== 1 ? "s" : ""}
-                  </span>
-                  <ChevronRight size={14} style={{ color: C.textFaint }} />
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Perfil de luchador — estadísticas, edición y comparativa cara a cara
-// ---------------------------------------------------------------------------
-function StatBlock({ label, value, color }) {
-  return (
-    <div className="rounded-lg p-3 flex-1 text-center" style={{ background: C.bg, border: `1px solid ${C.line}` }}>
-      <div className="f-display text-2xl" style={{ color: color || C.text }}>{value}</div>
-      <div className="f-body text-[10px] uppercase tracking-wide mt-1" style={{ color: C.textMuted }}>{label}</div>
-    </div>
-  );
-}
-
-function WrestlerProfile({ wrestler, data, update, onBack }) {
-  const [compareId, setCompareId] = useState("");
-  const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ name: wrestler.name, showId: wrestler.showId, alignment: wrestler.alignment, status: wrestler.status });
-
-  const show = data.shows.find((s) => s.id === wrestler.showId);
-  const stats = useMemo(() => computeWrestlerStats(wrestler.name, data.events), [wrestler.name, data.events]);
-  const winPct = stats.fought > 0 ? Math.round((stats.won / stats.fought) * 100) : 0;
-
-  const opponents = data.roster.filter((w) => w.id !== wrestler.id);
-  const compareWrestler = opponents.find((w) => w.id === compareId);
-  const h2h = useMemo(
-    () => (compareWrestler ? computeHeadToHead(wrestler.name, compareWrestler.name, data.events) : null),
-    [wrestler.name, compareWrestler, data.events]
-  );
-
-  const startEdit = () => {
-    setEditForm({ name: wrestler.name, showId: wrestler.showId, alignment: wrestler.alignment, status: wrestler.status });
-    setEditing(true);
-  };
-
-  const saveEdit = () => {
-    const newName = editForm.name.trim();
-    if (!newName) return;
-    const renamed = newName.toLowerCase() !== wrestler.name.toLowerCase();
-    update((d) => {
-      let next = { ...d, roster: d.roster.map((w) => (w.id === wrestler.id ? { ...w, ...editForm, name: newName } : w)) };
-      if (renamed) next = applyRename(next, wrestler.name, newName);
-      return next;
-    });
-    setEditing(false);
-  };
-
-  return (
-    <div className="flex flex-col gap-4">
-      <button onClick={onBack} className="flex items-center gap-1 f-body text-xs font-semibold w-fit" style={{ color: C.textMuted }}>
-        <ChevronRight size={14} style={{ transform: "rotate(180deg)" }} /> Volver al roster
-      </button>
-
-      {editing ? (
-        <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <Field label="Nombre">
-            <TextInput value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
-          </Field>
-          <Field label="Marca">
-            <Select value={editForm.showId} onChange={(e) => setEditForm({ ...editForm, showId: e.target.value })}>
-              {data.shows.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </Select>
-          </Field>
-          <Field label="Rol">
-            <Select value={editForm.alignment} onChange={(e) => setEditForm({ ...editForm, alignment: e.target.value })}>
-              <option value="face">Face (Técnico)</option>
-              <option value="heel">Heel (Rudo)</option>
-            </Select>
-          </Field>
-          <Field label="Estado">
-            <Select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
-              <option value="active">Activo</option>
-              <option value="injured">Lesionado</option>
-              <option value="out">Inactivo</option>
-            </Select>
-          </Field>
-          <div className="flex gap-2">
-            <PrimaryBtn onClick={saveEdit} style={{ flex: 1 }}>Guardar cambios</PrimaryBtn>
-            <GhostBtn onClick={() => setEditing(false)}>Cancelar</GhostBtn>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-1.5 mb-1">
-                <ShowDot color={show?.color || C.textFaint} />
-                <span className="f-body text-[10px] uppercase font-bold tracking-wide" style={{ color: C.textFaint }}>
-                  {show?.name || "Sin marca"} · {wrestler.alignment === "face" ? "Técnico" : "Rudo"}
-                </span>
-              </div>
-              <h2 className="f-display text-2xl leading-tight" style={{ color: C.text }}>{wrestler.name}</h2>
-            </div>
-            <IconBtn onClick={startEdit} title="Editar luchador"><Pencil size={16} /></IconBtn>
-          </div>
-        </div>
-      )}
-
-      <div className="flex gap-2">
-        <StatBlock label="Luchados" value={stats.fought} />
-        <StatBlock label="Ganados" value={stats.won} color={C.green} />
-        <StatBlock label="Perdidos" value={stats.lost} color={C.red} />
-      </div>
-
-      {stats.fought > 0 && (
-        <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="f-body text-xs font-semibold" style={{ color: C.textMuted }}>% de victorias</span>
-            <span className="f-mono text-sm font-bold" style={{ color: C.gold }}>{winPct}%</span>
-          </div>
-          <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: C.bg }}>
-            <div className="h-full rounded-full" style={{ width: `${winPct}%`, background: C.gold }} />
-          </div>
-        </div>
-      )}
-
-      {stats.log.length > 0 && (
-        <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <h3 className="f-body text-xs font-bold uppercase tracking-wider mb-3" style={{ color: C.textMuted }}>Historial de combates</h3>
-          <div className="flex flex-col gap-2">
-            {stats.log.map((m, i) => (
-              <div key={i} className="f-body text-xs flex items-start justify-between gap-2" style={{ color: C.textMuted }}>
-                <div>
-                  <div style={{ color: C.text }}>{m.participants}</div>
-                  <div style={{ color: C.textFaint }}>{m.eventName} · {fmtDate(m.date)}</div>
-                </div>
-                <span
-                  className="f-body text-[10px] font-bold uppercase px-2 py-0.5 rounded-full flex-shrink-0"
-                  style={{
-                    color: m.result === "win" ? C.green : m.result === "loss" ? C.red : C.textFaint,
-                    border: `1px solid ${(m.result === "win" ? C.green : m.result === "loss" ? C.red : C.textFaint)}55`,
-                  }}
-                >
-                  {m.result === "win" ? "Victoria" : m.result === "loss" ? "Derrota" : "Sin resultado"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-        <h3 className="f-body text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: C.textMuted }}>
-          <Swords size={13} /> Comparar contra
-        </h3>
-        <WrestlerSelect roster={opponents} value={compareId ? compareWrestler?.name : ""} onChange={(name) => setCompareId(opponents.find((w) => w.name === name)?.id || "")} allowEmpty="Elige un luchador" />
-
-        {compareWrestler && h2h && (
-          <div className="mt-4 flex flex-col gap-3">
-            {h2h.encounters === 0 ? (
-              <p className="f-body text-xs" style={{ color: C.textFaint }}>
-                {wrestler.name} y {compareWrestler.name} no se han enfrentado todavía.
-              </p>
-            ) : (
-              <>
-                <div className="flex items-center justify-between">
-                  <div className="text-center flex-1">
-                    <div className="f-display text-xl" style={{ color: C.text }}>{h2h.winsA}</div>
-                    <div className="f-body text-[10px]" style={{ color: C.textMuted }}>{wrestler.name}</div>
-                  </div>
-                  <div className="text-center px-3">
-                    <div className="f-mono text-xs" style={{ color: C.textFaint }}>{h2h.encounters} enfrentamiento{h2h.encounters !== 1 ? "s" : ""}</div>
-                  </div>
-                  <div className="text-center flex-1">
-                    <div className="f-display text-xl" style={{ color: C.text }}>{h2h.winsB}</div>
-                    <div className="f-body text-[10px]" style={{ color: C.textMuted }}>{compareWrestler.name}</div>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  {h2h.log.map((m, i) => (
-                    <div key={i} className="f-body text-[11px] flex justify-between" style={{ color: C.textFaint }}>
-                      <span>{m.eventName} · {fmtDate(m.date)}</span>
-                      <span style={{ color: C.textMuted }}>{m.winner || "Sin resultado"}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tab: Roster
-// ---------------------------------------------------------------------------
-function RosterTab({ data, update }) {
-  const [selectedId, setSelectedId] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [filterShow, setFilterShow] = useState("all");
-  const [form, setForm] = useState({ name: "", showId: data.shows[0]?.id || "", alignment: "face", status: "active" });
-
-  const addWrestler = () => {
-    if (!form.name.trim()) return;
-    const newWrestler = { id: uid(), ...form, name: form.name.trim() };
-    update((d) => ({ ...d, roster: [...d.roster, newWrestler] }));
-    setForm({ name: "", showId: data.shows[0]?.id || "", alignment: "face", status: "active" });
-    setShowForm(false);
-    setSelectedId(newWrestler.id);
-  };
-
-  const removeWrestler = (id) => update((d) => ({ ...d, roster: d.roster.filter((w) => w.id !== id) }));
-  const cycleStatus = (id) => {
-    const order = ["active", "injured", "out"];
-    update((d) => ({
-      ...d,
-      roster: d.roster.map((w) => (w.id === id ? { ...w, status: order[(order.indexOf(w.status) + 1) % order.length] } : w)),
-    }));
-  };
-
-  const statusColor = { active: "#4CAF6D", injured: C.red, out: C.textFaint };
-  const statusLabel = { active: "Activo", injured: "Lesionado", out: "Inactivo" };
-
-  const filtered = sortByName(filterShow === "all" ? data.roster : data.roster.filter((w) => w.showId === filterShow));
-  const selected = data.roster.find((w) => w.id === selectedId);
-
-  if (selected) {
-    return <WrestlerProfile wrestler={selected} data={data} update={update} onBack={() => setSelectedId(null)} />;
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <PrimaryBtn onClick={() => setShowForm((v) => !v)}>
-        {showForm ? <X size={15} /> : <Plus size={15} />}
-        {showForm ? "Cancelar" : "Añadir luchador"}
-      </PrimaryBtn>
-
-      {showForm && (
-        <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <Field label="Nombre">
-            <TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nombre del luchador" />
-          </Field>
-          <Field label="Marca">
-            <Select value={form.showId} onChange={(e) => setForm({ ...form, showId: e.target.value })}>
-              {data.shows.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </Select>
-          </Field>
-          <Field label="Rol">
-            <Select value={form.alignment} onChange={(e) => setForm({ ...form, alignment: e.target.value })}>
-              <option value="face">Face (Técnico)</option>
-              <option value="heel">Heel (Rudo)</option>
-            </Select>
-          </Field>
-          <PrimaryBtn onClick={addWrestler}>Guardar luchador</PrimaryBtn>
-        </div>
-      )}
-
-      <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
-        <button
-          onClick={() => setFilterShow("all")}
-          className="f-body text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0"
-          style={{ background: filterShow === "all" ? C.gold : C.surface, color: filterShow === "all" ? "#181215" : C.textMuted, border: `1px solid ${C.line}` }}
-        >
-          Todas
-        </button>
-        {data.shows.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => setFilterShow(s.id)}
-            className="f-body text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0 flex items-center gap-1.5"
-            style={{ background: filterShow === s.id ? C.gold : C.surface, color: filterShow === s.id ? "#181215" : C.textMuted, border: `1px solid ${C.line}` }}
-          >
-            <ShowDot color={filterShow === s.id ? "#181215" : s.color} /> {s.name}
-          </button>
-        ))}
-      </div>
-
-      {filtered.length === 0 ? (
-        <EmptyState icon={Users} title="Roster vacío" hint="Añade luchadores para asignarlos a marcas, rivalidades y carteleras." />
-      ) : (
-        <div className="flex flex-col gap-2">
-          {filtered.map((w) => {
-            const show = data.shows.find((s) => s.id === w.showId);
-            return (
-              <button
-                key={w.id}
-                onClick={() => setSelectedId(w.id)}
-                className="rounded-lg p-3 flex items-center justify-between text-left w-full transition-colors"
-                style={{ background: C.surface, border: `1px solid ${C.line}` }}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <ShowDot color={show?.color || C.textFaint} />
-                  <div className="min-w-0">
-                    <p className="f-body text-sm font-semibold truncate" style={{ color: C.text }}>{w.name}</p>
-                    <p className="f-body text-[11px]" style={{ color: C.textFaint }}>
-                      {show?.name || "—"} · {w.alignment === "face" ? "Técnico" : "Rudo"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span
-                    onClick={(e) => { e.stopPropagation(); cycleStatus(w.id); }}
-                    className="f-body text-[10px] font-bold uppercase px-2 py-1 rounded-full"
-                    style={{ color: statusColor[w.status], border: `1px solid ${statusColor[w.status]}55` }}
-                  >
-                    {statusLabel[w.status]}
-                  </span>
-                  <span onClick={(e) => { e.stopPropagation(); removeWrestler(w.id); }}>
-                    <IconBtn danger title="Eliminar"><Trash2 size={14} /></IconBtn>
-                  </span>
-                  <ChevronRight size={15} style={{ color: C.textFaint }} />
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tab: Rivalidades
-// ---------------------------------------------------------------------------
-function RivalriesTab({ data, update }) {
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ participants: [], showId: data.shows[0]?.id || "", notes: "" });
-
-  const toggleParticipant = (name) =>
-    setForm((f) => ({
-      ...f,
-      participants: f.participants.includes(name) ? f.participants.filter((n) => n !== name) : [...f.participants, name],
-    }));
-
-  const addRivalry = () => {
-    if (form.participants.length < 2) return;
-    update((d) => ({
-      ...d,
-      rivalries: [
-        ...d.rivalries,
-        { id: uid(), name: form.participants.join(" vs "), participants: form.participants, showId: form.showId, notes: form.notes, status: "active" },
-      ],
-    }));
-    setForm({ participants: [], showId: data.shows[0]?.id || "", notes: "" });
-    setShowForm(false);
-  };
-
-  const toggleStatus = (id) =>
-    update((d) => ({
-      ...d,
-      rivalries: d.rivalries.map((r) => (r.id === id ? { ...r, status: r.status === "active" ? "resolved" : "active" } : r)),
-    }));
-
-  const removeRivalry = (id) => update((d) => ({ ...d, rivalries: d.rivalries.filter((r) => r.id !== id) }));
-
-  return (
-    <div className="flex flex-col gap-4">
-      <PrimaryBtn onClick={() => setShowForm((v) => !v)}>
-        {showForm ? <X size={15} /> : <Plus size={15} />}
-        {showForm ? "Cancelar" : "Nueva rivalidad"}
-      </PrimaryBtn>
-
-      {showForm && (
-        <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <Field label="Luchadores implicados (elige 2 o más)">
-            <WrestlerChips roster={data.roster} shows={data.shows} selected={form.participants} onToggle={toggleParticipant} />
-          </Field>
-          <Field label="Marca">
-            <Select value={form.showId} onChange={(e) => setForm({ ...form, showId: e.target.value })}>
-              {data.shows.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </Select>
-          </Field>
-          <Field label="Notas de la historia (opcional)">
-            <textarea
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="Qué está pasando en esta rivalidad..."
-              rows={3}
-              className="rounded-md px-3 py-2 text-sm f-body w-full resize-none"
-              style={inputStyle}
-            />
-          </Field>
-          <PrimaryBtn onClick={addRivalry}>Guardar rivalidad</PrimaryBtn>
-        </div>
-      )}
-
-      {data.rivalries.length === 0 ? (
-        <EmptyState icon={Flame} title="Sin rivalidades" hint="Registra las historias en curso de tu Universe Mode." />
-      ) : (
-        <div className="flex flex-col gap-2">
-          {data.rivalries.map((r) => {
-            const show = data.shows.find((s) => s.id === r.showId);
-            const active = r.status === "active";
-            return (
-              <div key={r.id} className="rounded-lg p-3" style={{ background: C.surface, border: `1px solid ${active ? C.red + "55" : C.line}` }}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <ShowDot color={show?.color || C.textFaint} />
-                      <span className="f-body text-[10px] uppercase font-bold tracking-wide" style={{ color: C.textFaint }}>{show?.name}</span>
-                    </div>
-                    <p className="f-body text-sm font-semibold" style={{ color: C.text }}>{r.name}</p>
-                    {r.notes && <p className="f-body text-xs mt-1" style={{ color: C.textMuted }}>{r.notes}</p>}
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Swords size={15} style={{ color: active ? C.red : C.textFaint }} />
-                    <IconBtn onClick={() => removeRivalry(r.id)} danger title="Eliminar"><Trash2 size={14} /></IconBtn>
-                  </div>
-                </div>
-                <button
-                  onClick={() => toggleStatus(r.id)}
-                  className="mt-2 f-body text-[10px] font-bold uppercase px-2 py-1 rounded-full"
-                  style={{ color: active ? C.red : "#4CAF6D", border: `1px solid ${(active ? C.red : "#4CAF6D")}55` }}
-                >
-                  {active ? "Activa" : "Resuelta"}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tab: Cartelera / Eventos
-// ---------------------------------------------------------------------------
-function EventsTab({ data, update }) {
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", date: { ...data.currentDate }, showId: data.shows[0]?.id || "", type: "weekly" });
-  const [matchForms, setMatchForms] = useState({});
-  const [openMatchForm, setOpenMatchForm] = useState(null);
-  const [editingResultId, setEditingResultId] = useState(null);
-
-  const addEvent = () => {
-    if (!form.name.trim()) return;
-    update((d) => ({ ...d, events: [...d.events, { id: uid(), ...form, name: form.name.trim(), matches: [] }] }));
-    setForm({ name: "", date: { ...data.currentDate }, showId: data.shows[0]?.id || "", type: "weekly" });
-    setShowForm(false);
-  };
-
-  const removeEvent = (id) => update((d) => ({ ...d, events: d.events.filter((e) => e.id !== id) }));
-
-  const getMatchForm = (eventId) => matchForms[eventId] || { sideA: [], sideB: [], stipulation: "", titleId: "", winnerSide: "" };
-  const setMatchForm = (eventId, patch) => setMatchForms((prev) => ({ ...prev, [eventId]: { ...getMatchForm(eventId), ...patch } }));
-
-  const addMatch = (eventId) => {
-    const mf = getMatchForm(eventId);
-    if (mf.sideA.length === 0 || mf.sideB.length === 0) return;
-    const participants = `${mf.sideA.join(" & ")} vs ${mf.sideB.join(" & ")}`;
-    const winner = mf.winnerSide === "A" ? mf.sideA.join(" & ") : mf.winnerSide === "B" ? mf.sideB.join(" & ") : "";
-    update((d) => ({
-      ...d,
-      events: d.events.map((e) =>
-        e.id === eventId ? { ...e, matches: [...e.matches, { id: uid(), participants, stipulation: mf.stipulation, titleId: mf.titleId, winner }] } : e
-      ),
-    }));
-    setMatchForms((prev) => ({ ...prev, [eventId]: { sideA: [], sideB: [], stipulation: "", titleId: "", winnerSide: "" } }));
-    setOpenMatchForm(null);
-  };
-
-  const removeMatch = (eventId, matchId) =>
-    update((d) => ({
-      ...d,
-      events: d.events.map((e) => (e.id === eventId ? { ...e, matches: e.matches.filter((m) => m.id !== matchId) } : e)),
-    }));
-
-  const setMatchWinner = (eventId, matchId, winner) => {
-    update((d) => ({
-      ...d,
-      events: d.events.map((e) =>
-        e.id === eventId ? { ...e, matches: e.matches.map((m) => (m.id === matchId ? { ...m, winner } : m)) } : e
-      ),
-    }));
-    setEditingResultId(null);
-  };
-
-  const applyTitleChange = (match, eventDate) => {
-    if (!match.titleId || !match.winner) return;
-    update((d) => ({
-      ...d,
-      championships: d.championships.map((c) => {
-        if (c.id !== match.titleId) return c;
-        const historyEntry = c.holder
-          ? { holder: c.holder, start: c.reignStart, end: eventDate, weeks: weeksBetween(c.reignStart, eventDate), defenses: c.defenses }
-          : null;
-        return { ...c, holder: match.winner, reignStart: eventDate, defenses: 0, history: historyEntry ? [historyEntry, ...c.history] : c.history };
-      }),
-    }));
-  };
-
-  const sortedEvents = [...data.events].sort((a, b) => compareDates(b.date, a.date));
-
-  return (
-    <div className="flex flex-col gap-4">
-      <PrimaryBtn onClick={() => setShowForm((v) => !v)}>
-        {showForm ? <X size={15} /> : <Plus size={15} />}
-        {showForm ? "Cancelar" : "Nuevo evento"}
-      </PrimaryBtn>
-
-      {showForm && (
-        <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <Field label="Nombre del evento">
-            <TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ej. SummerSlam" />
-          </Field>
-          <Field label="Semana">
-            <FictionalDatePicker value={form.date} onChange={(v) => setForm({ ...form, date: v })} />
-          </Field>
-          <Field label="Marca">
-            <Select value={form.showId} onChange={(e) => setForm({ ...form, showId: e.target.value })}>
-              {data.shows.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </Select>
-          </Field>
-          <Field label="Tipo">
-            <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-              <option value="weekly">Show semanal</option>
-              <option value="ppv">Premium Live Event</option>
-            </Select>
-          </Field>
-          <PrimaryBtn onClick={addEvent}>Guardar evento</PrimaryBtn>
-        </div>
-      )}
-
-      {sortedEvents.length === 0 ? (
-        <EmptyState icon={CalendarDays} title="Sin eventos" hint="Crea tus shows semanales y Premium Live Events." />
-      ) : (
-        <div className="flex flex-col gap-4">
-          {sortedEvents.map((ev) => {
-            const show = data.shows.find((s) => s.id === ev.showId);
-            const mf = getMatchForm(ev.id);
-            const isPast = compareDates(ev.date, data.currentDate) < 0;
-            return (
-              <div key={ev.id} className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <ShowDot color={show?.color || C.textFaint} />
-                      <span className="f-body text-[10px] uppercase font-bold tracking-wide" style={{ color: C.textFaint }}>
-                        {ev.type === "ppv" ? "Premium Live Event" : "Show semanal"}
-                      </span>
-                    </div>
-                    <p className="f-display text-lg leading-tight" style={{ color: C.text }}>{ev.name}</p>
-                    <p className="f-body text-xs mt-0.5" style={{ color: isPast ? C.textFaint : C.gold }}>{fmtDate(ev.date)}</p>
-                  </div>
-                  <IconBtn onClick={() => removeEvent(ev.id)} danger title="Eliminar"><Trash2 size={15} /></IconBtn>
-                </div>
-
-                {ev.matches.length > 0 && (
-                  <div className="flex flex-col gap-2 mb-3">
-                    {ev.matches.map((m) => {
-                      const title = data.championships.find((c) => c.id === m.titleId);
-                      const sides = parseMatchSides(m.participants);
-                      return (
-                        <div key={m.id} className="rounded-lg p-3" style={{ background: C.bg, border: `1px solid ${C.line}` }}>
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="f-body text-sm font-semibold" style={{ color: C.text }}>{m.participants}</p>
-                              {m.stipulation && <p className="f-body text-[11px] mt-0.5" style={{ color: C.textMuted }}>{m.stipulation}</p>}
-                              {title && (
-                                <p className="f-body text-[11px] mt-0.5 flex items-center gap-1" style={{ color: C.gold }}>
-                                  <Trophy size={11} /> {title.name}
-                                </p>
-                              )}
-                              {m.winner && (
-                                <p className="f-body text-xs mt-1 font-semibold" style={{ color: "#4CAF6D" }}>
-                                  Ganador: {m.winner}
-                                </p>
-                              )}
-                            </div>
-                            <IconBtn onClick={() => removeMatch(ev.id, m.id)} danger title="Eliminar combate"><Trash2 size={13} /></IconBtn>
-                          </div>
-
-                          {editingResultId === m.id ? (
-                            <div className="mt-2 flex flex-col gap-2">
-                              <Select defaultValue="" onChange={(e) => e.target.value && setMatchWinner(ev.id, m.id, e.target.value)}>
-                                <option value="">Elige el bando ganador</option>
-                                {sides.map((side, i) => (
-                                  <option key={i} value={side.join(" & ")}>{side.join(" & ")}</option>
-                                ))}
-                              </Select>
-                              <GhostBtn onClick={() => setEditingResultId(null)}>Cancelar</GhostBtn>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setEditingResultId(m.id)}
-                              className="mt-2 f-body text-[11px] font-bold flex items-center gap-1"
-                              style={{ color: C.textMuted }}
-                            >
-                              <ShieldCheck size={12} /> {m.winner ? "Cambiar resultado" : "Cerrar combate / declarar ganador"}
-                            </button>
-                          )}
-
-                          {title && m.winner && !sameNames(title.holder, m.winner) && (
-                            <button
-                              onClick={() => applyTitleChange(m, ev.date)}
-                              className="mt-2 f-body text-[11px] font-bold flex items-center gap-1"
-                              style={{ color: C.gold }}
-                            >
-                              <Crown size={12} /> Actualizar campeón a {m.winner}
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {openMatchForm === ev.id ? (
-                  <div className="rounded-lg p-3 flex flex-col gap-3" style={{ background: C.bg, border: `1px solid ${C.line}` }}>
-                    <Field label="Bando A">
-                      <WrestlerChips
-                        roster={data.roster}
-                        shows={data.shows}
-                        selected={mf.sideA}
-                        disabledNames={mf.sideB}
-                        onToggle={(name) =>
-                          setMatchForm(ev.id, { sideA: mf.sideA.includes(name) ? mf.sideA.filter((n) => n !== name) : [...mf.sideA, name] })
-                        }
-                      />
-                    </Field>
-                    <Field label="Bando B">
-                      <WrestlerChips
-                        roster={data.roster}
-                        shows={data.shows}
-                        selected={mf.sideB}
-                        disabledNames={mf.sideA}
-                        onToggle={(name) =>
-                          setMatchForm(ev.id, { sideB: mf.sideB.includes(name) ? mf.sideB.filter((n) => n !== name) : [...mf.sideB, name] })
-                        }
-                      />
-                    </Field>
-                    <Field label="Estipulación (opcional)">
-                      <TextInput value={mf.stipulation} onChange={(e) => setMatchForm(ev.id, { stipulation: e.target.value })} placeholder="Ej. Hell in a Cell" />
-                    </Field>
-                    <Field label="Título en juego (opcional)">
-                      <Select value={mf.titleId} onChange={(e) => setMatchForm(ev.id, { titleId: e.target.value })}>
-                        <option value="">Ninguno</option>
-                        {data.championships.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </Select>
-                    </Field>
-                    <Field label="Ganador (opcional)">
-                      <Select value={mf.winnerSide} onChange={(e) => setMatchForm(ev.id, { winnerSide: e.target.value })}>
-                        <option value="">Sin resultado</option>
-                        {mf.sideA.length > 0 && <option value="A">{mf.sideA.join(" & ")}</option>}
-                        {mf.sideB.length > 0 && <option value="B">{mf.sideB.join(" & ")}</option>}
-                      </Select>
-                    </Field>
-                    <div className="flex gap-2">
-                      <PrimaryBtn onClick={() => addMatch(ev.id)} style={{ flex: 1 }}>Añadir combate</PrimaryBtn>
-                      <GhostBtn onClick={() => setOpenMatchForm(null)}>Cancelar</GhostBtn>
-                    </div>
-                  </div>
-                ) : (
-                  <GhostBtn onClick={() => setOpenMatchForm(ev.id)}>
-                    <Plus size={14} /> Añadir combate
-                  </GhostBtn>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tab: Shows — asigna un día de la semana a cada show para llevar el calendario
-// ---------------------------------------------------------------------------
-function ShowsTab({ data, update }) {
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", color: SHOW_PALETTE[0], weekday: "" });
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({ name: "", color: "", weekday: "" });
-
-  const order = getWeekOrder(data.shows);
-  const pointer = order.length ? (data.nextShowPointer || 0) % order.length : 0;
-  const nextShow = order[pointer];
-
-  const advanceShow = () =>
-    update((d) => {
-      const ord = getWeekOrder(d.shows);
-      if (!ord.length) return d;
-      const p = (d.nextShowPointer || 0) % ord.length;
-      const np = (p + 1) % ord.length;
-      return { ...d, nextShowPointer: np, currentDate: np === 0 ? shiftWeeks(d.currentDate, 1) : d.currentDate };
-    });
-
-  const addShow = () => {
-    if (!form.name.trim()) return;
-    update((d) => ({
-      ...d,
-      shows: [...d.shows, { id: uid(), name: form.name.trim(), color: form.color, weekday: form.weekday === "" ? null : Number(form.weekday) }],
-    }));
-    setForm({ name: "", color: SHOW_PALETTE[0], weekday: "" });
-    setShowForm(false);
-  };
-
-  const startEdit = (s) => { setEditingId(s.id); setEditForm({ name: s.name, color: s.color, weekday: s.weekday ?? "" }); };
-  const saveEdit = (id) => {
-    if (!editForm.name.trim()) return;
-    update((d) => ({
-      ...d,
-      shows: d.shows.map((s) => (s.id === id ? { ...s, name: editForm.name.trim(), color: editForm.color, weekday: editForm.weekday === "" ? null : Number(editForm.weekday) } : s)),
-    }));
-    setEditingId(null);
-  };
-  const removeShow = (id) => {
-    if (!window.confirm("¿Eliminar este show? Los luchadores, títulos y eventos que lo usaban se quedarán sin marca asignada.")) return;
-    update((d) => ({ ...d, shows: d.shows.filter((s) => s.id !== id) }));
-  };
-
-  const ColorSwatches = ({ value, onPick }) => (
-    <div className="flex gap-2 flex-wrap">
-      {SHOW_PALETTE.map((color) => (
-        <button
-          type="button"
-          key={color}
-          onClick={() => onPick(color)}
-          className="w-7 h-7 rounded-full"
-          style={{ background: color, border: value === color ? `2px solid ${C.text}` : "2px solid transparent" }}
-        />
-      ))}
-    </div>
-  );
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="rounded-xl p-4" style={{ background: C.surface, border: `1px solid ${C.gold}55` }}>
-        <h3 className="f-body text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: C.textMuted }}>
-          <Repeat size={13} style={{ color: C.gold }} /> Próximo show
-        </h3>
-        {nextShow ? (
-          <>
-            <div className="flex items-center gap-2 mb-3">
-              <ShowDot color={nextShow.color} />
-              <p className="f-display text-lg" style={{ color: C.text }}>{nextShow.name}</p>
-              <span className="f-body text-xs" style={{ color: C.textMuted }}>{WEEKDAY_NAMES[nextShow.weekday]}</span>
-            </div>
-            <PrimaryBtn onClick={advanceShow}><SkipForward size={15} /> Show emitido: pasar al siguiente</PrimaryBtn>
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {order.map((s, i) => (
-                <span
-                  key={s.id}
-                  className="f-body text-[10px] font-semibold px-2 py-1 rounded-full"
-                  style={{
-                    background: i === pointer ? C.gold : C.bg,
-                    color: i === pointer ? "#181215" : C.textMuted,
-                    border: `1px solid ${i === pointer ? C.gold : C.line}`,
-                  }}
-                >
-                  {s.name} · {WEEKDAY_NAMES[s.weekday].slice(0, 3)}
-                </span>
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className="f-body text-xs" style={{ color: C.textFaint }}>
-            Asigna un día de la semana a algún show de la lista para activar el calendario.
-          </p>
-        )}
-      </div>
-
-      <PrimaryBtn onClick={() => setShowForm((v) => !v)}>
-        {showForm ? <X size={15} /> : <Plus size={15} />}
-        {showForm ? "Cancelar" : "Nuevo show"}
-      </PrimaryBtn>
-
-      {showForm && (
-        <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-          <Field label="Nombre">
-            <TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ej. Main Event" />
-          </Field>
-          <Field label="Color">
-            <ColorSwatches value={form.color} onPick={(c) => setForm({ ...form, color: c })} />
-          </Field>
-          <Field label="Día de la semana (opcional)">
-            <Select value={form.weekday} onChange={(e) => setForm({ ...form, weekday: e.target.value })}>
-              <option value="">Sin asignar</option>
-              {WEEKDAY_NAMES.map((w, i) => <option key={i} value={i}>{w}</option>)}
-            </Select>
-          </Field>
-          <PrimaryBtn onClick={addShow}>Guardar show</PrimaryBtn>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-2">
-        {data.shows.map((s) =>
-          editingId === s.id ? (
-            <div key={s.id} className="rounded-lg p-3 flex flex-col gap-2" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-              <TextInput value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
-              <ColorSwatches value={editForm.color} onPick={(c) => setEditForm({ ...editForm, color: c })} />
-              <Select value={editForm.weekday} onChange={(e) => setEditForm({ ...editForm, weekday: e.target.value })}>
-                <option value="">Sin asignar</option>
-                {WEEKDAY_NAMES.map((w, i) => <option key={i} value={i}>{w}</option>)}
-              </Select>
-              <div className="flex gap-2">
-                <PrimaryBtn onClick={() => saveEdit(s.id)} style={{ flex: 1 }}>Guardar</PrimaryBtn>
-                <GhostBtn onClick={() => setEditingId(null)}>Cancelar</GhostBtn>
-              </div>
-            </div>
-          ) : (
-            <div key={s.id} className="rounded-lg p-3 flex items-center justify-between" style={{ background: C.surface, border: `1px solid ${C.line}` }}>
-              <div className="flex items-center gap-2 min-w-0">
-                <ShowDot color={s.color} />
-                <div className="min-w-0">
-                  <p className="f-body text-sm font-semibold truncate" style={{ color: C.text }}>{s.name}</p>
-                  <p className="f-body text-[11px]" style={{ color: C.textFaint }}>
-                    {s.weekday !== null && s.weekday !== undefined ? WEEKDAY_NAMES[s.weekday] : "Sin día asignado"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <IconBtn onClick={() => startEdit(s)} title="Editar"><Pencil size={14} /></IconBtn>
-                <IconBtn onClick={() => removeShow(s.id)} danger title="Eliminar"><Trash2 size={14} /></IconBtn>
-              </div>
-            </div>
-          )
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// App principal
-// ---------------------------------------------------------------------------
-const TABS = [
-  { id: "dashboard", label: "Resumen", icon: LayoutGrid },
-  { id: "titles", label: "Títulos", icon: Trophy },
-  { id: "roster", label: "Roster", icon: Users },
-  { id: "rivalries", label: "Rivalidades", icon: Flame },
-  { id: "events", label: "Cartelera", icon: CalendarDays },
-  { id: "shows", label: "Shows", icon: Repeat },
-];
-
-export default function UniverseModeTracker() {
-  const [data, setData] = useState(DEFAULT_DATA);
-  const [tab, setTab] = useState("dashboard");
-  const [loading, setLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState("saved"); // saving | saved | error
-  const fileInputRef = useRef(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const result = await window.storage.get("universe-data", false);
-        if (result && result.value) {
-          const parsed = JSON.parse(result.value);
-          setData({ ...DEFAULT_DATA, ...parsed, shows: parsed.shows?.length ? parsed.shows : SHOW_DEFAULTS });
-        }
-      } catch (err) {
-        // no hay datos guardados todavía — se usan los valores por defecto
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  const persist = (next) => {
-    setSaveStatus("saving");
-    window.storage.set("universe-data", JSON.stringify(next), false)
-      .then((res) => setSaveStatus(res ? "saved" : "error"))
-      .catch(() => setSaveStatus("error"));
-  };
-
-  const update = (fn) => {
-    setData((prev) => {
-      const next = fn(prev);
-      persist(next);
-      return next;
-    });
-  };
-
-  const saveNow = () => persist(data);
-
-  const resetAll = async () => {
-    if (!window.confirm("¿Borrar todos los datos de tu Universe Mode? Esta acción no se puede deshacer.")) return;
-    setData(DEFAULT_DATA);
-    persist(DEFAULT_DATA);
-  };
-
-  const exportBackup = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `universe-mode-backup-${data.currentDate.year}-${data.currentDate.month}-${data.currentDate.week}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
-
-  const importBackup = (file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsed = JSON.parse(e.target.result);
-        const merged = { ...DEFAULT_DATA, ...parsed, shows: parsed.shows?.length ? parsed.shows : SHOW_DEFAULTS };
-        setData(merged);
-        persist(merged);
-      } catch (err) {
-        window.alert("Ese archivo no es una copia de seguridad válida.");
-      }
+    <div id="list-roster"></div>
+  </div>
+
+  <!-- TAB 2: CAMPEONES -->
+  <div id="tab-titles" class="tab-content">
+    <form id="form-titles">
+      <input type="text" id="title-name" placeholder="Nombre del Título (ej. WWE Championship)" required>
+      <input type="text" id="title-holder" placeholder="Campeón Actual" required>
+      <button type="submit" class="btn-add">Añadir Campeón</button>
+    </form>
+    <div id="list-titles"></div>
+  </div>
+
+  <!-- TAB 3: SHOWS / MATCH CARDS -->
+  <div id="tab-matches" class="tab-content">
+    <form id="form-matches">
+      <input type="text" id="match-show" placeholder="Show / PPV (ej. SummerSlam)" required>
+      <input type="text" id="match-card" placeholder="Combate (ej. Cena vs. Orton)" required>
+      <input type="text" id="match-winner" placeholder="Ganador / Resultado">
+      <button type="submit" class="btn-add">Guardar Combate</button>
+    </form>
+    <div id="list-matches"></div>
+  </div>
+
+  <nav>
+    <button class="active" onclick="switchTab('roster', this)">Roster</button>
+    <button onclick="switchTab('titles', this)">Títulos</button>
+    <button onclick="switchTab('matches', this)">Cartelera</button>
+  </nav>
+
+  <script>
+    // Cargar datos guardados
+    let store = JSON.parse(localStorage.getItem('universe_data')) || { roster: [], titles: [], matches: [] };
+
+    // Estado de filtros activos
+    let filters = {
+      brand: 'ALL',
+      gender: 'ALL',
+      division: 'ALL'
     };
-    reader.readAsText(file);
-  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg }}>
-        <GlobalStyle />
-        <Loader2 className="animate-spin" size={22} style={{ color: C.gold }} />
-      </div>
-    );
-  }
+    function saveData() {
+      localStorage.setItem('universe_data', JSON.stringify(store));
+      render();
+    }
 
-  const statusIcon = { saving: Loader2, saved: Check, error: AlertTriangle }[saveStatus];
-  const statusColor = { saving: C.textFaint, saved: C.green, error: C.red }[saveStatus];
-  const statusLabel = { saving: "Guardando…", saved: "Guardado", error: "Error al guardar · toca para reintentar" }[saveStatus];
-  const StatusIcon = statusIcon;
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      btn.classList.add('active');
+    }
 
-  return (
-    <div className="min-h-screen f-body" style={{ background: C.bg }}>
-      <GlobalStyle />
+    function setFilter(type, value, btn) {
+      filters[type] = value;
+      
+      // Actualizar botón activo en el grupo correspondiente
+      const group = btn.parentElement;
+      group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      render();
+    }
 
-      <header className="sticky top-0 z-10" style={{ background: C.bg, borderBottom: `1px solid ${C.line}` }}>
-        <div className="px-4 pt-5 pb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-md flex items-center justify-center champ-glow"
-              style={{ background: `linear-gradient(135deg, ${C.goldBright}, ${C.gold})` }}
-            >
-              <Trophy size={16} style={{ color: "#1a1206" }} />
+    // Handlers para añadir items
+    document.getElementById('form-roster').onsubmit = (e) => {
+      e.preventDefault();
+      store.roster.push({
+        id: Date.now(),
+        name: document.getElementById('roster-name').value,
+        brand: document.getElementById('roster-brand').value,
+        alignment: document.getElementById('roster-alignment').value,
+        gender: document.getElementById('roster-gender').value || 'Men',
+        division: document.getElementById('roster-division').value || 'Midcarder'
+      });
+      e.target.reset();
+      saveData();
+    };
+
+    document.getElementById('form-titles').onsubmit = (e) => {
+      e.preventDefault();
+      store.titles.push({
+        id: Date.now(),
+        title: document.getElementById('title-name').value,
+        holder: document.getElementById('title-holder').value
+      });
+      e.target.reset();
+      saveData();
+    };
+
+    document.getElementById('form-matches').onsubmit = (e) => {
+      e.preventDefault();
+      store.matches.push({
+        id: Date.now(),
+        show: document.getElementById('match-show').value,
+        card: document.getElementById('match-card').value,
+        winner: document.getElementById('match-winner').value || 'Pendiente'
+      });
+      e.target.reset();
+      saveData();
+    };
+
+    function deleteItem(type, id) {
+      store[type] = store[type].filter(item => item.id !== id);
+      saveData();
+    }
+
+    function render() {
+      // 1. Ordenar roster alfabéticamente
+      let sortedRoster = [...store.roster].sort((a, b) => a.name.localeCompare(b.name));
+
+      // 2. Aplicar filtros simultáneos (Marca, Género, División)
+      if (filters.brand !== 'ALL') {
+        sortedRoster = sortedRoster.filter(r => r.brand === filters.brand);
+      }
+      if (filters.gender !== 'ALL') {
+        sortedRoster = sortedRoster.filter(r => (r.gender || 'Men') === filters.gender);
+      }
+      if (filters.division !== 'ALL') {
+        sortedRoster = sortedRoster.filter(r => (r.division || 'Midcarder') === filters.division);
+      }
+
+      // 3. Render Roster
+      document.getElementById('list-roster').innerHTML = sortedRoster.length > 0 
+        ? sortedRoster.map(r => `
+            <div class="card">
+              <div class="card-info">
+                <span class="card-title">${r.name}</span>
+                <div class="tags-container">
+                  <span class="tag tag-${r.brand.toLowerCase()}">${r.brand}</span>
+                  <span class="tag tag-${r.alignment.toLowerCase()}">${r.alignment}</span>
+                  <span class="tag tag-gender">${r.gender || 'Men'}</span>
+                  <span class="tag tag-division">${r.division || 'Midcarder'}</span>
+                </div>
+              </div>
+              <button class="btn-del" onclick="deleteItem('roster', ${r.id})">✕</button>
             </div>
-            <div>
-              <h1 className="f-display text-xl leading-none" style={{ color: C.text }}>UNIVERSE MODE</h1>
-              <p className="f-body text-[10px] uppercase tracking-widest" style={{ color: C.textFaint }}>Tu WWE 2K26, controlado</p>
-            </div>
+          `).join('')
+        : `<p style="color: var(--text-dim); text-align: center; margin-top: 20px; font-size: 0.9rem;">No hay Superstars que cumplan estos filtros.</p>`;
+
+      // Render Titles
+      document.getElementById('list-titles').innerHTML = store.titles.map(t => `
+        <div class="card">
+          <div class="card-info">
+            <span class="card-title">${t.title}</span>
+            <span class="card-sub">🏆 ${t.holder}</span>
           </div>
-          <button
-            onClick={saveStatus === "error" ? saveNow : undefined}
-            className="flex items-center gap-1 f-body text-[10px] font-semibold px-2 py-1 rounded-full flex-shrink-0"
-            style={{ color: statusColor, border: `1px solid ${statusColor}55` }}
-            title={statusLabel}
-          >
-            <StatusIcon size={11} className={saveStatus === "saving" ? "save-pulse" : ""} />
-            <span className="hidden xs:inline">{saveStatus === "saving" ? "Guardando" : saveStatus === "saved" ? "Guardado" : "Reintentar"}</span>
-          </button>
+          <button class="btn-del" onclick="deleteItem('titles', ${t.id})">✕</button>
         </div>
-        <nav className="flex overflow-x-auto scrollbar-none px-2 gap-1">
-          {TABS.map((t) => {
-            const active = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className="flex flex-col items-center gap-1 px-3 py-2 flex-shrink-0 relative"
-              >
-                <t.icon size={16} style={{ color: active ? C.gold : C.textFaint }} />
-                <span className="f-body text-[10px] font-semibold" style={{ color: active ? C.gold : C.textFaint }}>{t.label}</span>
-                {active && <span className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full" style={{ background: C.gold }} />}
-              </button>
-            );
-          })}
-        </nav>
-      </header>
+      `).join('');
 
-      <main className="px-4 py-5 max-w-lg mx-auto">
-        {tab === "dashboard" && <Dashboard data={data} update={update} setTab={setTab} />}
-        {tab === "titles" && <ChampionshipsTab data={data} update={update} />}
-        {tab === "roster" && <RosterTab data={data} update={update} />}
-        {tab === "rivalries" && <RivalriesTab data={data} update={update} />}
-        {tab === "events" && <EventsTab data={data} update={update} />}
-        {tab === "shows" && <ShowsTab data={data} update={update} />}
-
-        <div className="mt-8 pt-4 flex flex-col gap-2" style={{ borderTop: `1px solid ${C.line}` }}>
-          <p className="f-body text-[10px] uppercase tracking-wider text-center" style={{ color: C.textFaint }}>Copia de seguridad</p>
-          <div className="flex gap-2">
-            <GhostBtn onClick={exportBackup}><Download size={13} /> Descargar copia</GhostBtn>
-            <GhostBtn onClick={() => fileInputRef.current?.click()}><Upload size={13} /> Restaurar copia</GhostBtn>
+      // Render Matches
+      document.getElementById('list-matches').innerHTML = store.matches.map(m => `
+        <div class="card">
+          <div class="card-info">
+            <span class="card-title">${m.card}</span>
+            <span class="card-sub">📌 ${m.show} | 👑 Ganador: ${m.winner}</span>
           </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json"
-            className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) importBackup(f); e.target.value = ""; }}
-          />
-
-          <button
-            onClick={resetAll}
-            className="w-full flex items-center justify-center gap-1.5 f-body text-xs mt-4 py-2"
-            style={{ color: C.textFaint }}
-          >
-            <RotateCcw size={12} /> Borrar todos los datos
-          </button>
+          <button class="btn-del" onclick="deleteItem('matches', ${m.id})">✕</button>
         </div>
-      </main>
-    </div>
-  );
-}
+      `).join('');
+    }
+
+    render();
+  </script>
+</body>
+</html>
