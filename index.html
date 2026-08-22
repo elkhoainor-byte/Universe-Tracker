@@ -183,14 +183,13 @@
     .edit-tab-btn { flex: 1; padding: 8px; background: #2a2a2a; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
     .edit-tab-btn.active { background: var(--accent); border-color: var(--accent); }
 
-    /* ===== CARTELERA DE HOY - NUEVO SISTEMA ===== */
+    /* ===== CARTELERA DE HOY ===== */
     .card-slot {
       background: #1a1a1a;
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 14px;
       margin-bottom: 12px;
-      transition: border-color 0.2s;
     }
     .card-slot.locked { opacity: 0.8; border-color: #555; }
     .card-slot-header {
@@ -214,9 +213,7 @@
       font-weight: bold;
       font-size: 0.95rem;
       cursor: pointer;
-      transition: transform 0.1s;
     }
-    .type-btn:active { transform: scale(0.97); }
     .type-btn.combate { background: var(--accent); color: #fff; }
     .type-btn.promo { background: #455a64; color: #fff; }
 
@@ -257,6 +254,20 @@
       background: #1a1a1a;
       color: #fff;
       font-size: 0.82rem;
+    }
+
+    .stages-box {
+      background: #252525;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .stages-box label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      display: block;
+      margin-bottom: 4px;
     }
 
     .slot-summary {
@@ -621,7 +632,14 @@
   </nav>
 
   <script>
-    // ========== MATCH TYPE DEFINITIONS ==========
+    // ========== MATCH TYPE DEFINITIONS (ACTUALIZADO) ==========
+    const STAGES_OF_HELL_OPTIONS = [
+      "Normal", "Extreme Rules", "Inferno", "I Quit", "Contenedor",
+      "Hell in a Cell", "Steel Cage", "Tables", "Ladder", "TLC",
+      "Sumisión", "Ambulancia", "Ataúd", "Falls Count Anywhere",
+      "Last Man Standing", "No Holds Barred"
+    ];
+
     const MATCH_TYPES = {
       "Normal": {
         "1 contra 1": 2,
@@ -655,12 +673,30 @@
       "Inferno": {
         "1 contra 1": 2
       },
-      // El resto de tipos no tienen sub-opciones todavía → se tratan como 2 participantes por defecto
-      "3 Stages of Hell": { "1 contra 1": 2 },
-      "I Quit": { "1 contra 1": 2 },
-      "Contenedor": { "1 contra 1": 2 },
-      "Peleas": { "1 contra 1": 2 },
-      "Royal Rumble": { "30 participantes": 30 },
+      "3 Stages of Hell": {
+        // Caso especial: se maneja con stages[]
+        "special": true
+      },
+      "I Quit": {
+        "1 contra 1": 2
+      },
+      "Contenedor": {
+        "1 contra 1": 2
+      },
+      "Peleas": {
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "2 contra 2": 4,
+        "1 contra 2 Handicap": 3,
+        "6-Way": 6,
+        "8-Way": 8
+      },
+      "Royal Rumble": {
+        "10 participantes": 10,
+        "20 participantes": 20,
+        "30 participantes": 30
+      },
       "Árbitro especial invitado": { "1 contra 1": 2 },
       "Underground": { "1 contra 1": 2 },
       "Reglas de Bloodline": { "1 contra 1": 2 },
@@ -893,7 +929,7 @@
       saveData();
     }
 
-    // ========== PLE / SHOW MODALS (igual que antes) ==========
+    // ========== PLE / SHOW MODALS ==========
     function openCalendarEditModal(targetDay = 1, initialMode = 'ple') {
       switchCalendarEditMode(initialMode);
       document.getElementById('cal-ple-day').value = targetDay;
@@ -1172,7 +1208,7 @@
       saveData();
     };
 
-    // ========== CARTELERA DE HOY - NUEVO SISTEMA ==========
+    // ========== CARTELERA DE HOY ==========
     function getCurrentEvent() {
       const startMonth = store.calendar.startMonth || 0;
       const currentMonthIndex = store.calendar.currentMonthIndex || 0;
@@ -1196,7 +1232,6 @@
       const dayOfWeek = ((day - 1) % 7) + 1;
       const show = store.shows.find(s => parseInt(s.day) === dayOfWeek);
       if (show) {
-        // Calcular el número de show
         let count = 0;
         for (let m = 0; m < currentMonthIndex; m++) {
           for (let d = 1; d <= 28; d++) {
@@ -1242,9 +1277,10 @@
           showNumber: event.showNumber,
           slots: Array.from({ length: needed }, (_, i) => ({
             id: Date.now() + i,
-            type: null,          // null | 'combate' | 'promo'
+            type: null,
             matchType: null,
             subType: null,
+            stages: [null, null, null],   // para 3 Stages of Hell
             participants: [],
             winner: '',
             titleId: null
@@ -1277,7 +1313,6 @@
 
       container.innerHTML = store.todayCard.slots.map((slot, idx) => {
         if (!slot.type) {
-          // Estado inicial vacío
           return `
             <div class="card-slot ${isLocked ? 'locked' : ''}">
               <div class="card-slot-header">
@@ -1321,9 +1356,52 @@
               ${MATCH_TYPE_LIST.map(t => `<option value="${t}">${t}</option>`).join('')}
             </select>
           `;
+        } else if (slot.matchType === "3 Stages of Hell") {
+          // CASO ESPECIAL: 3 Stages of Hell
+          html += `<div style="font-size:0.8rem; color:var(--gold-end); margin-bottom:8px; font-weight:bold;">3 Stages of Hell</div>`;
+          
+          for (let s = 0; s < 3; s++) {
+            html += `
+              <div class="stages-box">
+                <label>Combate ${s + 1}:</label>
+                <select class="slot-select" style="margin-bottom:0;" onchange="setStage(${idx}, ${s}, this.value)" ${isLocked ? 'disabled' : ''}>
+                  <option value="">-- Elige estipulación --</option>
+                  ${STAGES_OF_HELL_OPTIONS.map(opt => `<option value="${opt}" ${slot.stages && slot.stages[s] === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>
+              </div>
+            `;
+          }
+
+          // Siempre 2 participantes
+          if (!slot.participants || slot.participants.length !== 2) {
+            slot.participants = [null, null];
+          }
+
+          html += `
+            <div class="participants-grid">
+              ${slot.participants.map((p, pIdx) => `
+                <div class="participant-box">
+                  <label>Luchador ${pIdx + 1}</label>
+                  <select onchange="setParticipant(${idx}, ${pIdx}, this.value)" ${isLocked ? 'disabled' : ''}>
+                    <option value="">-- Elegir --</option>
+                    ${available.map(w => `<option value="${w.id}" ${p == w.id ? 'selected' : ''}>${w.name}</option>`).join('')}
+                  </select>
+                </div>
+              `).join('')}
+            </div>
+          `;
+
+          const names = slot.participants.map(id => {
+            const w = store.roster.find(r => r.id == id);
+            return w ? w.name : '?';
+          });
+          const stagesText = (slot.stages || []).filter(Boolean).join(' → ');
+          html += `<div class="slot-summary">${names.join(' vs ')}${stagesText ? '<br>' + stagesText : ''}</div>`;
+
         } else {
+          // Resto de tipos normales
           const subTypes = MATCH_TYPES[slot.matchType] || {};
-          const subKeys = Object.keys(subTypes);
+          const subKeys = Object.keys(subTypes).filter(k => k !== 'special');
 
           if (subKeys.length > 1 && !slot.subType) {
             html += `
@@ -1334,11 +1412,9 @@
               </select>
             `;
           } else {
-            // Ya tenemos matchType + subType (o solo un sub-tipo)
             const finalSub = slot.subType || subKeys[0];
             const numParticipants = (MATCH_TYPES[slot.matchType] && MATCH_TYPES[slot.matchType][finalSub]) || 2;
 
-            // Asegurar que participants tenga el tamaño correcto
             if (!slot.participants || slot.participants.length !== numParticipants) {
               slot.participants = Array(numParticipants).fill(null);
             }
@@ -1360,7 +1436,6 @@
               </div>
             `;
 
-            // Resumen legible
             const names = slot.participants.map(id => {
               const w = store.roster.find(r => r.id == id);
               return w ? w.name : '?';
@@ -1382,6 +1457,7 @@
       store.todayCard.slots[idx].type = type;
       store.todayCard.slots[idx].matchType = null;
       store.todayCard.slots[idx].subType = null;
+      store.todayCard.slots[idx].stages = [null, null, null];
       store.todayCard.slots[idx].participants = [];
       saveData();
       renderTodayCard();
@@ -1391,6 +1467,7 @@
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx].matchType = matchType;
       store.todayCard.slots[idx].subType = null;
+      store.todayCard.slots[idx].stages = [null, null, null];
       store.todayCard.slots[idx].participants = [];
       saveData();
       renderTodayCard();
@@ -1401,6 +1478,14 @@
       store.todayCard.slots[idx].subType = subType;
       const num = (MATCH_TYPES[store.todayCard.slots[idx].matchType] && MATCH_TYPES[store.todayCard.slots[idx].matchType][subType]) || 2;
       store.todayCard.slots[idx].participants = Array(num).fill(null);
+      saveData();
+      renderTodayCard();
+    }
+
+    function setStage(idx, stageIdx, value) {
+      if (store.todayCard.locked) return;
+      if (!store.todayCard.slots[idx].stages) store.todayCard.slots[idx].stages = [null, null, null];
+      store.todayCard.slots[idx].stages[stageIdx] = value || null;
       saveData();
       renderTodayCard();
     }
@@ -1419,6 +1504,7 @@
         type: null,
         matchType: null,
         subType: null,
+        stages: [null, null, null],
         participants: [],
         winner: '',
         titleId: null
@@ -1448,8 +1534,14 @@
               return w ? w.name : '?';
             }).filter(n => n !== '?');
 
-            const sub = slot.subType || '';
-            const cardText = `${names.join(' vs ')} (${slot.matchType}${sub ? ' · ' + sub : ''})`;
+            let cardText = '';
+            if (slot.matchType === "3 Stages of Hell") {
+              const stages = (slot.stages || []).filter(Boolean).join(' → ');
+              cardText = `${names.join(' vs ')} (3 Stages of Hell: ${stages})`;
+            } else {
+              const sub = slot.subType || '';
+              cardText = `${names.join(' vs ')} (${slot.matchType}${sub ? ' · ' + sub : ''})`;
+            }
 
             store.matches.push({
               id: Date.now() + Math.random(),
