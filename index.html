@@ -88,20 +88,21 @@
       border: 2px solid transparent; 
       display: flex; 
       justify-content: space-between; 
-      align-items: stretch;
+      align-items: center;
       cursor: pointer; 
       overflow: hidden;
       border-image-slice: 1;
+      position: relative;
     }
 
-    /* TAMAÑO UNIFORME PARA CAJAS DEL ROSTER (2 FILAS DE FICHAS CONSERVADAS) */
+    /* TAMAÑO UNIFORME PARA CAJAS DEL ROSTER */
     #list-roster .card {
       height: 110px;
       min-height: 110px;
       max-height: 110px;
     }
 
-    /* BORDES SEGÚN MARCA (Izquierda a Derecha / Color a Negro) */
+    /* BORDES SEGÚN MARCA */
     .card-brand-raw { border-image: linear-gradient(to right, var(--brand-raw), #000000) 1; }
     .card-brand-smackdown { border-image: linear-gradient(to right, var(--brand-smackdown), #000000) 1; }
     .card-brand-nxt { border-image: linear-gradient(to right, var(--brand-nxt), #000000) 1; }
@@ -143,7 +144,7 @@
       flex-shrink: 0; 
     }
 
-    .card-info { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; justify-content: center; overflow: hidden; height: 100%; }
+    .card-info { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; justify-content: center; overflow: hidden; height: 100%; flex: 1; }
     .card-title { font-weight: bold; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .card-sub { font-size: 0.8rem; color: var(--text-dim); }
     .tags-container { display: flex; flex-wrap: wrap; gap: 4px; max-height: 68px; overflow: hidden; }
@@ -162,6 +163,23 @@
     .tag-division { background: #455a64; color: #fff; }
     .tag-team { background: #ff9800; color: #000; font-weight: bold; }
     .tag-champ { background: #ffd700; color: #000; font-weight: bold; }
+
+    /* IMAGEN DEL TÍTULO EN LA FICHA */
+    .card-titles-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      padding-left: 6px;
+      flex-shrink: 0;
+    }
+
+    .title-badge-img {
+      max-height: 60px;
+      max-width: 70px;
+      object-fit: contain;
+      filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));
+    }
 
     .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; align-self: center; }
     .btn-del:hover { color: var(--accent); }
@@ -207,6 +225,54 @@
     .match-item.win { border-left-color: #2e7d32; }
     .match-item.loss { border-left-color: #c62828; }
     .match-item.draw { border-left-color: #d4a017; }
+
+    /* ESTILOS DE POPUP EMERGENTE PERSONALIZADO */
+    .confirm-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .confirm-modal-overlay.active { display: flex; }
+    .confirm-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
+    .confirm-text { font-size: 1rem; color: #fff; line-height: 1.4; }
+    .confirm-actions { display: flex; justify-content: center; gap: 10px; }
+    .btn-confirm-accept {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      flex: 1;
+    }
+    .btn-confirm-cancel {
+      background: #444;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      flex: 1;
+    }
   </style>
 </head>
 <body>
@@ -249,6 +315,7 @@
     <form id="form-titles">
       <input type="text" id="title-name" placeholder="Nombre del Título (ej. WWE Championship)" autocapitalize="words" required>
       <input type="text" id="title-holder" placeholder="Campeón Actual" autocapitalize="words" required>
+      <input type="url" id="title-image" placeholder="URL de la Imagen del Título (.png, .jpg...)">
       <button type="submit" class="btn-add">Añadir Campeón</button>
     </form>
     <div id="list-titles"></div>
@@ -365,6 +432,17 @@
     </div>
   </div>
 
+  <!-- POPUP PERSONALIZADO DE CONFIRMACIÓN -->
+  <div id="modal-confirm" class="confirm-modal-overlay">
+    <div class="confirm-box">
+      <div class="confirm-text" id="confirm-modal-text">¿Seguro que quieres realizar esta acción?</div>
+      <div class="confirm-actions">
+        <button class="btn-confirm-accept" id="btn-confirm-accept">Aceptar</button>
+        <button class="btn-confirm-cancel" onclick="closeConfirmModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <nav>
     <button class="active" onclick="switchTab('roster', this)">Roster</button>
     <button onclick="switchTab('teams', this)">Tag Teams</button>
@@ -392,6 +470,7 @@
     };
 
     let activeWrestlerId = null;
+    let confirmAction = null;
 
     function handleImgError(img) {
       img.onerror = null;
@@ -585,10 +664,12 @@
 
     document.getElementById('form-titles').onsubmit = (e) => {
       e.preventDefault();
+      const rawImage = document.getElementById('title-image').value;
       store.titles.push({
         id: Date.now(),
         title: document.getElementById('title-name').value.trim(),
-        holder: document.getElementById('title-holder').value.trim()
+        holder: document.getElementById('title-holder').value.trim(),
+        imageUrl: cleanImageUrl(rawImage)
       });
       e.target.reset();
       saveData();
@@ -617,14 +698,31 @@
       saveData();
     }
 
+    /* SISTEMA DE CONFIRMACIÓN CON POPUP */
+    function showConfirmModal(text, onAccept) {
+      document.getElementById('confirm-modal-text').innerText = text;
+      confirmAction = onAccept;
+      document.getElementById('modal-confirm').classList.add('active');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('modal-confirm').classList.remove('active');
+      confirmAction = null;
+    }
+
+    document.getElementById('btn-confirm-accept').onclick = () => {
+      if (confirmAction) confirmAction();
+      closeConfirmModal();
+    };
+
     function dismissCurrentWrestler() {
       if (activeWrestlerId === null) return;
       const wrestler = store.roster.find(r => r.id === activeWrestlerId);
       if (wrestler) {
-        if (confirm(`¿Estás seguro de que deseas despedir a ${wrestler.name}?`)) {
+        showConfirmModal(`¿Seguro que quieres despedir a ${wrestler.name}?`, () => {
           deleteItem('roster', activeWrestlerId);
           closeWrestlerModal();
-        }
+        });
       }
     }
 
@@ -869,9 +967,6 @@
       renderFilterSelect();
       renderActiveFiltersBar();
 
-      // Lista de campeones actuales para detectar si un luchador tiene un título
-      const championHolders = store.titles.map(t => t.holder.toLowerCase().trim());
-
       let sortedRoster = [...store.roster].sort((a, b) => cleanName(a.name).localeCompare(cleanName(b.name)));
 
       if (filters.brand !== 'ALL') {
@@ -890,15 +985,24 @@
             const rBrands = r.brands || (r.brand ? [r.brand] : ['RAW']);
             const mainBrand = rBrands[0] ? rBrands[0].toLowerCase() : 'default';
             
-            // Clase de marca para el borde (RAW, SmackDown, NXT, EVOLVE)
+            // Clase de marca para el borde
             const cardBrandClass = ['raw', 'smackdown', 'nxt', 'evolve'].includes(mainBrand) 
               ? `card-brand-${mainBrand}` 
               : 'card-brand-default';
 
-            // Detección de campeón
-            const isChamp = championHolders.some(holder => holder.length > 0 && r.name.toLowerCase().trim().includes(holder));
+            // Detección de títulos ganados por este luchador
+            const wrestlerTitles = store.titles.filter(t => t.holder.length > 0 && r.name.toLowerCase().trim().includes(t.holder.toLowerCase().trim()));
+            const isChamp = wrestlerTitles.length > 0;
             const champClass = isChamp ? 'is-champion' : '';
             const champTagHTML = isChamp ? `<span class="tag tag-champ">🏆 CAMPEÓN</span>` : '';
+
+            // Renderizado de imágenes de los títulos a la derecha de la caja
+            const titleImagesHTML = wrestlerTitles.map(t => {
+              if (t.imageUrl) {
+                return `<img src="${t.imageUrl}" class="title-badge-img" title="${t.title}" alt="${t.title}" referrerpolicy="no-referrer" onerror="this.style.display='none'">`;
+              }
+              return '';
+            }).join('');
 
             const brandTagsHTML = rBrands.map(b => {
               const bClass = ['raw', 'smackdown', 'nxt', 'evolve'].includes(b.toLowerCase()) ? `tag-${b.toLowerCase()}` : 'tag-brand-default';
@@ -925,6 +1029,7 @@
                     </div>
                   </div>
                 </div>
+                ${titleImagesHTML ? `<div class="card-titles-container">${titleImagesHTML}</div>` : ''}
               </div>
             `;
           }).join('')
@@ -960,15 +1065,24 @@
         `;
       }).join('');
 
-      document.getElementById('list-titles').innerHTML = store.titles.map(t => `
-        <div class="card" style="cursor:default; padding:12px;">
-          <div class="card-info">
-            <span class="card-title">${t.title}</span>
-            <span class="card-sub">🏆 ${t.holder}</span>
+      document.getElementById('list-titles').innerHTML = store.titles.map(t => {
+        const titleImgHTML = t.imageUrl 
+          ? `<img src="${t.imageUrl}" class="title-badge-img" style="max-height:50px; margin-right:10px;" alt="${t.title}" referrerpolicy="no-referrer" onerror="this.style.display='none'">`
+          : '';
+
+        return `
+          <div class="card" style="cursor:default; padding:12px;">
+            <div class="card-left">
+              ${titleImgHTML}
+              <div class="card-info">
+                <span class="card-title">${t.title}</span>
+                <span class="card-sub">🏆 Campeón: ${t.holder}</span>
+              </div>
+            </div>
+            <button class="btn-del" onclick="deleteItem('titles', ${t.id}, event)">✕</button>
           </div>
-          <button class="btn-del" onclick="deleteItem('titles', ${t.id}, event)">✕</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
 
       document.getElementById('list-matches').innerHTML = store.matches.map(m => `
         <div class="card" style="cursor:default; padding:12px;">
