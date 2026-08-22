@@ -330,6 +330,30 @@
       display: block;
       margin-bottom: 6px;
     }
+
+    .title-match-box {
+      margin-top: 10px;
+      padding: 10px;
+      background: #2a2a1a;
+      border: 1px solid var(--gold-end);
+      border-radius: 8px;
+    }
+    .title-match-box label {
+      font-size: 0.75rem;
+      color: var(--gold-end);
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      cursor: pointer;
+    }
+    .title-match-box input[type="checkbox"] {
+      accent-color: var(--gold-end);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -832,7 +856,6 @@
       const sub = (subType || '').toLowerCase();
       const type = (matchType || '').toLowerCase();
 
-      // Detectar formato de equipos
       if (sub.includes('2 contra 2') || sub.includes('2 vs 2')) {
         if (clean.length >= 4) return `${clean[0]} & ${clean[1]} vs ${clean[2]} & ${clean[3]}`;
       }
@@ -855,7 +878,6 @@
         return `${clean[0]} (+ ${clean[1]}, ${clean[2]}, ${clean[3]}) vs ${clean[4]} (+ ${clean[5]}, ${clean[6]}, ${clean[7]})`;
       }
 
-      // Multiway normal
       return clean.join(' vs ');
     }
 
@@ -1422,7 +1444,8 @@
             specialReferee: null,
             winner: '',
             matchId: null,
-            titleId: null
+            titleId: null,
+            isTitleMatch: false
           }))
         };
       }
@@ -1528,12 +1551,21 @@
             </div>
           `;
 
+          // Checkbox título
+          html += renderTitleMatchBox(slot, idx, isLocked);
+
           const names = slot.participants.map(id => {
             const w = store.roster.find(r => r.id == id);
             return w ? w.name : '?';
           });
           const stagesText = (slot.stages || []).filter(Boolean).join(' → ');
-          html += `<div class="slot-summary">${formatMatchSummary(names, slot.matchType, slot.subType)}${stagesText ? '<br>' + stagesText : ''}</div>`;
+          let summary = formatMatchSummary(names, slot.matchType, slot.subType);
+          if (stagesText) summary += '<br>' + stagesText;
+          if (slot.isTitleMatch && slot.titleId) {
+            const t = store.titles.find(tt => tt.id == slot.titleId);
+            if (t) summary += `<br><span style="color:var(--gold-end);">🏆 ${t.name}</span>`;
+          }
+          html += `<div class="slot-summary">${summary}</div>`;
 
         } else {
           const subTypes = MATCH_TYPES[slot.matchType] || {};
@@ -1572,7 +1604,7 @@
               </div>
             `;
 
-            // Árbitro Especial (solo para este tipo)
+            // Árbitro Especial
             if (slot.matchType === "Árbitro especial invitado") {
               html += `
                 <div class="participant-box" style="margin-top:8px; grid-column: 1 / -1;">
@@ -1585,6 +1617,9 @@
               `;
             }
 
+            // Checkbox título
+            html += renderTitleMatchBox(slot, idx, isLocked);
+
             const names = slot.participants.map(id => {
               const w = store.roster.find(r => r.id == id);
               return w ? w.name : '?';
@@ -1593,6 +1628,10 @@
             if (slot.matchType === "Árbitro especial invitado" && slot.specialReferee) {
               const ref = store.roster.find(r => r.id == slot.specialReferee);
               if (ref) summary += `<br><span style="color:var(--gold-end);">Árbitro Especial: ${ref.name}</span>`;
+            }
+            if (slot.isTitleMatch && slot.titleId) {
+              const t = store.titles.find(tt => tt.id == slot.titleId);
+              if (t) summary += `<br><span style="color:var(--gold-end);">🏆 ${t.name}</span>`;
             }
             html += `<div class="slot-summary">${summary}</div>`;
           }
@@ -1625,6 +1664,48 @@
       btnNext.style.display = isLocked ? 'block' : 'none';
     }
 
+    function renderTitleMatchBox(slot, idx, isLocked) {
+      const titlesOptions = store.titles.map(t => {
+        const champs = (t.champions || []).map(cId => {
+          const r = store.roster.find(ros => ros.id === cId);
+          return r ? r.name : '?';
+        }).join(' & ');
+        return `<option value="${t.id}" ${slot.titleId == t.id ? 'selected' : ''}>${t.name}${champs ? ' (' + champs + ')' : ''}</option>`;
+      }).join('');
+
+      return `
+        <div class="title-match-box">
+          <label>
+            <input type="checkbox" ${slot.isTitleMatch ? 'checked' : ''} onchange="toggleTitleMatch(${idx}, this.checked)" ${isLocked ? 'disabled' : ''}>
+            ¿Es por un título?
+          </label>
+          ${slot.isTitleMatch ? `
+            <select class="slot-select" style="margin-bottom:0;" onchange="setTitleForMatch(${idx}, this.value)" ${isLocked ? 'disabled' : ''}>
+              <option value="">-- Seleccionar título --</option>
+              ${titlesOptions}
+            </select>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function toggleTitleMatch(idx, checked) {
+      if (store.todayCard.locked) return;
+      store.todayCard.slots[idx].isTitleMatch = checked;
+      if (!checked) {
+        store.todayCard.slots[idx].titleId = null;
+      }
+      saveData();
+      renderTodayCard();
+    }
+
+    function setTitleForMatch(idx, titleId) {
+      if (store.todayCard.locked) return;
+      store.todayCard.slots[idx].titleId = titleId ? parseInt(titleId) : null;
+      saveData();
+      renderTodayCard();
+    }
+
     function setSlotType(idx, type) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx].type = type;
@@ -1635,6 +1716,8 @@
       store.todayCard.slots[idx].specialReferee = null;
       store.todayCard.slots[idx].winner = '';
       store.todayCard.slots[idx].matchId = null;
+      store.todayCard.slots[idx].titleId = null;
+      store.todayCard.slots[idx].isTitleMatch = false;
       saveData();
       renderTodayCard();
     }
@@ -1685,7 +1768,6 @@
     function setWinner(idx, winnerName) {
       store.todayCard.slots[idx].winner = winnerName || '';
       
-      // Actualizar también en el historial de matches
       const slot = store.todayCard.slots[idx];
       if (slot.matchId) {
         const match = store.matches.find(m => m.id === slot.matchId);
@@ -1709,7 +1791,8 @@
         specialReferee: null,
         winner: '',
         matchId: null,
-        titleId: null
+        titleId: null,
+        isTitleMatch: false
       };
       saveData();
       renderTodayCard();
@@ -1752,14 +1835,20 @@
               }
             }
 
+            const titleId = (slot.isTitleMatch && slot.titleId) ? slot.titleId : null;
+            if (titleId) {
+              const t = store.titles.find(tt => tt.id === titleId);
+              if (t) cardText += ` 🏆 ${t.name}`;
+            }
+
             const matchId = Date.now() + Math.random();
             store.matches.push({
               id: matchId,
               show: store.todayCard.eventName + (store.todayCard.showNumber ? ' #' + store.todayCard.showNumber : ''),
               card: cardText,
               winner: 'Pendiente',
-              titleId: null,
-              isDefense: false
+              titleId: titleId,
+              isDefense: !!titleId
             });
             slot.matchId = matchId;
             slot.winner = '';
