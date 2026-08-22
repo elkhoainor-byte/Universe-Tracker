@@ -21,7 +21,7 @@
     header { background: #000; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; letter-spacing: 1px; color: var(--accent); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
     
     nav { display: flex; justify-content: space-around; background: #1a1a1a; position: fixed; bottom: 0; width: 100%; border-top: 1px solid var(--border); z-index: 100; }
-    nav button { background: none; border: none; color: var(--text-dim); padding: 12px 0; width: 100%; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    nav button { background: none; border: none; color: var(--text-dim); padding: 12px 0; width: 100%; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
     nav button.active { color: var(--accent); border-top: 2px solid var(--accent); }
     
     .tab-content { display: none; padding: 15px; }
@@ -31,12 +31,10 @@
     input, select, button.btn-add { padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: #fff; font-size: 0.9rem; }
     button.btn-add { background: var(--accent); font-weight: bold; border: none; margin-top: 5px; cursor: pointer; }
 
-    /* Filtros Avanzados (Multicriterio) */
-    .filters-wrapper { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; background: var(--card-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
-    .filter-group { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
-    .filter-btn { background: #2a2a2a; color: var(--text-dim); border: 1px solid var(--border); padding: 5px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: bold; cursor: pointer; white-space: nowrap; }
-    .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
+    /* Filtros Avanzados mediante Desplegables */
+    .filters-wrapper { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
+    .filter-header { font-size: 0.8rem; font-weight: bold; color: var(--text-dim); text-transform: uppercase; margin-bottom: 2px; }
+    
     .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .card-info { display: flex; flex-direction: column; gap: 6px; }
     .card-title { font-weight: bold; font-size: 1rem; }
@@ -44,22 +42,25 @@
     .tags-container { display: flex; flex-wrap: wrap; gap: 4px; }
     .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: bold; text-transform: uppercase; }
     
-    /* Colores de Marcas */
+    /* Colores de Etiquetas */
     .tag-raw { background: #b20710; color: #fff; }
     .tag-smackdown { background: #0055b8; color: #fff; }
     .tag-nxt { background: #d4a017; color: #000; }
     .tag-evolve { background: #7b1fa2; color: #fff; }
     
-    /* Colores de Alineación */
     .tag-face { background: #2e7d32; color: #fff; }
     .tag-heel { background: #c62828; color: #fff; }
 
-    /* Colores de Género y Estatus */
     .tag-gender { background: #37474f; color: #eceff1; }
     .tag-division { background: #455a64; color: #fff; }
+    .tag-team { background: #ff9800; color: #000; font-weight: bold; }
 
     .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; }
     .btn-del:hover { color: var(--accent); }
+
+    /* Selección múltiple para Tag Teams */
+    .checkbox-list { max-height: 120px; overflow-y: auto; background: #2a2a2a; border: 1px solid var(--border); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
 
     /* Modales */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 200; overflow-y: auto; padding: 20px 15px 80px 15px; }
@@ -69,7 +70,6 @@
     .modal-title { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
     .modal-close { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; }
     
-    /* Stats Bar & H2H */
     .stats-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
     .stat-card { background: #2a2a2a; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
     .stat-val { font-size: 1.1rem; font-weight: bold; }
@@ -113,44 +113,53 @@
       <button type="submit" class="btn-add">Añadir a Roster</button>
     </form>
 
-    <!-- Filtros Simultáneos de Roster -->
+    <!-- Filtros por Pestañas Desplegables con Encabezados -->
     <div class="filters-wrapper">
-      <!-- Marca -->
-      <div class="filter-group" id="filter-brand-group">
-        <button class="filter-btn active" onclick="setFilter('brand', 'ALL', this)">Todas las Marcas</button>
-        <button class="filter-btn" onclick="setFilter('brand', 'RAW', this)">RAW</button>
-        <button class="filter-btn" onclick="setFilter('brand', 'SmackDown', this)">SmackDown</button>
-        <button class="filter-btn" onclick="setFilter('brand', 'NXT', this)">NXT</button>
-        <button class="filter-btn" onclick="setFilter('brand', 'EVOLVE', this)">EVOLVE</button>
-      </div>
-
-      <!-- Alineación (Heel/Face) -->
-      <div class="filter-group" id="filter-alignment-group">
-        <button class="filter-btn active" onclick="setFilter('alignment', 'ALL', this)">Todas las Alineaciones</button>
-        <button class="filter-btn" onclick="setFilter('alignment', 'Face', this)">Face</button>
-        <button class="filter-btn" onclick="setFilter('alignment', 'Heel', this)">Heel</button>
-      </div>
-
-      <!-- Género -->
-      <div class="filter-group" id="filter-gender-group">
-        <button class="filter-btn active" onclick="setFilter('gender', 'ALL', this)">Todos los Géneros</button>
-        <button class="filter-btn" onclick="setFilter('gender', 'Men', this)">Men</button>
-        <button class="filter-btn" onclick="setFilter('gender', 'Women', this)">Women</button>
-      </div>
-
-      <!-- División / Estatus -->
-      <div class="filter-group" id="filter-division-group">
-        <button class="filter-btn active" onclick="setFilter('division', 'ALL', this)">Todas las Divisiones</button>
-        <button class="filter-btn" onclick="setFilter('division', 'Main Eventer', this)">Main Eventer</button>
-        <button class="filter-btn" onclick="setFilter('division', 'Midcarder', this)">Midcarder</button>
-        <button class="filter-btn" onclick="setFilter('division', 'Tag Team', this)">Tag Team</button>
-      </div>
+      <span class="filter-header">🔍 Filtrar Roster</span>
+      <select id="filter-select-all" onchange="onFilterChange(this)">
+        <optgroup label="Marca">
+          <option value="brand:ALL">Marca: Todas</option>
+          <option value="brand:RAW">Marca: RAW</option>
+          <option value="brand:SmackDown">Marca: SmackDown</option>
+          <option value="brand:NXT">Marca: NXT</option>
+          <option value="brand:EVOLVE">Marca: EVOLVE</option>
+        </optgroup>
+        <optgroup label="Alineación">
+          <option value="alignment:ALL">Alineación: Todas</option>
+          <option value="alignment:Face">Alineación: Face</option>
+          <option value="alignment:Heel">Alineación: Heel</option>
+        </optgroup>
+        <optgroup label="Género">
+          <option value="gender:ALL">Género: Todos</option>
+          <option value="gender:Men">Género: Men</option>
+          <option value="gender:Women">Género: Women</option>
+        </optgroup>
+        <optgroup label="División">
+          <option value="division:ALL">División: Todas</option>
+          <option value="division:Main Eventer">División: Main Eventer</option>
+          <option value="division:Midcarder">División: Midcarder</option>
+          <option value="division:Tag Team">División: Tag Team</option>
+        </optgroup>
+      </select>
     </div>
 
     <div id="list-roster"></div>
   </div>
 
-  <!-- TAB 2: CAMPEONES -->
+  <!-- TAB 2: TAG TEAMS -->
+  <div id="tab-teams" class="tab-content">
+    <form id="form-teams">
+      <input type="text" id="team-name" placeholder="Nombre del Tag Team / Ficción" required>
+      <label style="font-size:0.75rem; color:var(--text-dim);">SELECCIONA MIEMBROS DEL ROSTER:</label>
+      <div class="checkbox-list" id="team-members-select">
+        <!-- Generado dinámicamente -->
+      </div>
+      <button type="submit" class="btn-add">Crear Tag Team</button>
+    </form>
+    <div id="list-teams"></div>
+  </div>
+
+  <!-- TAB 3: CAMPEONES -->
   <div id="tab-titles" class="tab-content">
     <form id="form-titles">
       <input type="text" id="title-name" placeholder="Nombre del Título (ej. WWE Championship)" required>
@@ -160,7 +169,7 @@
     <div id="list-titles"></div>
   </div>
 
-  <!-- TAB 3: SHOWS / MATCH CARDS -->
+  <!-- TAB 4: SHOWS / MATCH CARDS -->
   <div id="tab-matches" class="tab-content">
     <form id="form-matches">
       <input type="text" id="match-show" placeholder="Show / PPV (ej. SummerSlam)" required>
@@ -201,6 +210,10 @@
           <option value="Main Eventer">Main Eventer</option>
           <option value="Midcarder">Midcarder</option>
           <option value="Tag Team">Tag Team</option>
+        </select>
+        <label style="font-size:0.75rem; color:var(--text-dim);">TAG TEAM / EQUIPO</label>
+        <select id="edit-team">
+          <option value="">-- Ninguno --</option>
         </select>
         <button type="submit" class="btn-add" style="background:#2e7d32;">Guardar Cambios</button>
       </form>
@@ -245,13 +258,15 @@
 
   <nav>
     <button class="active" onclick="switchTab('roster', this)">Roster</button>
+    <button onclick="switchTab('teams', this)">Tag Teams</button>
     <button onclick="switchTab('titles', this)">Títulos</button>
     <button onclick="switchTab('matches', this)">Cartelera</button>
   </nav>
 
   <script>
     // Cargar datos guardados
-    let store = JSON.parse(localStorage.getItem('universe_data')) || { roster: [], titles: [], matches: [] };
+    let store = JSON.parse(localStorage.getItem('universe_data')) || { roster: [], teams: [], titles: [], matches: [] };
+    if(!store.teams) store.teams = [];
 
     // Estado de filtros activos
     let filters = {
@@ -275,13 +290,9 @@
       btn.classList.add('active');
     }
 
-    function setFilter(type, value, btn) {
+    function onFilterChange(select) {
+      const [type, value] = select.value.split(':');
       filters[type] = value;
-      
-      const group = btn.parentElement;
-      group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
       render();
     }
 
@@ -294,8 +305,34 @@
         brand: document.getElementById('roster-brand').value,
         alignment: document.getElementById('roster-alignment').value,
         gender: document.getElementById('roster-gender').value || 'Men',
-        division: document.getElementById('roster-division').value || 'Midcarder'
+        division: document.getElementById('roster-division').value || 'Midcarder',
+        teamId: null
       });
+      e.target.reset();
+      saveData();
+    };
+
+    document.getElementById('form-teams').onsubmit = (e) => {
+      e.preventDefault();
+      const teamName = document.getElementById('team-name').value.trim();
+      const checkedBoxes = document.querySelectorAll('#team-members-select input[type="checkbox"]:checked');
+      const memberIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+
+      if (memberIds.length === 0) {
+        alert("Por favor selecciona al menos un luchador para el equipo.");
+        return;
+      }
+
+      const teamId = Date.now();
+      store.teams.push({ id: teamId, name: teamName, members: memberIds });
+
+      // Asignar teamId a cada luchador seleccionado
+      store.roster.forEach(r => {
+        if (memberIds.includes(r.id)) {
+          r.teamId = teamId;
+        }
+      });
+
       e.target.reset();
       saveData();
     };
@@ -325,6 +362,12 @@
 
     function deleteItem(type, id, e) {
       if(e) e.stopPropagation();
+      if(type === 'teams') {
+        // Desvincular luchadores de este equipo
+        store.roster.forEach(r => {
+          if (r.teamId === id) r.teamId = null;
+        });
+      }
       store[type] = store[type].filter(item => item.id !== id);
       saveData();
     }
@@ -335,7 +378,6 @@
       const wrestler = store.roster.find(r => r.id === id);
       if(!wrestler) return;
 
-      // Cargar Formulario
       document.getElementById('modal-wrestler-title').innerText = wrestler.name;
       document.getElementById('edit-name').value = wrestler.name;
       document.getElementById('edit-brand').value = wrestler.brand;
@@ -343,7 +385,12 @@
       document.getElementById('edit-gender').value = wrestler.gender || 'Men';
       document.getElementById('edit-division').value = wrestler.division || 'Midcarder';
 
-      // Cargar Selección H2H (excluyendo al propio luchador)
+      // Cargar lista de Tag Teams en el modal
+      const editTeamSelect = document.getElementById('edit-team');
+      editTeamSelect.innerHTML = `<option value="">-- Ninguno --</option>` +
+        store.teams.map(t => `<option value="${t.id}" ${wrestler.teamId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+
+      // Cargar Selección H2H
       const opponentSelect = document.getElementById('h2h-opponent');
       opponentSelect.innerHTML = `<option value="">-- Selecciona un rival --</option>` +
         store.roster
@@ -354,9 +401,7 @@
 
       document.getElementById('h2h-result').innerHTML = 'Selecciona un rival para ver el historial cara a cara.';
 
-      // Procesar Combates e Historial
       updateWrestlerStats(wrestler);
-
       document.getElementById('modal-wrestler').classList.add('active');
     }
 
@@ -369,13 +414,30 @@
       e.preventDefault();
       const wrestler = store.roster.find(r => r.id === activeWrestlerId);
       if(wrestler) {
+        const oldTeamId = wrestler.teamId;
+        const newTeamId = document.getElementById('edit-team').value ? parseInt(document.getElementById('edit-team').value) : null;
+
         wrestler.name = document.getElementById('edit-name').value.trim();
         wrestler.brand = document.getElementById('edit-brand').value;
         wrestler.alignment = document.getElementById('edit-alignment').value;
         wrestler.gender = document.getElementById('edit-gender').value;
         wrestler.division = document.getElementById('edit-division').value;
+        wrestler.teamId = newTeamId;
+
+        // Actualizar relaciones de equipo en store.teams
+        if (oldTeamId !== newTeamId) {
+          if (oldTeamId) {
+            const oldTeam = store.teams.find(t => t.id === oldTeamId);
+            if (oldTeam) oldTeam.members = oldTeam.members.filter(mId => mId !== wrestler.id);
+          }
+          if (newTeamId) {
+            const newTeam = store.teams.find(t => t.id === newTeamId);
+            if (newTeam && !newTeam.members.includes(wrestler.id)) newTeam.members.push(wrestler.id);
+          }
+        }
+
         saveData();
-        openWrestlerModal(activeWrestlerId); // Re-renderizar modal con nuevos datos
+        openWrestlerModal(activeWrestlerId);
       }
     };
 
@@ -419,7 +481,6 @@
         : `<p style="font-size:0.8rem; color:var(--text-dim);">No se han registrado combates para este luchador.</p>`;
     }
 
-    // Renderizado H2H
     function renderH2H() {
       const wrestler = store.roster.find(r => r.id === activeWrestlerId);
       const opponentId = parseInt(document.getElementById('h2h-opponent').value);
@@ -433,7 +494,6 @@
       const wName = wrestler.name.toLowerCase();
       const oName = opponent.name.toLowerCase();
 
-      // Buscar combates donde participen AMBOS luchadores
       const sharedMatches = store.matches.filter(m => {
         const card = m.card.toLowerCase();
         return card.includes(wName) && card.includes(oName);
@@ -466,40 +526,64 @@
     }
 
     function render() {
-      // 1. Ordenar roster alfabéticamente
+      // 1. Filtrar Roster
       let sortedRoster = [...store.roster].sort((a, b) => a.name.localeCompare(b.name));
 
-      // 2. Aplicar filtros simultáneos (Marca, Alineación, Género, División)
-      if (filters.brand !== 'ALL') {
-        sortedRoster = sortedRoster.filter(r => r.brand === filters.brand);
-      }
-      if (filters.alignment !== 'ALL') {
-        sortedRoster = sortedRoster.filter(r => r.alignment === filters.alignment);
-      }
-      if (filters.gender !== 'ALL') {
-        sortedRoster = sortedRoster.filter(r => (r.gender || 'Men') === filters.gender);
-      }
-      if (filters.division !== 'ALL') {
-        sortedRoster = sortedRoster.filter(r => (r.division || 'Midcarder') === filters.division);
-      }
+      if (filters.brand !== 'ALL') sortedRoster = sortedRoster.filter(r => r.brand === filters.brand);
+      if (filters.alignment !== 'ALL') sortedRoster = sortedRoster.filter(r => r.alignment === filters.alignment);
+      if (filters.gender !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.gender || 'Men') === filters.gender);
+      if (filters.division !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.division || 'Midcarder') === filters.division);
 
-      // 3. Render Roster
+      // Render Roster
       document.getElementById('list-roster').innerHTML = sortedRoster.length > 0 
-        ? sortedRoster.map(r => `
-            <div class="card" onclick="openWrestlerModal(${r.id})">
-              <div class="card-info">
-                <span class="card-title">${r.name}</span>
-                <div class="tags-container">
-                  <span class="tag tag-${r.brand.toLowerCase()}">${r.brand}</span>
-                  <span class="tag tag-${r.alignment.toLowerCase()}">${r.alignment}</span>
-                  <span class="tag tag-gender">${r.gender || 'Men'}</span>
-                  <span class="tag tag-division">${r.division || 'Midcarder'}</span>
+        ? sortedRoster.map(r => {
+            const team = store.teams.find(t => t.id === r.teamId);
+            const teamTagHTML = team ? `<span class="tag tag-team">👥 ${team.name}</span>` : '';
+            return `
+              <div class="card" onclick="openWrestlerModal(${r.id})">
+                <div class="card-info">
+                  <span class="card-title">${r.name}</span>
+                  <div class="tags-container">
+                    <span class="tag tag-${r.brand.toLowerCase()}">${r.brand}</span>
+                    <span class="tag tag-${r.alignment.toLowerCase()}">${r.alignment}</span>
+                    <span class="tag tag-gender">${r.gender || 'Men'}</span>
+                    <span class="tag tag-division">${r.division || 'Midcarder'}</span>
+                    ${teamTagHTML}
+                  </div>
                 </div>
+                <button class="btn-del" onclick="deleteItem('roster', ${r.id}, event)">✕</button>
               </div>
-              <button class="btn-del" onclick="deleteItem('roster', ${r.id}, event)">✕</button>
-            </div>
-          `).join('')
+            `;
+          }).join('')
         : `<p style="color: var(--text-dim); text-align: center; margin-top: 20px; font-size: 0.9rem;">No hay Superstars que cumplan estos filtros.</p>`;
+
+      // 2. Render Selección de miembros en Formulario de Tag Teams
+      document.getElementById('team-members-select').innerHTML = store.roster.length > 0
+        ? store.roster.map(r => `
+            <label class="checkbox-item">
+              <input type="checkbox" value="${r.id}">
+              <span>${r.name} (${r.brand})</span>
+            </label>
+          `).join('')
+        : `<span style="font-size:0.8rem; color:var(--text-dim);">Añade primero luchadores al Roster.</span>`;
+
+      // 3. Render Lista de Tag Teams
+      document.getElementById('list-teams').innerHTML = store.teams.map(t => {
+        const membersList = store.roster
+          .filter(r => t.members && t.members.includes(r.id))
+          .map(r => r.name)
+          .join(' & ');
+
+        return `
+          <div class="card" style="cursor:default;">
+            <div class="card-info">
+              <span class="card-title">👥 ${t.name}</span>
+              <span class="card-sub">Miembros: ${membersList || 'Sin miembros asignados'}</span>
+            </div>
+            <button class="btn-del" onclick="deleteItem('teams', ${t.id}, event)">✕</button>
+          </div>
+        `;
+      }).join('');
 
       // Render Titles
       document.getElementById('list-titles').innerHTML = store.titles.map(t => `
