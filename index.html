@@ -31,12 +31,12 @@
     input, select, button.btn-add { padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: #fff; font-size: 0.9rem; }
     button.btn-add { background: var(--accent); font-weight: bold; border: none; margin-top: 5px; cursor: pointer; }
 
-    /* Selección de Marcas con Checkboxes */
-    .brand-selector-wrapper { display: flex; flex-direction: column; gap: 4px; }
-    .brand-selector-label { font-size: 0.75rem; color: var(--text-dim); font-weight: bold; }
-    .brand-checkboxes { display: flex; flex-wrap: wrap; gap: 8px; background: #2a2a2a; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
-    .brand-checkbox-item { display: inline-flex; align-items: center; gap: 5px; font-size: 0.82rem; cursor: pointer; user-select: none; }
-    .brand-checkbox-item input { cursor: pointer; accent-color: var(--accent); }
+    /* Estilos para Contenedores de Casillas (Marcas, Alineación, Género, División) */
+    .option-selector-wrapper { display: flex; flex-direction: column; gap: 4px; }
+    .option-selector-label { font-size: 0.75rem; color: var(--text-dim); font-weight: bold; }
+    .option-checkboxes { display: flex; flex-wrap: wrap; gap: 8px; background: #2a2a2a; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
+    .option-checkbox-item { display: inline-flex; align-items: center; gap: 5px; font-size: 0.82rem; cursor: pointer; user-select: none; }
+    .option-checkbox-item input { cursor: pointer; accent-color: var(--accent); }
 
     /* Barra de Búsqueda de Roster */
     .search-box { width: 100%; margin-bottom: 10px; }
@@ -112,30 +112,45 @@
       <input type="text" id="roster-name" placeholder="Nombre del Superstar" autocapitalize="words" required>
       
       <!-- Selección Múltiple de Marcas -->
-      <div class="brand-selector-wrapper">
-        <span class="brand-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
-        <div class="brand-checkboxes" id="roster-brands-container">
-          <label class="brand-checkbox-item"><input type="checkbox" value="RAW" checked> RAW</label>
-          <label class="brand-checkbox-item"><input type="checkbox" value="SmackDown"> SmackDown</label>
-          <label class="brand-checkbox-item"><input type="checkbox" value="NXT"> NXT</label>
-          <label class="brand-checkbox-item"><input type="checkbox" value="EVOLVE"> EVOLVE</label>
+      <div class="option-selector-wrapper">
+        <span class="option-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
+        <div class="option-checkboxes" id="roster-brands-container">
+          <label class="option-checkbox-item"><input type="checkbox" value="RAW" checked> RAW</label>
+          <label class="option-checkbox-item"><input type="checkbox" value="SmackDown"> SmackDown</label>
+          <label class="option-checkbox-item"><input type="checkbox" value="NXT"> NXT</label>
+          <label class="option-checkbox-item"><input type="checkbox" value="EVOLVE"> EVOLVE</label>
         </div>
       </div>
 
-      <select id="roster-alignment">
-        <option value="Face">Face</option>
-        <option value="Heel">Heel</option>
-      </select>
-      <select id="roster-gender">
-        <option value="Men">Men</option>
-        <option value="Women">Women</option>
-      </select>
-      <select id="roster-division">
-        <option value="Main Eventer">Main Eventer</option>
-        <option value="Midcarder">Midcarder</option>
-        <option value="Tag Team">Tag Team</option>
-        <option value="Jobber">Jobber</option>
-      </select>
+      <!-- Alineación (Selección Exclusiva) -->
+      <div class="option-selector-wrapper">
+        <span class="option-selector-label">ALINEACIÓN:</span>
+        <div class="option-checkboxes" id="roster-alignment-container">
+          <label class="option-checkbox-item"><input type="radio" name="roster-alignment" value="Face" checked> Face</label>
+          <label class="option-checkbox-item"><input type="radio" name="roster-alignment" value="Heel"> Heel</label>
+        </div>
+      </div>
+
+      <!-- Género (Selección Exclusiva) -->
+      <div class="option-selector-wrapper">
+        <span class="option-selector-label">GÉNERO:</span>
+        <div class="option-checkboxes" id="roster-gender-container">
+          <label class="option-checkbox-item"><input type="radio" name="roster-gender" value="Men" checked> Men</label>
+          <label class="option-checkbox-item"><input type="radio" name="roster-gender" value="Women"> Women</label>
+        </div>
+      </div>
+
+      <!-- División (Selección Exclusiva) -->
+      <div class="option-selector-wrapper">
+        <span class="option-selector-label">DIVISIÓN:</span>
+        <div class="option-checkboxes" id="roster-division-container">
+          <label class="option-checkbox-item"><input type="radio" name="roster-division" value="Main Eventer"> Main Eventer</label>
+          <label class="option-checkbox-item"><input type="radio" name="roster-division" value="Midcarder" checked> Midcarder</label>
+          <label class="option-checkbox-item"><input type="radio" name="roster-division" value="Tag Team"> Tag Team</label>
+          <label class="option-checkbox-item"><input type="radio" name="roster-division" value="Jobber"> Jobber</label>
+        </div>
+      </div>
+
       <button type="submit" class="btn-add">Añadir a Roster</button>
     </form>
 
@@ -207,30 +222,45 @@
         <label style="font-size:0.75rem; color:var(--text-dim);">DATOS GENERALES</label>
         <input type="text" id="edit-name" placeholder="Nombre" autocapitalize="words" required>
         
-        <div class="brand-selector-wrapper">
-          <span class="brand-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
-          <div class="brand-checkboxes" id="edit-brands-container">
-            <label class="brand-checkbox-item"><input type="checkbox" value="RAW"> RAW</label>
-            <label class="brand-checkbox-item"><input type="checkbox" value="SmackDown"> SmackDown</label>
-            <label class="brand-checkbox-item"><input type="checkbox" value="NXT"> NXT</label>
-            <label class="brand-checkbox-item"><input type="checkbox" value="EVOLVE"> EVOLVE</label>
+        <div class="option-selector-wrapper">
+          <span class="option-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
+          <div class="option-checkboxes" id="edit-brands-container">
+            <label class="option-checkbox-item"><input type="checkbox" value="RAW"> RAW</label>
+            <label class="option-checkbox-item"><input type="checkbox" value="SmackDown"> SmackDown</label>
+            <label class="option-checkbox-item"><input type="checkbox" value="NXT"> NXT</label>
+            <label class="option-checkbox-item"><input type="checkbox" value="EVOLVE"> EVOLVE</label>
           </div>
         </div>
 
-        <select id="edit-alignment">
-          <option value="Face">Face</option>
-          <option value="Heel">Heel</option>
-        </select>
-        <select id="edit-gender">
-          <option value="Men">Men</option>
-          <option value="Women">Women</option>
-        </select>
-        <select id="edit-division">
-          <option value="Main Eventer">Main Eventer</option>
-          <option value="Midcarder">Midcarder</option>
-          <option value="Tag Team">Tag Team</option>
-          <option value="Jobber">Jobber</option>
-        </select>
+        <!-- Edición de Alineación -->
+        <div class="option-selector-wrapper">
+          <span class="option-selector-label">ALINEACIÓN:</span>
+          <div class="option-checkboxes" id="edit-alignment-container">
+            <label class="option-checkbox-item"><input type="radio" name="edit-alignment" value="Face"> Face</label>
+            <label class="option-checkbox-item"><input type="radio" name="edit-alignment" value="Heel"> Heel</label>
+          </div>
+        </div>
+
+        <!-- Edición de Género -->
+        <div class="option-selector-wrapper">
+          <span class="option-selector-label">GÉNERO:</span>
+          <div class="option-checkboxes" id="edit-gender-container">
+            <label class="option-checkbox-item"><input type="radio" name="edit-gender" value="Men"> Men</label>
+            <label class="option-checkbox-item"><input type="radio" name="edit-gender" value="Women"> Women</label>
+          </div>
+        </div>
+
+        <!-- Edición de División -->
+        <div class="option-selector-wrapper">
+          <span class="option-selector-label">DIVISIÓN:</span>
+          <div class="option-checkboxes" id="edit-division-container">
+            <label class="option-checkbox-item"><input type="radio" name="edit-division" value="Main Eventer"> Main Eventer</label>
+            <label class="option-checkbox-item"><input type="radio" name="edit-division" value="Midcarder"> Midcarder</label>
+            <label class="option-checkbox-item"><input type="radio" name="edit-division" value="Tag Team"> Tag Team</label>
+            <label class="option-checkbox-item"><input type="radio" name="edit-division" value="Jobber"> Jobber</label>
+          </div>
+        </div>
+
         <label style="font-size:0.75rem; color:var(--text-dim);">TAG TEAM / EQUIPO</label>
         <select id="edit-team">
           <option value="">-- Ninguno --</option>
@@ -295,7 +325,7 @@
       }
     });
 
-    // Estado de filtros activos (Selección Exclusiva por categoría)
+    // Estado de filtros activos
     let filters = {
       brand: 'ALL',
       alignment: 'ALL',
@@ -306,12 +336,12 @@
 
     let activeWrestlerId = null;
 
-    // Función para limpiar caracteres especiales al ordenar (comillas, apóstrofes, etc.)
+    // Función para limpiar caracteres especiales al ordenar
     function cleanName(str) {
       return str.replace(/^["'“`«ʼ\s]+/, '');
     }
 
-    // Capitalización automática en tiempo real al pulsar espacio / escribir
+    // Capitalización automática en tiempo real
     function setupAutoCapitalize(inputId) {
       const input = document.getElementById(inputId);
       if(!input) return;
@@ -334,7 +364,7 @@
       });
     }
 
-    // Inicializar auto-capitalización en inputs de nombres
+    // Inicializar auto-capitalización
     setupAutoCapitalize('roster-name');
     setupAutoCapitalize('edit-name');
     setupAutoCapitalize('team-name');
@@ -364,7 +394,6 @@
       render();
     }
 
-    // Función para eliminar un filtro activo haciendo clic en su etiqueta
     function clearFilter(filterType) {
       if (filterType === 'search') {
         filters.search = '';
@@ -375,7 +404,7 @@
       render();
     }
 
-    // Configuración estructural de opciones para los filtros con casillas
+    // Configuración estructural de opciones para los filtros
     const filterGroupsConfig = [
       {
         type: 'brand',
@@ -451,12 +480,23 @@
       }
     }
 
+    // Helper para obtener el valor seleccionado de un grupo de Radio Buttons
+    function getRadioValue(name) {
+      const selected = document.querySelector(`input[name="${name}"]:checked`);
+      return selected ? selected.value : '';
+    }
+
+    // Helper para establecer el valor seleccionado de un grupo de Radio Buttons
+    function setRadioValue(name, value) {
+      const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+      if (radio) radio.checked = true;
+    }
+
     // Handlers para añadir items
     document.getElementById('form-roster').onsubmit = (e) => {
       e.preventDefault();
       const inputName = document.getElementById('roster-name').value.trim();
       
-      // Comprobación de duplicados
       const duplicate = store.roster.find(r => r.name.toLowerCase() === inputName.toLowerCase());
       if (duplicate) {
         const confirmAdd = confirm(`⚠️ ¡Atención! Ya existe un luchador registrado como "${duplicate.name}".\n\n¿Deseas añadirlo de todos modos como una nueva entrada?`);
@@ -465,7 +505,6 @@
         }
       }
 
-      // Obtener marcas seleccionadas
       const checkedBrands = Array.from(document.querySelectorAll('#roster-brands-container input[type="checkbox"]:checked')).map(cb => cb.value);
       if (checkedBrands.length === 0) {
         alert("Por favor selecciona al menos una marca para el luchador.");
@@ -476,16 +515,20 @@
         id: Date.now(),
         name: inputName,
         brands: checkedBrands,
-        alignment: document.getElementById('roster-alignment').value,
-        gender: document.getElementById('roster-gender').value || 'Men',
-        division: document.getElementById('roster-division').value || 'Midcarder',
+        alignment: getRadioValue('roster-alignment') || 'Face',
+        gender: getRadioValue('roster-gender') || 'Men',
+        division: getRadioValue('roster-division') || 'Midcarder',
         teamId: null
       });
 
       e.target.reset();
-      // Re-establecer checkbox RAW por defecto al resetear
+      
+      // Re-establecer valores por defecto tras el reset
       const rawCb = document.querySelector('#roster-brands-container input[value="RAW"]');
       if (rawCb) rawCb.checked = true;
+      setRadioValue('roster-alignment', 'Face');
+      setRadioValue('roster-gender', 'Men');
+      setRadioValue('roster-division', 'Midcarder');
 
       saveData();
     };
@@ -504,7 +547,6 @@
       const teamId = Date.now();
       store.teams.push({ id: teamId, name: teamName, members: memberIds });
 
-      // Asignar teamId a cada luchador seleccionado
       store.roster.forEach(r => {
         if (memberIds.includes(r.id)) {
           r.teamId = teamId;
@@ -558,22 +600,19 @@
       document.getElementById('modal-wrestler-title').innerText = wrestler.name;
       document.getElementById('edit-name').value = wrestler.name;
 
-      // Marcar checkboxes de brands en edit modal
       const wrestlerBrands = wrestler.brands || (wrestler.brand ? [wrestler.brand] : []);
       document.querySelectorAll('#edit-brands-container input[type="checkbox"]').forEach(cb => {
         cb.checked = wrestlerBrands.includes(cb.value);
       });
 
-      document.getElementById('edit-alignment').value = wrestler.alignment;
-      document.getElementById('edit-gender').value = wrestler.gender || 'Men';
-      document.getElementById('edit-division').value = wrestler.division || 'Midcarder';
+      setRadioValue('edit-alignment', wrestler.alignment || 'Face');
+      setRadioValue('edit-gender', wrestler.gender || 'Men');
+      setRadioValue('edit-division', wrestler.division || 'Midcarder');
 
-      // Cargar lista de Tag Teams en el modal
       const editTeamSelect = document.getElementById('edit-team');
       editTeamSelect.innerHTML = `<option value="">-- Ninguno --</option>` +
         store.teams.map(t => `<option value="${t.id}" ${wrestler.teamId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
 
-      // Cargar Selección H2H (ordenada ignorando comillas)
       const opponentSelect = document.getElementById('h2h-opponent');
       opponentSelect.innerHTML = `<option value="">-- Selecciona un rival --</option>` +
         store.roster
@@ -618,9 +657,9 @@
 
         wrestler.name = newName;
         wrestler.brands = checkedBrands;
-        wrestler.alignment = document.getElementById('edit-alignment').value;
-        wrestler.gender = document.getElementById('edit-gender').value;
-        wrestler.division = document.getElementById('edit-division').value;
+        wrestler.alignment = getRadioValue('edit-alignment');
+        wrestler.gender = getRadioValue('edit-gender');
+        wrestler.division = getRadioValue('edit-division');
         wrestler.teamId = newTeamId;
 
         if (oldTeamId !== newTeamId) {
@@ -724,11 +763,9 @@
     }
 
     function render() {
-      // 0. Actualizar UI de Filtros
       renderFilterSelect();
       renderActiveFiltersBar();
 
-      // 1. Filtrar y Ordenar Roster ignorando comillas iniciales
       let sortedRoster = [...store.roster].sort((a, b) => cleanName(a.name).localeCompare(cleanName(b.name)));
 
       if (filters.brand !== 'ALL') {
@@ -739,7 +776,6 @@
       if (filters.division !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.division || 'Midcarder') === filters.division);
       if (filters.search !== '') sortedRoster = sortedRoster.filter(r => r.name.toLowerCase().includes(filters.search));
 
-      // Render Roster
       document.getElementById('list-roster').innerHTML = sortedRoster.length > 0 
         ? sortedRoster.map(r => {
             const team = store.teams.find(t => t.id === r.teamId);
@@ -757,7 +793,7 @@
                   <span class="card-title">${r.name}</span>
                   <div class="tags-container">
                     ${brandTagsHTML}
-                    <span class="tag tag-${r.alignment.toLowerCase()}">${r.alignment}</span>
+                    <span class="tag tag-${(r.alignment || 'face').toLowerCase()}">${r.alignment || 'Face'}</span>
                     <span class="tag tag-gender">${r.gender || 'Men'}</span>
                     <span class="tag tag-division">${r.division || 'Midcarder'}</span>
                     ${teamTagHTML}
@@ -769,7 +805,6 @@
           }).join('')
         : `<p style="color: var(--text-dim); text-align: center; margin-top: 20px; font-size: 0.9rem;">No hay Superstars que cumplan estos filtros.</p>`;
 
-      // 2. Render Selección de miembros en Formulario de Tag Teams (ordenados ignorando comillas)
       const sortedFullRoster = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
       document.getElementById('team-members-select').innerHTML = sortedFullRoster.length > 0
         ? sortedFullRoster.map(r => {
@@ -783,7 +818,6 @@
           }).join('')
         : `<span style="font-size:0.8rem; color:var(--text-dim);">Añade primero luchadores al Roster.</span>`;
 
-      // 3. Render Lista de Tag Teams
       document.getElementById('list-teams').innerHTML = store.teams.map(t => {
         const membersList = store.roster
           .filter(r => t.members && t.members.includes(r.id))
@@ -801,7 +835,6 @@
         `;
       }).join('');
 
-      // Render Titles
       document.getElementById('list-titles').innerHTML = store.titles.map(t => `
         <div class="card" style="cursor:default;">
           <div class="card-info">
@@ -812,7 +845,6 @@
         </div>
       `).join('');
 
-      // Render Matches
       document.getElementById('list-matches').innerHTML = store.matches.map(m => `
         <div class="card" style="cursor:default;">
           <div class="card-info">
