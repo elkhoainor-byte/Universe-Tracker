@@ -585,10 +585,10 @@
     </div>
   </div>
 
-  <nav>
-    <button class="active" onclick="switchTab('home', this)">Inicio</button>
+  <nav id="main-nav">
+    <button id="nav-btn-home" class="active" onclick="switchTab('home', this)">Inicio</button>
     <button onclick="switchTab('calendar', this)">Calendario</button>
-    <button onclick="switchTab('roster', this)">Roster</button>
+    <button id="nav-btn-roster" onclick="switchTab('roster', this)">Roster</button>
     <button onclick="switchTab('shows', this)">Shows</button>
     <button onclick="switchTab('teams', this)">Tag Teams</button>
     <button onclick="switchTab('titles', this)">Títulos</button>
@@ -716,8 +716,14 @@
       render();
     }
 
+    function hideHomeTab() {
+      const homeBtn = document.getElementById('nav-btn-home');
+      if (homeBtn) homeBtn.style.display = 'none';
+    }
+
     function continueUniverse() {
-      const rosterBtn = document.querySelectorAll('nav button')[2];
+      hideHomeTab();
+      const rosterBtn = document.getElementById('nav-btn-roster');
       switchTab('roster', rosterBtn);
     }
 
@@ -745,6 +751,7 @@
       store.calendar.startMonth = val;
       store.calendar.configured = true;
       document.getElementById('modal-start-month').classList.remove('active');
+      hideHomeTab();
       saveData();
     }
 
