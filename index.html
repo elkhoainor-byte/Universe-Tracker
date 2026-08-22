@@ -182,13 +182,13 @@
     .card-titles-container { display: flex; align-items: center; gap: 6px; height: 100%; padding-left: 6px; flex-shrink: 0; }
     .title-badge-img { max-height: 60px; max-width: 70px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8)); }
 
-    /* ESTILOS ESPECÍFICOS DE TARJETAS DE TÍTULOS */
+    /* ESTILOS ESPECÍFICOS DE TARJETAS DE TÍTULOS - VERSIÓN ELEGANTE Y LLAMATIVA */
     .title-card {
       height: 110px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      margin-bottom: 10px;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a1a 50%, #1e1e1e 100%);
+      border: 2px solid var(--gold-end);
+      border-radius: 10px;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -196,6 +196,19 @@
       cursor: pointer;
       position: relative;
       overflow: hidden;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.25), 0 4px 12px rgba(0,0,0,0.5);
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+    .title-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 18px rgba(255, 215, 0, 0.4), 0 6px 16px rgba(0,0,0,0.6);
+    }
+    .title-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.08) 50%, transparent 100%);
+      pointer-events: none;
     }
     .title-card-left {
       display: flex;
@@ -204,14 +217,16 @@
       height: 100%;
       flex: 1;
       overflow: hidden;
+      position: relative;
+      z-index: 2;
     }
     .title-card-belt-img {
       width: 80px;
       height: 100%;
       object-fit: contain;
       padding: 5px;
-      background: rgba(0,0,0,0.3);
-      border-right: 1px solid var(--border);
+      background: rgba(0,0,0,0.4);
+      border-right: 1px solid rgba(255,215,0,0.4);
       flex-shrink: 0;
     }
     .title-card-champs-avatars {
@@ -226,35 +241,53 @@
       height: 100%;
       object-fit: cover;
       object-position: top center;
+      border-right: 1px solid rgba(255,215,0,0.2);
     }
     .title-card-days-counter {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #1a1a1a;
-      border: 1px solid var(--gold-end);
-      border-radius: 8px;
+      background: linear-gradient(145deg, #1a1a1a, #2a2a1a);
+      border: 2px solid var(--gold-end);
+      border-radius: 10px;
       padding: 6px 10px;
       flex-shrink: 0;
-      min-width: 65px;
+      min-width: 68px;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.35);
+      position: relative;
+      z-index: 2;
     }
     .title-card-days-num {
-      font-size: 1.4rem;
+      font-size: 1.45rem;
       font-weight: 900;
       color: var(--gold-end);
       line-height: 1;
       text-align: center;
       width: 100%;
+      text-shadow: 0 0 6px rgba(255,215,0,0.5);
     }
     .title-card-days-label {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       font-weight: 900;
       color: var(--gold-end);
-      letter-spacing: 2px;
+      letter-spacing: 1.5px;
       text-align: center;
       width: 100%;
       margin-top: 3px;
+    }
+    .title-inaugural-badge {
+      display: inline-block;
+      background: linear-gradient(90deg, #ffd700, #ffec8b);
+      color: #1a1a1a;
+      font-size: 0.65rem;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      box-shadow: 0 0 6px rgba(255,215,0,0.5);
+      margin-top: 2px;
     }
 
     .btn-del { background: none; border: none; color: #aaa; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; align-self: center; }
@@ -533,6 +566,14 @@
           <select id="title-champ2-select">
             <option value="">-- Seleccionar Luchador --</option>
           </select>
+        </div>
+
+        <!-- NUEVA CASILLA: REINADO INAUGURAL -->
+        <div class="option-selector-wrapper" style="margin-top:4px;">
+          <label class="option-checkbox-item" style="font-size:0.85rem;">
+            <input type="checkbox" id="title-is-inaugural" checked>
+            ¿Es el reinado inaugural?
+          </label>
         </div>
 
         <label style="font-size:0.75rem; color:var(--text-dim);">IMAGEN DEL TÍTULO / CINTURÓN</label>
@@ -1431,6 +1472,7 @@
       document.getElementById('title-image-file').value = '';
       
       const statsContainer = document.getElementById('title-stats-container');
+      const inauguralCheck = document.getElementById('title-is-inaugural');
 
       if (id === null) {
         document.getElementById('modal-title-header').innerText = 'Añadir Campeonato';
@@ -1439,6 +1481,7 @@
         onTitleTypeChange();
         document.getElementById('title-champ1-select').value = '';
         document.getElementById('title-champ2-select').value = '';
+        inauguralCheck.checked = true; // Por defecto inaugural al crear
         document.getElementById('btn-save-title').innerText = 'Crear Campeonato';
         statsContainer.style.display = 'none';
       } else {
@@ -1452,6 +1495,8 @@
 
         document.getElementById('title-champ1-select').value = title.champions[0] || '';
         document.getElementById('title-champ2-select').value = title.champions[1] || '';
+
+        inauguralCheck.checked = !!title.isInaugural;
 
         document.getElementById('btn-save-title').innerText = 'Guardar Cambios';
         statsContainer.style.display = 'flex';
@@ -1515,6 +1560,7 @@
       const type = document.getElementById('title-type-select').value;
       const champ1 = parseInt(document.getElementById('title-champ1-select').value);
       const champ2 = type === 'tag' ? parseInt(document.getElementById('title-champ2-select').value) : null;
+      const isInaugural = document.getElementById('title-is-inaugural').checked;
 
       if (!champ1 || (type === 'tag' && !champ2)) {
         alert("Por favor selecciona todos los campeones requeridos desde tu Roster.");
@@ -1537,7 +1583,8 @@
           type: type,
           champions: championsArr,
           reignStartDay: getTotalUniverseDays(),
-          history: []
+          history: [],
+          isInaugural: isInaugural
         });
       } else {
         const title = store.titles.find(t => t.id === activeTitleId);
@@ -1566,6 +1613,11 @@
             });
 
             title.reignStartDay = currentUniverseDays;
+            // Al cambiar de campeón ya no es inaugural
+            title.isInaugural = false;
+          } else {
+            // Solo actualizamos el flag si no cambió el campeón
+            title.isInaugural = isInaugural;
           }
 
           title.name = name;
@@ -2052,7 +2104,7 @@
         `;
       }).join('');
 
-      // RENDER PESTAÑA TÍTULOS CON ETIOUETAS, AVATARES Y DÍAS MISMAS MEDIDAS
+      // RENDER PESTAÑA TÍTULOS CON ESTILO ELEGANTE
       const currentUniverseDays = getTotalUniverseDays();
 
       const titleCardsHTML = await Promise.all(store.titles.map(async t => {
@@ -2072,6 +2124,7 @@
         }));
 
         const daysReigning = Math.max(0, currentUniverseDays - (t.reignStartDay || 0));
+        const inauguralBadge = t.isInaugural ? `<span class="title-inaugural-badge">INAUGURAL</span>` : '';
 
         return `
           <div class="title-card" onclick="openTitleModal(${t.id})">
@@ -2083,6 +2136,7 @@
               <div class="card-info">
                 <span class="card-title">${t.name}</span>
                 <span class="card-sub">🏆 ${champsNamesText}</span>
+                ${inauguralBadge}
               </div>
             </div>
             <div class="title-card-days-counter">
