@@ -54,6 +54,12 @@
     .filter-badge .close-icon { font-weight: bold; margin-left: 2px; font-size: 0.8rem; }
 
     .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    
+    /* Nueva estructura para Tarjeta con Imagen */
+    .card-left { display: flex; align-items: center; gap: 12px; }
+    .wrestler-avatar { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: #2a2a2a; flex-shrink: 0; }
+    .wrestler-avatar-placeholder { width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--border); background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--text-dim); flex-shrink: 0; }
+
     .card-info { display: flex; flex-direction: column; gap: 6px; }
     .card-title { font-weight: bold; font-size: 1rem; }
     .card-sub { font-size: 0.8rem; color: var(--text-dim); }
@@ -86,6 +92,7 @@
     .modal-overlay.active { display: block; }
     .modal-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .modal-title-wrapper { display: flex; align-items: center; gap: 10px; }
     .modal-title { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
     .modal-close { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; }
     
@@ -110,6 +117,7 @@
   <div id="tab-roster" class="tab-content active">
     <form id="form-roster">
       <input type="text" id="roster-name" placeholder="Nombre del Superstar" autocapitalize="words" required>
+      <input type="url" id="roster-image" placeholder="URL de la Imagen (https://...)" >
       
       <!-- Selección Múltiple de Marcas -->
       <div class="option-selector-wrapper">
@@ -213,7 +221,10 @@
   <div id="modal-wrestler" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <span class="modal-title" id="modal-wrestler-title">Ficha de Luchador</span>
+        <div class="modal-title-wrapper">
+          <div id="modal-avatar-container"></div>
+          <span class="modal-title" id="modal-wrestler-title">Ficha de Luchador</span>
+        </div>
         <button class="modal-close" onclick="closeWrestlerModal()">✕</button>
       </div>
 
@@ -221,6 +232,7 @@
       <form id="form-edit-wrestler" style="margin-bottom:0;">
         <label style="font-size:0.75rem; color:var(--text-dim);">DATOS GENERALES</label>
         <input type="text" id="edit-name" placeholder="Nombre" autocapitalize="words" required>
+        <input type="url" id="edit-image" placeholder="URL de la Imagen (https://...)">
         
         <div class="option-selector-wrapper">
           <span class="option-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
@@ -496,6 +508,7 @@
     document.getElementById('form-roster').onsubmit = (e) => {
       e.preventDefault();
       const inputName = document.getElementById('roster-name').value.trim();
+      const inputImage = document.getElementById('roster-image').value.trim();
       
       const duplicate = store.roster.find(r => r.name.toLowerCase() === inputName.toLowerCase());
       if (duplicate) {
@@ -514,6 +527,7 @@
       store.roster.push({
         id: Date.now(),
         name: inputName,
+        imageUrl: inputImage,
         brands: checkedBrands,
         alignment: getRadioValue('roster-alignment') || 'Face',
         gender: getRadioValue('roster-gender') || 'Men',
@@ -599,6 +613,14 @@
 
       document.getElementById('modal-wrestler-title').innerText = wrestler.name;
       document.getElementById('edit-name').value = wrestler.name;
+      document.getElementById('edit-image').value = wrestler.imageUrl || '';
+
+      const avatarContainer = document.getElementById('modal-avatar-container');
+      if (wrestler.imageUrl) {
+        avatarContainer.innerHTML = `<img src="${wrestler.imageUrl}" class="wrestler-avatar" style="width:40px; height:40px;" alt="${wrestler.name}">`;
+      } else {
+        avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; font-size:1rem;">👤</div>`;
+      }
 
       const wrestlerBrands = wrestler.brands || (wrestler.brand ? [wrestler.brand] : []);
       document.querySelectorAll('#edit-brands-container input[type="checkbox"]').forEach(cb => {
@@ -637,6 +659,7 @@
       const wrestler = store.roster.find(r => r.id === activeWrestlerId);
       if(wrestler) {
         const newName = document.getElementById('edit-name').value.trim();
+        const newImage = document.getElementById('edit-image').value.trim();
 
         const duplicate = store.roster.find(r => r.id !== activeWrestlerId && r.name.toLowerCase() === newName.toLowerCase());
         if (duplicate) {
@@ -656,6 +679,7 @@
         const newTeamId = document.getElementById('edit-team').value ? parseInt(document.getElementById('edit-team').value) : null;
 
         wrestler.name = newName;
+        wrestler.imageUrl = newImage;
         wrestler.brands = checkedBrands;
         wrestler.alignment = getRadioValue('edit-alignment');
         wrestler.gender = getRadioValue('edit-gender');
@@ -787,16 +811,23 @@
               return `<span class="tag ${bClass}">${b}</span>`;
             }).join(' ');
 
+            const imageHTML = r.imageUrl 
+              ? `<img src="${r.imageUrl}" class="wrestler-avatar" alt="${r.name}" onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\\'wrestler-avatar-placeholder\\'>👤</div>';">`
+              : `<div class="wrestler-avatar-placeholder">👤</div>`;
+
             return `
               <div class="card" onclick="openWrestlerModal(${r.id})">
-                <div class="card-info">
-                  <span class="card-title">${r.name}</span>
-                  <div class="tags-container">
-                    ${brandTagsHTML}
-                    <span class="tag tag-${(r.alignment || 'face').toLowerCase()}">${r.alignment || 'Face'}</span>
-                    <span class="tag tag-gender">${r.gender || 'Men'}</span>
-                    <span class="tag tag-division">${r.division || 'Midcarder'}</span>
-                    ${teamTagHTML}
+                <div class="card-left">
+                  ${imageHTML}
+                  <div class="card-info">
+                    <span class="card-title">${r.name}</span>
+                    <div class="tags-container">
+                      ${brandTagsHTML}
+                      <span class="tag tag-${(r.alignment || 'face').toLowerCase()}">${r.alignment || 'Face'}</span>
+                      <span class="tag tag-gender">${r.gender || 'Men'}</span>
+                      <span class="tag tag-division">${r.division || 'Midcarder'}</span>
+                      ${teamTagHTML}
+                    </div>
                   </div>
                 </div>
                 <button class="btn-del" onclick="deleteItem('roster', ${r.id}, event)">✕</button>
