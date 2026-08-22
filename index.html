@@ -166,6 +166,25 @@
     .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; align-self: center; }
     .btn-del:hover { color: var(--accent); }
 
+    /* BOTÓN DESPEDIR LUCHADOR (EN GRIS) */
+    .btn-dismiss {
+      width: 100%;
+      padding: 10px;
+      background: #333333;
+      color: #bbbbbb;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-dismiss:hover {
+      background: #444444;
+      color: #ffffff;
+    }
+
     .checkbox-list { max-height: 120px; overflow-y: auto; background: #2a2a2a; border: 1px solid var(--border); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
     .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
 
@@ -338,6 +357,9 @@
           <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">HISTORIAL DE COMBATES</label>
           <div id="wrestler-history-list"></div>
         </div>
+
+        <!-- BOTÓN EN GRIS PARA DESPEDIR LUCHADOR -->
+        <button type="button" class="btn-dismiss" onclick="dismissCurrentWrestler()">Despedir luchador</button>
       </div>
 
     </div>
@@ -593,6 +615,17 @@
       }
       store[type] = store[type].filter(item => item.id !== id);
       saveData();
+    }
+
+    function dismissCurrentWrestler() {
+      if (activeWrestlerId === null) return;
+      const wrestler = store.roster.find(r => r.id === activeWrestlerId);
+      if (wrestler) {
+        if (confirm(`¿Estás seguro de que deseas despedir a ${wrestler.name}?`)) {
+          deleteItem('roster', activeWrestlerId);
+          closeWrestlerModal();
+        }
+      }
     }
 
     function openWrestlerModal(id = null) {
@@ -892,7 +925,6 @@
                     </div>
                   </div>
                 </div>
-                <button class="btn-del" onclick="deleteItem('roster', ${r.id}, event)">✕</button>
               </div>
             `;
           }).join('')
