@@ -191,7 +191,7 @@
       padding: 14px;
       margin-bottom: 12px;
     }
-    .card-slot.locked { opacity: 0.8; border-color: #555; }
+    .card-slot.locked { opacity: 0.95; border-color: #555; }
     .card-slot-header {
       display: flex;
       justify-content: space-between;
@@ -314,6 +314,21 @@
       width: 100%;
       margin-top: 12px;
       font-size: 1rem;
+    }
+
+    .winner-box {
+      margin-top: 10px;
+      padding: 10px;
+      background: #1a2a1a;
+      border: 1px solid #2e7d32;
+      border-radius: 8px;
+    }
+    .winner-box label {
+      font-size: 0.75rem;
+      color: #4caf50;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 6px;
     }
   </style>
 </head>
@@ -632,7 +647,7 @@
   </nav>
 
   <script>
-    // ========== MATCH TYPE DEFINITIONS (ACTUALIZADO) ==========
+    // ========== MATCH TYPE DEFINITIONS ==========
     const STAGES_OF_HELL_OPTIONS = [
       "Normal", "Extreme Rules", "Inferno", "I Quit", "Contenedor",
       "Hell in a Cell", "Steel Cage", "Tables", "Ladder", "TLC",
@@ -808,6 +823,41 @@
     };
 
     const MATCH_TYPE_LIST = Object.keys(MATCH_TYPES);
+
+    // ========== HELPER: Formatear resumen del combate ==========
+    function formatMatchSummary(names, matchType, subType) {
+      if (!names || names.length === 0) return '?';
+      
+      const clean = names.map(n => n || '?');
+      const sub = (subType || '').toLowerCase();
+      const type = (matchType || '').toLowerCase();
+
+      // Detectar formato de equipos
+      if (sub.includes('2 contra 2') || sub.includes('2 vs 2')) {
+        if (clean.length >= 4) return `${clean[0]} & ${clean[1]} vs ${clean[2]} & ${clean[3]}`;
+      }
+      if (sub.includes('3 contra 3') || sub.includes('3 vs 3')) {
+        if (clean.length >= 6) return `${clean[0]} & ${clean[1]} & ${clean[2]} vs ${clean[3]} & ${clean[4]} & ${clean[5]}`;
+      }
+      if (sub.includes('4 contra 4') || sub.includes('4 vs 4')) {
+        if (clean.length >= 8) return `${clean.slice(0,4).join(' & ')} vs ${clean.slice(4,8).join(' & ')}`;
+      }
+      if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) {
+        if (clean.length >= 3) return `${clean[0]} vs ${clean[1]} & ${clean[2]}`;
+      }
+      if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) {
+        if (clean.length >= 4) return `${clean[0]} vs ${clean[1]} & ${clean[2]} & ${clean[3]}`;
+      }
+      if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) {
+        if (clean.length >= 5) return `${clean[0]} & ${clean[1]} vs ${clean[2]} & ${clean[3]} & ${clean[4]}`;
+      }
+      if (type === 'reglas de bloodline' && clean.length >= 8) {
+        return `${clean[0]} (+ ${clean[1]}, ${clean[2]}, ${clean[3]}) vs ${clean[4]} (+ ${clean[5]}, ${clean[6]}, ${clean[7]})`;
+      }
+
+      // Multiway normal
+      return clean.join(' vs ');
+    }
 
     // ========== CORE ==========
     let db;
@@ -1369,7 +1419,9 @@
             subType: null,
             stages: [null, null, null],
             participants: [],
+            specialReferee: null,
             winner: '',
+            matchId: null,
             titleId: null
           }))
         };
@@ -1444,7 +1496,6 @@
             </select>
           `;
         } else if (slot.matchType === "3 Stages of Hell") {
-          // CASO ESPECIAL: 3 Stages of Hell
           html += `<div style="font-size:0.8rem; color:var(--gold-end); margin-bottom:8px; font-weight:bold;">3 Stages of Hell</div>`;
           
           for (let s = 0; s < 3; s++) {
@@ -1459,7 +1510,6 @@
             `;
           }
 
-          // Siempre 2 participantes
           if (!slot.participants || slot.participants.length !== 2) {
             slot.participants = [null, null];
           }
@@ -1483,10 +1533,9 @@
             return w ? w.name : '?';
           });
           const stagesText = (slot.stages || []).filter(Boolean).join(' → ');
-          html += `<div class="slot-summary">${names.join(' vs ')}${stagesText ? '<br>' + stagesText : ''}</div>`;
+          html += `<div class="slot-summary">${formatMatchSummary(names, slot.matchType, slot.subType)}${stagesText ? '<br>' + stagesText : ''}</div>`;
 
         } else {
-          // Resto de tipos normales
           const subTypes = MATCH_TYPES[slot.matchType] || {};
           const subKeys = Object.keys(subTypes).filter(k => k !== 'special');
 
@@ -1523,12 +1572,49 @@
               </div>
             `;
 
+            // Árbitro Especial (solo para este tipo)
+            if (slot.matchType === "Árbitro especial invitado") {
+              html += `
+                <div class="participant-box" style="margin-top:8px; grid-column: 1 / -1;">
+                  <label>Árbitro Especial:</label>
+                  <select onchange="setSpecialReferee(${idx}, this.value)" ${isLocked ? 'disabled' : ''}>
+                    <option value="">-- Elegir Árbitro Especial --</option>
+                    ${available.map(w => `<option value="${w.id}" ${slot.specialReferee == w.id ? 'selected' : ''}>${w.name}</option>`).join('')}
+                  </select>
+                </div>
+              `;
+            }
+
             const names = slot.participants.map(id => {
               const w = store.roster.find(r => r.id == id);
               return w ? w.name : '?';
             });
-            html += `<div class="slot-summary">${names.join(' vs ')}</div>`;
+            let summary = formatMatchSummary(names, slot.matchType, finalSub);
+            if (slot.matchType === "Árbitro especial invitado" && slot.specialReferee) {
+              const ref = store.roster.find(r => r.id == slot.specialReferee);
+              if (ref) summary += `<br><span style="color:var(--gold-end);">Árbitro Especial: ${ref.name}</span>`;
+            }
+            html += `<div class="slot-summary">${summary}</div>`;
           }
+        }
+
+        // Selector de ganador (solo si está finalizado)
+        if (isLocked && slot.type === 'combate' && slot.matchType) {
+          const participantNames = (slot.participants || []).map(id => {
+            const w = store.roster.find(r => r.id == id);
+            return w ? { id: w.id, name: w.name } : null;
+          }).filter(Boolean);
+
+          html += `
+            <div class="winner-box">
+              <label>🏆 Elegir ganador:</label>
+              <select class="slot-select" style="margin-bottom:0;" onchange="setWinner(${idx}, this.value)">
+                <option value="">-- Seleccionar ganador --</option>
+                ${participantNames.map(p => `<option value="${p.name}" ${slot.winner === p.name ? 'selected' : ''}>${p.name}</option>`).join('')}
+                <option value="Empate" ${slot.winner === 'Empate' ? 'selected' : ''}>Empate / Sin resultado</option>
+              </select>
+            </div>
+          `;
         }
 
         html += `</div>`;
@@ -1546,6 +1632,9 @@
       store.todayCard.slots[idx].subType = null;
       store.todayCard.slots[idx].stages = [null, null, null];
       store.todayCard.slots[idx].participants = [];
+      store.todayCard.slots[idx].specialReferee = null;
+      store.todayCard.slots[idx].winner = '';
+      store.todayCard.slots[idx].matchId = null;
       saveData();
       renderTodayCard();
     }
@@ -1556,6 +1645,7 @@
       store.todayCard.slots[idx].subType = null;
       store.todayCard.slots[idx].stages = [null, null, null];
       store.todayCard.slots[idx].participants = [];
+      store.todayCard.slots[idx].specialReferee = null;
       saveData();
       renderTodayCard();
     }
@@ -1565,6 +1655,7 @@
       store.todayCard.slots[idx].subType = subType;
       const num = (MATCH_TYPES[store.todayCard.slots[idx].matchType] && MATCH_TYPES[store.todayCard.slots[idx].matchType][subType]) || 2;
       store.todayCard.slots[idx].participants = Array(num).fill(null);
+      store.todayCard.slots[idx].specialReferee = null;
       saveData();
       renderTodayCard();
     }
@@ -1584,6 +1675,28 @@
       renderTodayCard();
     }
 
+    function setSpecialReferee(idx, value) {
+      if (store.todayCard.locked) return;
+      store.todayCard.slots[idx].specialReferee = value ? parseInt(value) : null;
+      saveData();
+      renderTodayCard();
+    }
+
+    function setWinner(idx, winnerName) {
+      store.todayCard.slots[idx].winner = winnerName || '';
+      
+      // Actualizar también en el historial de matches
+      const slot = store.todayCard.slots[idx];
+      if (slot.matchId) {
+        const match = store.matches.find(m => m.id === slot.matchId);
+        if (match) {
+          match.winner = winnerName || 'Pendiente';
+        }
+      }
+      saveData();
+      renderTodayCard();
+    }
+
     function resetSlot(idx) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx] = {
@@ -1593,7 +1706,9 @@
         subType: null,
         stages: [null, null, null],
         participants: [],
+        specialReferee: null,
         winner: '',
+        matchId: null,
         titleId: null
       };
       saveData();
@@ -1602,19 +1717,21 @@
 
     function finalizeTodayCard() {
       if (store.todayCard.locked) return;
-      showConfirmModal("¿Finalizar esta parrilla? No se podrán hacer más cambios.", () => {
+      showConfirmModal("¿Finalizar esta parrilla? Podrás elegir los ganadores después.", () => {
         store.todayCard.locked = true;
 
         store.todayCard.slots.forEach(slot => {
           if (slot.type === 'promo') {
+            const matchId = Date.now() + Math.random();
             store.matches.push({
-              id: Date.now() + Math.random(),
+              id: matchId,
               show: store.todayCard.eventName + (store.todayCard.showNumber ? ' #' + store.todayCard.showNumber : ''),
               card: '🎤 Promo',
               winner: 'Promo',
               titleId: null,
               isDefense: false
             });
+            slot.matchId = matchId;
           } else if (slot.type === 'combate' && slot.matchType) {
             const names = (slot.participants || []).map(id => {
               const w = store.roster.find(r => r.id == id);
@@ -1624,20 +1741,28 @@
             let cardText = '';
             if (slot.matchType === "3 Stages of Hell") {
               const stages = (slot.stages || []).filter(Boolean).join(' → ');
-              cardText = `${names.join(' vs ')} (3 Stages of Hell: ${stages})`;
+              cardText = `${formatMatchSummary(names, slot.matchType, slot.subType)} (3 Stages of Hell: ${stages})`;
             } else {
               const sub = slot.subType || '';
-              cardText = `${names.join(' vs ')} (${slot.matchType}${sub ? ' · ' + sub : ''})`;
+              cardText = `${formatMatchSummary(names, slot.matchType, sub)} (${slot.matchType}${sub ? ' · ' + sub : ''})`;
+              
+              if (slot.matchType === "Árbitro especial invitado" && slot.specialReferee) {
+                const ref = store.roster.find(r => r.id == slot.specialReferee);
+                if (ref) cardText += ` [Árbitro Especial: ${ref.name}]`;
+              }
             }
 
+            const matchId = Date.now() + Math.random();
             store.matches.push({
-              id: Date.now() + Math.random(),
+              id: matchId,
               show: store.todayCard.eventName + (store.todayCard.showNumber ? ' #' + store.todayCard.showNumber : ''),
               card: cardText,
               winner: 'Pendiente',
               titleId: null,
               isDefense: false
             });
+            slot.matchId = matchId;
+            slot.winner = '';
           }
         });
 
