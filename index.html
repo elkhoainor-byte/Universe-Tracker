@@ -139,11 +139,11 @@
       <button type="submit" class="btn-add">Añadir a Roster</button>
     </form>
 
-    <!-- Filtros por Pestañas Desplegables con Casillas de Selección -->
+    <!-- Filtros por Pestañas Desplegables con Casillas de Selección Exclusivas -->
     <div class="filters-wrapper">
       <span class="filter-header">🔍 Seleccionar Filtros</span>
       <select id="filter-select-all" onchange="onFilterChange(this)">
-        <!-- Opciones generadas dinámicamente con casillas -->
+        <!-- Opciones generadas dinámicamente -->
       </select>
 
       <!-- Panel 'Filtrado por' -->
@@ -295,7 +295,7 @@
       }
     });
 
-    // Estado de filtros activos
+    // Estado de filtros activos (Selección Exclusiva por categoría)
     let filters = {
       brand: 'ALL',
       alignment: 'ALL',
@@ -305,6 +305,11 @@
     };
 
     let activeWrestlerId = null;
+
+    // Función para limpiar caracteres especiales al ordenar (comillas, apóstrofes, etc.)
+    function cleanName(str) {
+      return str.replace(/^["'“`«ʼ\s]+/, '');
+    }
 
     // Capitalización automática en tiempo real al pulsar espacio / escribir
     function setupAutoCapitalize(inputId) {
@@ -370,7 +375,7 @@
       render();
     }
 
-    // Configuración estructural de opciones para los filtros
+    // Configuración estructural de opciones para los filtros con casillas
     const filterGroupsConfig = [
       {
         type: 'brand',
@@ -456,7 +461,7 @@
       if (duplicate) {
         const confirmAdd = confirm(`⚠️ ¡Atención! Ya existe un luchador registrado como "${duplicate.name}".\n\n¿Deseas añadirlo de todos modos como una nueva entrada?`);
         if (!confirmAdd) {
-          return; // Cancela la acción
+          return;
         }
       }
 
@@ -536,7 +541,6 @@
     function deleteItem(type, id, e) {
       if(e) e.stopPropagation();
       if(type === 'teams') {
-        // Desvincular luchadores de este equipo
         store.roster.forEach(r => {
           if (r.teamId === id) r.teamId = null;
         });
@@ -569,12 +573,12 @@
       editTeamSelect.innerHTML = `<option value="">-- Ninguno --</option>` +
         store.teams.map(t => `<option value="${t.id}" ${wrestler.teamId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
 
-      // Cargar Selección H2H
+      // Cargar Selección H2H (ordenada ignorando comillas)
       const opponentSelect = document.getElementById('h2h-opponent');
       opponentSelect.innerHTML = `<option value="">-- Selecciona un rival --</option>` +
         store.roster
           .filter(r => r.id !== id)
-          .sort((a,b) => a.name.localeCompare(b.name))
+          .sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)))
           .map(r => `<option value="${r.id}">${r.name}</option>`)
           .join('');
 
@@ -595,7 +599,6 @@
       if(wrestler) {
         const newName = document.getElementById('edit-name').value.trim();
 
-        // Comprobación de duplicados al editar (excluyendo su propio ID)
         const duplicate = store.roster.find(r => r.id !== activeWrestlerId && r.name.toLowerCase() === newName.toLowerCase());
         if (duplicate) {
           const confirmEdit = confirm(`⚠️ ¡Atención! Ya existe otro luchador registrado como "${duplicate.name}".\n\n¿Deseas guardar los cambios de todos modos?`);
@@ -620,7 +623,6 @@
         wrestler.division = document.getElementById('edit-division').value;
         wrestler.teamId = newTeamId;
 
-        // Actualizar relaciones de equipo en store.teams
         if (oldTeamId !== newTeamId) {
           if (oldTeamId) {
             const oldTeam = store.teams.find(t => t.id === oldTeamId);
@@ -726,8 +728,8 @@
       renderFilterSelect();
       renderActiveFiltersBar();
 
-      // 1. Filtrar Roster
-      let sortedRoster = [...store.roster].sort((a, b) => a.name.localeCompare(b.name));
+      // 1. Filtrar y Ordenar Roster ignorando comillas iniciales
+      let sortedRoster = [...store.roster].sort((a, b) => cleanName(a.name).localeCompare(cleanName(b.name)));
 
       if (filters.brand !== 'ALL') {
         sortedRoster = sortedRoster.filter(r => (r.brands && r.brands.includes(filters.brand)) || r.brand === filters.brand);
@@ -767,9 +769,10 @@
           }).join('')
         : `<p style="color: var(--text-dim); text-align: center; margin-top: 20px; font-size: 0.9rem;">No hay Superstars que cumplan estos filtros.</p>`;
 
-      // 2. Render Selección de miembros en Formulario de Tag Teams
-      document.getElementById('team-members-select').innerHTML = store.roster.length > 0
-        ? store.roster.map(r => {
+      // 2. Render Selección de miembros en Formulario de Tag Teams (ordenados ignorando comillas)
+      const sortedFullRoster = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
+      document.getElementById('team-members-select').innerHTML = sortedFullRoster.length > 0
+        ? sortedFullRoster.map(r => {
             const bText = (r.brands || [r.brand || 'RAW']).join('/');
             return `
               <label class="checkbox-item">
