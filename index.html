@@ -35,6 +35,11 @@
     .filters-wrapper { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
     .filter-header { font-size: 0.8rem; font-weight: bold; color: var(--text-dim); text-transform: uppercase; margin-bottom: 2px; }
     
+    /* Indicador de Filtros Activos */
+    .active-filters-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 0.8rem; padding-top: 4px; border-top: 1px dashed var(--border); margin-top: 4px; }
+    .active-filters-label { font-weight: bold; color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; }
+    .filter-badge { background: #333; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; border: 1px solid var(--accent); display: inline-flex; align-items: center; gap: 4px; }
+
     .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .card-info { display: flex; flex-direction: column; gap: 6px; }
     .card-title { font-weight: bold; font-size: 1rem; }
@@ -113,34 +118,17 @@
       <button type="submit" class="btn-add">Añadir a Roster</button>
     </form>
 
-    <!-- Filtros por Pestañas Desplegables con Encabezados -->
+    <!-- Filtros por Pestañas Desplegables con Casillas de Selección -->
     <div class="filters-wrapper">
-      <span class="filter-header">🔍 Filtrar Roster</span>
+      <span class="filter-header">🔍 Seleccionar Filtros</span>
       <select id="filter-select-all" onchange="onFilterChange(this)">
-        <optgroup label="Marca">
-          <option value="brand:ALL">Marca: Todas</option>
-          <option value="brand:RAW">Marca: RAW</option>
-          <option value="brand:SmackDown">Marca: SmackDown</option>
-          <option value="brand:NXT">Marca: NXT</option>
-          <option value="brand:EVOLVE">Marca: EVOLVE</option>
-        </optgroup>
-        <optgroup label="Alineación">
-          <option value="alignment:ALL">Alineación: Todas</option>
-          <option value="alignment:Face">Alineación: Face</option>
-          <option value="alignment:Heel">Alineación: Heel</option>
-        </optgroup>
-        <optgroup label="Género">
-          <option value="gender:ALL">Género: Todos</option>
-          <option value="gender:Men">Género: Men</option>
-          <option value="gender:Women">Género: Women</option>
-        </optgroup>
-        <optgroup label="División">
-          <option value="division:ALL">División: Todas</option>
-          <option value="division:Main Eventer">División: Main Eventer</option>
-          <option value="division:Midcarder">División: Midcarder</option>
-          <option value="division:Tag Team">División: Tag Team</option>
-        </optgroup>
+        <!-- Opciones generadas dinámicamente con casillas -->
       </select>
+
+      <!-- Panel 'Filtrado por' -->
+      <div class="active-filters-bar" id="active-filters-container">
+        <!-- Renderizado dinámico de filtros activos -->
+      </div>
     </div>
 
     <div id="list-roster"></div>
@@ -294,6 +282,78 @@
       const [type, value] = select.value.split(':');
       filters[type] = value;
       render();
+    }
+
+    // Configuración estructural de opciones para los filtros
+    const filterGroupsConfig = [
+      {
+        type: 'brand',
+        label: 'Marca',
+        options: [
+          { val: 'ALL', text: 'Todas las marcas' },
+          { val: 'RAW', text: 'RAW' },
+          { val: 'SmackDown', text: 'SmackDown' },
+          { val: 'NXT', text: 'NXT' },
+          { val: 'EVOLVE', text: 'EVOLVE' }
+        ]
+      },
+      {
+        type: 'alignment',
+        label: 'Alineación',
+        options: [
+          { val: 'ALL', text: 'Todas las alineaciones' },
+          { val: 'Face', text: 'Face' },
+          { val: 'Heel', text: 'Heel' }
+        ]
+      },
+      {
+        type: 'gender',
+        label: 'Género',
+        options: [
+          { val: 'ALL', text: 'Todos los géneros' },
+          { val: 'Men', text: 'Men' },
+          { val: 'Women', text: 'Women' }
+        ]
+      },
+      {
+        type: 'division',
+        label: 'División',
+        options: [
+          { val: 'ALL', text: 'Todas las divisiones' },
+          { val: 'Main Eventer', text: 'Main Eventer' },
+          { val: 'Midcarder', text: 'Midcarder' },
+          { val: 'Tag Team', text: 'Tag Team' }
+        ]
+      }
+    ];
+
+    function renderFilterSelect() {
+      const select = document.getElementById('filter-select-all');
+      select.innerHTML = filterGroupsConfig.map(group => {
+        const optionsHTML = group.options.map(opt => {
+          const isActive = filters[group.type] === opt.val;
+          const box = isActive ? '[☑]' : '[☐]';
+          return `<option value="${group.type}:${opt.val}" ${isActive ? 'selected' : ''}>${box} ${group.label}: ${opt.text}</option>`;
+        }).join('');
+        return `<optgroup label="${group.label}">${optionsHTML}</optgroup>`;
+      }).join('');
+    }
+
+    function renderActiveFiltersBar() {
+      const container = document.getElementById('active-filters-container');
+      const activeBadges = [];
+
+      if (filters.brand !== 'ALL') activeBadges.push(`Marca: ${filters.brand}`);
+      if (filters.alignment !== 'ALL') activeBadges.push(`Alineación: ${filters.alignment}`);
+      if (filters.gender !== 'ALL') activeBadges.push(`Género: ${filters.gender}`);
+      if (filters.division !== 'ALL') activeBadges.push(`División: ${filters.division}`);
+
+      if (activeBadges.length === 0) {
+        container.innerHTML = `<span class="active-filters-label">Filtrado por:</span> <span style="color: var(--text-dim); font-size: 0.75rem;">Ninguno (Mostrando todos)</span>`;
+      } else {
+        const badgesHTML = activeBadges.map(b => `<span class="filter-badge">📌 ${b}</span>`).join('');
+        container.innerHTML = `<span class="active-filters-label">Filtrado por:</span> ${badgesHTML}`;
+      }
     }
 
     // Handlers para añadir items
@@ -526,6 +586,10 @@
     }
 
     function render() {
+      // 0. Actualizar UI de Filtros
+      renderFilterSelect();
+      renderActiveFiltersBar();
+
       // 1. Filtrar Roster
       let sortedRoster = [...store.roster].sort((a, b) => a.name.localeCompare(b.name));
 
