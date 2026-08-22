@@ -21,7 +21,7 @@
     header { background: #000; padding: 15px; text-align: center; font-weight: bold; font-size: 1.2rem; letter-spacing: 1px; color: var(--accent); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
     
     nav { display: flex; justify-content: space-around; background: #1a1a1a; position: fixed; bottom: 0; width: 100%; border-top: 1px solid var(--border); z-index: 100; }
-    nav button { background: none; border: none; color: var(--text-dim); padding: 12px 0; width: 100%; font-size: 0.85rem; font-weight: 600; }
+    nav button { background: none; border: none; color: var(--text-dim); padding: 12px 0; width: 100%; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
     nav button.active { color: var(--accent); border-top: 2px solid var(--accent); }
     
     .tab-content { display: none; padding: 15px; }
@@ -31,6 +31,11 @@
     input, select, button.btn-add { padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: #fff; font-size: 0.9rem; }
     button.btn-add { background: var(--accent); font-weight: bold; border: none; margin-top: 5px; cursor: pointer; }
 
+    /* Filtros de marca */
+    .filter-container { display: flex; gap: 6px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 4px; }
+    .filter-btn { background: #2a2a2a; color: var(--text-dim); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; white-space: nowrap; }
+    .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
     .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .card-info { display: flex; flex-direction: column; gap: 4px; }
     .card-title { font-weight: bold; font-size: 1rem; }
@@ -39,11 +44,11 @@
     .tag-raw { background: #b20710; color: #fff; }
     .tag-smackdown { background: #0055b8; color: #fff; }
     .tag-nxt { background: #d4a017; color: #000; }
-    .tag-evolve { background: #e65100; color: #fff; }
+    .tag-evolve { background: #7b1fa2; color: #fff; } /* Morado */
     .tag-face { background: #2e7d32; color: #fff; }
     .tag-heel { background: #c62828; color: #fff; }
 
-    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; }
+    .btn-del { background: none; border: none; color: #888; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -66,6 +71,16 @@
       </select>
       <button type="submit" class="btn-add">Añadir a Roster</button>
     </form>
+
+    <!-- Filtro por Marcas -->
+    <div class="filter-container">
+      <button class="filter-btn active" onclick="setBrandFilter('ALL', this)">Todas</button>
+      <button class="filter-btn" onclick="setBrandFilter('RAW', this)">RAW</button>
+      <button class="filter-btn" onclick="setBrandFilter('SmackDown', this)">SmackDown</button>
+      <button class="filter-btn" onclick="setBrandFilter('NXT', this)">NXT</button>
+      <button class="filter-btn" onclick="setBrandFilter('EVOLVE', this)">EVOLVE</button>
+    </div>
+
     <div id="list-roster"></div>
   </div>
 
@@ -99,6 +114,7 @@
   <script>
     // Cargar datos guardados
     let store = JSON.parse(localStorage.getItem('universe_data')) || { roster: [], titles: [], matches: [] };
+    let currentBrandFilter = 'ALL';
 
     function saveData() {
       localStorage.setItem('universe_data', JSON.stringify(store));
@@ -110,6 +126,13 @@
       document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-' + tabId).classList.add('active');
       btn.classList.add('active');
+    }
+
+    function setBrandFilter(brand, btn) {
+      currentBrandFilter = brand;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      render();
     }
 
     // Handlers para añadir items
@@ -154,19 +177,29 @@
     }
 
     function render() {
+      // Ordenar roster alfabéticamente por nombre
+      let sortedRoster = [...store.roster].sort((a, b) => a.name.localeCompare(b.name));
+
+      // Filtrar roster según la marca seleccionada
+      if (currentBrandFilter !== 'ALL') {
+        sortedRoster = sortedRoster.filter(r => r.brand === currentBrandFilter);
+      }
+
       // Render Roster
-      document.getElementById('list-roster').innerHTML = store.roster.map(r => `
-        <div class="card">
-          <div class="card-info">
-            <span class="card-title">${r.name}</span>
-            <div>
-              <span class="tag tag-${r.brand.toLowerCase()}">${r.brand}</span>
-              <span class="tag tag-${r.alignment.toLowerCase()}">${r.alignment}</span>
+      document.getElementById('list-roster').innerHTML = sortedRoster.length > 0 
+        ? sortedRoster.map(r => `
+            <div class="card">
+              <div class="card-info">
+                <span class="card-title">${r.name}</span>
+                <div>
+                  <span class="tag tag-${r.brand.toLowerCase()}">${r.brand}</span>
+                  <span class="tag tag-${r.alignment.toLowerCase()}">${r.alignment}</span>
+                </div>
+              </div>
+              <button class="btn-del" onclick="deleteItem('roster', ${r.id})">✕</button>
             </div>
-          </div>
-          <button class="btn-del" onclick="deleteItem('roster', ${r.id})">✕</button>
-        </div>
-      `).join('');
+          `).join('')
+        : `<p style="color: var(--text-dim); text-align: center; margin-top: 20px; font-size: 0.9rem;">No hay Superstars en esta categoría.</p>`;
 
       // Render Titles
       document.getElementById('list-titles').innerHTML = store.titles.map(t => `
