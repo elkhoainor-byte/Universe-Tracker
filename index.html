@@ -31,6 +31,13 @@
     input, select, button.btn-add { padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: #fff; font-size: 0.9rem; }
     button.btn-add { background: var(--accent); font-weight: bold; border: none; margin-top: 5px; cursor: pointer; }
 
+    /* Selección de Marcas con Checkboxes */
+    .brand-selector-wrapper { display: flex; flex-direction: column; gap: 4px; }
+    .brand-selector-label { font-size: 0.75rem; color: var(--text-dim); font-weight: bold; }
+    .brand-checkboxes { display: flex; flex-wrap: wrap; gap: 8px; background: #2a2a2a; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
+    .brand-checkbox-item { display: inline-flex; align-items: center; gap: 5px; font-size: 0.82rem; cursor: pointer; user-select: none; }
+    .brand-checkbox-item input { cursor: pointer; accent-color: var(--accent); }
+
     /* Barra de Búsqueda de Roster */
     .search-box { width: 100%; margin-bottom: 10px; }
     .search-box input { width: 100%; }
@@ -58,6 +65,7 @@
     .tag-smackdown { background: #0055b8; color: #fff; }
     .tag-nxt { background: #d4a017; color: #000; }
     .tag-evolve { background: #7b1fa2; color: #fff; }
+    .tag-brand-default { background: #555555; color: #fff; }
     
     .tag-face { background: #2e7d32; color: #fff; }
     .tag-heel { background: #c62828; color: #fff; }
@@ -101,13 +109,19 @@
   <!-- TAB 1: ROSTER -->
   <div id="tab-roster" class="tab-content active">
     <form id="form-roster">
-      <input type="text" id="roster-name" placeholder="Nombre del Superstar" required>
-      <select id="roster-brand">
-        <option value="RAW">RAW</option>
-        <option value="SmackDown">SmackDown</option>
-        <option value="NXT">NXT</option>
-        <option value="EVOLVE">EVOLVE</option>
-      </select>
+      <input type="text" id="roster-name" placeholder="Nombre del Superstar" autocapitalize="words" required>
+      
+      <!-- Selección Múltiple de Marcas -->
+      <div class="brand-selector-wrapper">
+        <span class="brand-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
+        <div class="brand-checkboxes" id="roster-brands-container">
+          <label class="brand-checkbox-item"><input type="checkbox" value="RAW" checked> RAW</label>
+          <label class="brand-checkbox-item"><input type="checkbox" value="SmackDown"> SmackDown</label>
+          <label class="brand-checkbox-item"><input type="checkbox" value="NXT"> NXT</label>
+          <label class="brand-checkbox-item"><input type="checkbox" value="EVOLVE"> EVOLVE</label>
+        </div>
+      </div>
+
       <select id="roster-alignment">
         <option value="Face">Face</option>
         <option value="Heel">Heel</option>
@@ -140,7 +154,7 @@
 
     <!-- Barra de Búsqueda por Nombre -->
     <div class="search-box">
-      <input type="text" id="roster-search" placeholder="🔎 Buscar luchador por nombre..." oninput="onSearchInput(this.value)">
+      <input type="text" id="roster-search" placeholder="🔎 Buscar luchador por nombre..." autocapitalize="words" oninput="onSearchInput(this.value)">
     </div>
 
     <div id="list-roster"></div>
@@ -149,7 +163,7 @@
   <!-- TAB 2: TAG TEAMS -->
   <div id="tab-teams" class="tab-content">
     <form id="form-teams">
-      <input type="text" id="team-name" placeholder="Nombre del Tag Team / Ficción" required>
+      <input type="text" id="team-name" placeholder="Nombre del Tag Team / Ficción" autocapitalize="words" required>
       <label style="font-size:0.75rem; color:var(--text-dim);">SELECCIONA MIEMBROS DEL ROSTER:</label>
       <div class="checkbox-list" id="team-members-select">
         <!-- Generado dinámicamente -->
@@ -162,8 +176,8 @@
   <!-- TAB 3: CAMPEONES -->
   <div id="tab-titles" class="tab-content">
     <form id="form-titles">
-      <input type="text" id="title-name" placeholder="Nombre del Título (ej. WWE Championship)" required>
-      <input type="text" id="title-holder" placeholder="Campeón Actual" required>
+      <input type="text" id="title-name" placeholder="Nombre del Título (ej. WWE Championship)" autocapitalize="words" required>
+      <input type="text" id="title-holder" placeholder="Campeón Actual" autocapitalize="words" required>
       <button type="submit" class="btn-add">Añadir Campeón</button>
     </form>
     <div id="list-titles"></div>
@@ -172,9 +186,9 @@
   <!-- TAB 4: SHOWS / MATCH CARDS -->
   <div id="tab-matches" class="tab-content">
     <form id="form-matches">
-      <input type="text" id="match-show" placeholder="Show / PPV (ej. SummerSlam)" required>
-      <input type="text" id="match-card" placeholder="Combate (ej. Cena vs. Orton)" required>
-      <input type="text" id="match-winner" placeholder="Ganador / Resultado (dejar 'Pendiente' si no se ha jugado)">
+      <input type="text" id="match-show" placeholder="Show / PPV (ej. SummerSlam)" autocapitalize="words" required>
+      <input type="text" id="match-card" placeholder="Combate (ej. Cena vs. Orton)" autocapitalize="words" required>
+      <input type="text" id="match-winner" placeholder="Ganador / Resultado (dejar 'Pendiente' si no se ha jugado)" autocapitalize="words">
       <button type="submit" class="btn-add">Guardar Combate</button>
     </form>
     <div id="list-matches"></div>
@@ -191,13 +205,18 @@
       <!-- Formulario de Edición -->
       <form id="form-edit-wrestler" style="margin-bottom:0;">
         <label style="font-size:0.75rem; color:var(--text-dim);">DATOS GENERALES</label>
-        <input type="text" id="edit-name" placeholder="Nombre" required>
-        <select id="edit-brand">
-          <option value="RAW">RAW</option>
-          <option value="SmackDown">SmackDown</option>
-          <option value="NXT">NXT</option>
-          <option value="EVOLVE">EVOLVE</option>
-        </select>
+        <input type="text" id="edit-name" placeholder="Nombre" autocapitalize="words" required>
+        
+        <div class="brand-selector-wrapper">
+          <span class="brand-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
+          <div class="brand-checkboxes" id="edit-brands-container">
+            <label class="brand-checkbox-item"><input type="checkbox" value="RAW"> RAW</label>
+            <label class="brand-checkbox-item"><input type="checkbox" value="SmackDown"> SmackDown</label>
+            <label class="brand-checkbox-item"><input type="checkbox" value="NXT"> NXT</label>
+            <label class="brand-checkbox-item"><input type="checkbox" value="EVOLVE"> EVOLVE</label>
+          </div>
+        </div>
+
         <select id="edit-alignment">
           <option value="Face">Face</option>
           <option value="Heel">Heel</option>
@@ -265,9 +284,16 @@
   </nav>
 
   <script>
-    // Cargar datos guardados
+    // Cargar datos guardados y migrar campo 'brand' a array 'brands'
     let store = JSON.parse(localStorage.getItem('universe_data')) || { roster: [], teams: [], titles: [], matches: [] };
     if(!store.teams) store.teams = [];
+
+    // Migración retrocompatible de brand -> brands
+    store.roster.forEach(r => {
+      if (!r.brands) {
+        r.brands = r.brand ? [r.brand] : ['RAW'];
+      }
+    });
 
     // Estado de filtros activos
     let filters = {
@@ -279,6 +305,36 @@
     };
 
     let activeWrestlerId = null;
+
+    // Capitalización automática en tiempo real al pulsar espacio / escribir
+    function setupAutoCapitalize(inputId) {
+      const input = document.getElementById(inputId);
+      if(!input) return;
+
+      input.addEventListener('input', (e) => {
+        const value = input.value;
+        if (value.length > 0) {
+          const capitalized = value.split(' ').map(word => {
+            if (word.length === 0) return '';
+            return word.charAt(0).toUpperCase() + word.slice(1);
+          }).join(' ');
+          
+          if (capitalized !== value) {
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            input.value = capitalized;
+            input.setSelectionRange(start, end);
+          }
+        }
+      });
+    }
+
+    // Inicializar auto-capitalización en inputs de nombres
+    setupAutoCapitalize('roster-name');
+    setupAutoCapitalize('edit-name');
+    setupAutoCapitalize('team-name');
+    setupAutoCapitalize('title-name');
+    setupAutoCapitalize('title-holder');
 
     function saveData() {
       localStorage.setItem('universe_data', JSON.stringify(store));
@@ -393,16 +449,39 @@
     // Handlers para añadir items
     document.getElementById('form-roster').onsubmit = (e) => {
       e.preventDefault();
+      const inputName = document.getElementById('roster-name').value.trim();
+      
+      // Comprobación de duplicados
+      const duplicate = store.roster.find(r => r.name.toLowerCase() === inputName.toLowerCase());
+      if (duplicate) {
+        const confirmAdd = confirm(`⚠️ ¡Atención! Ya existe un luchador registrado como "${duplicate.name}".\n\n¿Deseas añadirlo de todos modos como una nueva entrada?`);
+        if (!confirmAdd) {
+          return; // Cancela la acción
+        }
+      }
+
+      // Obtener marcas seleccionadas
+      const checkedBrands = Array.from(document.querySelectorAll('#roster-brands-container input[type="checkbox"]:checked')).map(cb => cb.value);
+      if (checkedBrands.length === 0) {
+        alert("Por favor selecciona al menos una marca para el luchador.");
+        return;
+      }
+
       store.roster.push({
         id: Date.now(),
-        name: document.getElementById('roster-name').value.trim(),
-        brand: document.getElementById('roster-brand').value,
+        name: inputName,
+        brands: checkedBrands,
         alignment: document.getElementById('roster-alignment').value,
         gender: document.getElementById('roster-gender').value || 'Men',
         division: document.getElementById('roster-division').value || 'Midcarder',
         teamId: null
       });
+
       e.target.reset();
+      // Re-establecer checkbox RAW por defecto al resetear
+      const rawCb = document.querySelector('#roster-brands-container input[value="RAW"]');
+      if (rawCb) rawCb.checked = true;
+
       saveData();
     };
 
@@ -474,7 +553,13 @@
 
       document.getElementById('modal-wrestler-title').innerText = wrestler.name;
       document.getElementById('edit-name').value = wrestler.name;
-      document.getElementById('edit-brand').value = wrestler.brand;
+
+      // Marcar checkboxes de brands en edit modal
+      const wrestlerBrands = wrestler.brands || (wrestler.brand ? [wrestler.brand] : []);
+      document.querySelectorAll('#edit-brands-container input[type="checkbox"]').forEach(cb => {
+        cb.checked = wrestlerBrands.includes(cb.value);
+      });
+
       document.getElementById('edit-alignment').value = wrestler.alignment;
       document.getElementById('edit-gender').value = wrestler.gender || 'Men';
       document.getElementById('edit-division').value = wrestler.division || 'Midcarder';
@@ -508,11 +593,28 @@
       e.preventDefault();
       const wrestler = store.roster.find(r => r.id === activeWrestlerId);
       if(wrestler) {
+        const newName = document.getElementById('edit-name').value.trim();
+
+        // Comprobación de duplicados al editar (excluyendo su propio ID)
+        const duplicate = store.roster.find(r => r.id !== activeWrestlerId && r.name.toLowerCase() === newName.toLowerCase());
+        if (duplicate) {
+          const confirmEdit = confirm(`⚠️ ¡Atención! Ya existe otro luchador registrado como "${duplicate.name}".\n\n¿Deseas guardar los cambios de todos modos?`);
+          if (!confirmEdit) {
+            return;
+          }
+        }
+
+        const checkedBrands = Array.from(document.querySelectorAll('#edit-brands-container input[type="checkbox"]:checked')).map(cb => cb.value);
+        if (checkedBrands.length === 0) {
+          alert("Por favor selecciona al menos una marca para el luchador.");
+          return;
+        }
+
         const oldTeamId = wrestler.teamId;
         const newTeamId = document.getElementById('edit-team').value ? parseInt(document.getElementById('edit-team').value) : null;
 
-        wrestler.name = document.getElementById('edit-name').value.trim();
-        wrestler.brand = document.getElementById('edit-brand').value;
+        wrestler.name = newName;
+        wrestler.brands = checkedBrands;
         wrestler.alignment = document.getElementById('edit-alignment').value;
         wrestler.gender = document.getElementById('edit-gender').value;
         wrestler.division = document.getElementById('edit-division').value;
@@ -531,7 +633,7 @@
         }
 
         saveData();
-        closeWrestlerModal(); // Cierra automáticamente la ventana tras guardar los cambios
+        closeWrestlerModal();
       }
     };
 
@@ -627,7 +729,9 @@
       // 1. Filtrar Roster
       let sortedRoster = [...store.roster].sort((a, b) => a.name.localeCompare(b.name));
 
-      if (filters.brand !== 'ALL') sortedRoster = sortedRoster.filter(r => r.brand === filters.brand);
+      if (filters.brand !== 'ALL') {
+        sortedRoster = sortedRoster.filter(r => (r.brands && r.brands.includes(filters.brand)) || r.brand === filters.brand);
+      }
       if (filters.alignment !== 'ALL') sortedRoster = sortedRoster.filter(r => r.alignment === filters.alignment);
       if (filters.gender !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.gender || 'Men') === filters.gender);
       if (filters.division !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.division || 'Midcarder') === filters.division);
@@ -638,12 +742,19 @@
         ? sortedRoster.map(r => {
             const team = store.teams.find(t => t.id === r.teamId);
             const teamTagHTML = team ? `<span class="tag tag-team">👥 ${team.name}</span>` : '';
+            
+            const rBrands = r.brands || (r.brand ? [r.brand] : ['RAW']);
+            const brandTagsHTML = rBrands.map(b => {
+              const bClass = ['raw', 'smackdown', 'nxt', 'evolve'].includes(b.toLowerCase()) ? `tag-${b.toLowerCase()}` : 'tag-brand-default';
+              return `<span class="tag ${bClass}">${b}</span>`;
+            }).join(' ');
+
             return `
               <div class="card" onclick="openWrestlerModal(${r.id})">
                 <div class="card-info">
                   <span class="card-title">${r.name}</span>
                   <div class="tags-container">
-                    <span class="tag tag-${r.brand.toLowerCase()}">${r.brand}</span>
+                    ${brandTagsHTML}
                     <span class="tag tag-${r.alignment.toLowerCase()}">${r.alignment}</span>
                     <span class="tag tag-gender">${r.gender || 'Men'}</span>
                     <span class="tag tag-division">${r.division || 'Midcarder'}</span>
@@ -658,12 +769,15 @@
 
       // 2. Render Selección de miembros en Formulario de Tag Teams
       document.getElementById('team-members-select').innerHTML = store.roster.length > 0
-        ? store.roster.map(r => `
-            <label class="checkbox-item">
-              <input type="checkbox" value="${r.id}">
-              <span>${r.name} (${r.brand})</span>
-            </label>
-          `).join('')
+        ? store.roster.map(r => {
+            const bText = (r.brands || [r.brand || 'RAW']).join('/');
+            return `
+              <label class="checkbox-item">
+                <input type="checkbox" value="${r.id}">
+                <span>${r.name} (${bText})</span>
+              </label>
+            `;
+          }).join('')
         : `<span style="font-size:0.8rem; color:var(--text-dim);">Añade primero luchadores al Roster.</span>`;
 
       // 3. Render Lista de Tag Teams
