@@ -105,19 +105,10 @@
       position: relative;
     }
 
-    .card > * {
-      position: relative;
-      z-index: 2;
-    }
+    .card > * { position: relative; z-index: 2; }
 
-    /* TAMAÑO UNIFORME PARA CAJAS DEL ROSTER */
-    #list-roster .card {
-      height: 110px;
-      min-height: 110px;
-      max-height: 110px;
-    }
+    #list-roster .card { height: 110px; min-height: 110px; max-height: 110px; }
 
-    /* ENCUADRE DE FONDOS EN PESTAÑA SHOWS */
     #list-shows .card {
       height: 90px;
       background-size: cover;
@@ -150,19 +141,8 @@
       justify-content: center;
     }
 
-    .wrestler-avatar { 
-      width: 100%; 
-      height: 100%;
-      object-fit: cover; 
-      object-position: top center; 
-      background: transparent; 
-      display: block;
-    }
-    
-    .wrestler-avatar-placeholder { 
-      font-size: 1.4rem; 
-      color: var(--text-dim); 
-    }
+    .wrestler-avatar { width: 100%; height: 100%; object-fit: cover; object-position: top center; background: transparent; display: block; }
+    .wrestler-avatar-placeholder { font-size: 1.4rem; color: var(--text-dim); }
 
     .card-info { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; justify-content: center; overflow: hidden; height: 100%; flex: 1; }
     .card-title { font-weight: bold; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px #000; }
@@ -172,27 +152,13 @@
     
     .tag-face { background: #2e7d32; color: #fff; }
     .tag-heel { background: #c62828; color: #fff; }
-
     .tag-gender { background: #37474f; color: #eceff1; }
     .tag-division { background: #455a64; color: #fff; }
     .tag-team { background: #ff9800; color: #000; font-weight: bold; }
     .tag-champ { background: #ffd700; color: #000; font-weight: bold; }
 
-    .card-titles-container {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      height: 100%;
-      padding-left: 6px;
-      flex-shrink: 0;
-    }
-
-    .title-badge-img {
-      max-height: 60px;
-      max-width: 70px;
-      object-fit: contain;
-      filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));
-    }
+    .card-titles-container { display: flex; align-items: center; gap: 6px; height: 100%; padding-left: 6px; flex-shrink: 0; }
+    .title-badge-img { max-height: 60px; max-width: 70px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8)); }
 
     .btn-del { background: none; border: none; color: #aaa; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; z-index: 2; align-self: center; }
     .btn-del:hover { color: var(--accent); }
@@ -264,28 +230,13 @@
     .match-item.draw { border-left-color: #d4a017; }
 
     .confirm-modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      z-index: 300;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); z-index: 300; align-items: center; justify-content: center; padding: 20px;
     }
     .confirm-modal-overlay.active { display: flex; }
     .confirm-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 20px; max-width: 400px; width: 100%; text-align: center; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     }
     .confirm-text { font-size: 1rem; color: #fff; line-height: 1.4; }
     .confirm-actions { display: flex; justify-content: center; gap: 10px; }
@@ -293,6 +244,18 @@
     .btn-confirm-cancel { background: #444; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; }
     
     .show-logo-img { height: 45px; width: 65px; object-fit: contain; }
+
+    /* ESTILOS DEL CALENDARIO */
+    .calendar-header-controls { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px; }
+    .calendar-title-text { font-weight: bold; font-size: 1.1rem; color: var(--accent); }
+    .calendar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 15px; }
+    .calendar-day-header { text-align: center; font-size: 0.75rem; font-weight: bold; color: var(--text-dim); padding: 5px 0; background: #1a1a1a; border-radius: 4px; border: 1px solid var(--border); }
+    .calendar-cell { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; min-height: 75px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; font-size: 0.7rem; position: relative; }
+    .calendar-cell.has-event { border-color: var(--accent); }
+    .cell-day-num { font-size: 0.65rem; color: var(--text-dim); position: absolute; top: 2px; right: 4px; }
+    .cell-event-badge { padding: 3px 4px; border-radius: 4px; font-weight: bold; font-size: 0.65rem; text-align: center; color: #fff; margin-top: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .btn-add-ppv-cell { font-size: 0.6rem; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); border-radius: 4px; padding: 2px; cursor: pointer; margin-top: 2px; text-align: center; }
+    .btn-add-ppv-cell:hover { border-color: var(--accent); color: #fff; }
   </style>
 </head>
 <body>
@@ -326,18 +289,39 @@
     </div>
   </div>
 
+  <!-- TAB: CALENDARIO -->
+  <div id="tab-calendar" class="tab-content">
+    <div class="calendar-header-controls">
+      <button class="btn-add" style="margin:0; padding:6px 12px;" onclick="prevMonth()">◀ Anter.</button>
+      <div class="calendar-title-text" id="calendar-month-year-display">Año 1 - Enero</div>
+      <button class="btn-add" style="margin:0; padding:6px 12px;" onclick="nextMonth()">Sig. ▶</button>
+    </div>
+
+    <form style="flex-direction:row; gap:10px; align-items:center;">
+      <label style="font-size:0.75rem; color:var(--text-dim); white-space:nowrap;">INICIAR EN MES:</label>
+      <select id="calendar-start-month-select" onchange="changeStartMonth(this.value)" style="margin:0; flex:1;"></select>
+    </form>
+
+    <div class="calendar-grid">
+      <div class="calendar-day-header">LUN</div>
+      <div class="calendar-day-header">MAR</div>
+      <div class="calendar-day-header">MIÉ</div>
+      <div class="calendar-day-header">JUE</div>
+      <div class="calendar-day-header">VIE</div>
+      <div id="calendar-days-container" style="display:contents;"></div>
+    </div>
+  </div>
+
   <!-- TAB 1: ROSTER -->
   <div id="tab-roster" class="tab-content">
     <button class="btn-trigger-add" onclick="openWrestlerModal(null)">➕ Añadir Luchador</button>
 
-    <!-- Filtros -->
     <div class="filters-wrapper">
       <span class="filter-header">🔍 Seleccionar Filtros</span>
       <select id="filter-select-all" onchange="onFilterChange(this)"></select>
       <div class="active-filters-bar" id="active-filters-container"></div>
     </div>
 
-    <!-- Búsqueda -->
     <div class="search-box">
       <input type="text" id="roster-search" placeholder="🔎 Buscar luchador por nombre..." autocapitalize="words" oninput="onSearchInput(this.value)">
     </div>
@@ -397,6 +381,15 @@
         <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL SHOW</label>
         <input type="text" id="show-name" placeholder="Ej. RAW, SmackDown..." autocapitalize="words" required>
         
+        <label style="font-size:0.75rem; color:var(--text-dim);">DÍA DE LA SEMANA DE DISPUTA:</label>
+        <select id="show-day">
+          <option value="1">Lunes</option>
+          <option value="2">Martes</option>
+          <option value="3">Miércoles</option>
+          <option value="4">Jueves</option>
+          <option value="5">Viernes</option>
+        </select>
+
         <label style="font-size:0.75rem; color:var(--text-dim);">COLOR REPRESENTATIVO:</label>
         <input type="color" id="show-color" value="#e50914" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
 
@@ -410,6 +403,29 @@
       </form>
 
       <button type="button" id="btn-delete-show" class="btn-delete-show" style="display:none;" onclick="deleteCurrentShow()">Eliminar Show</button>
+    </div>
+  </div>
+
+  <!-- MODAL CREAR/EDITAR PPV -->
+  <div id="modal-ppv" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-ppv-title">Gestionar PPV / Evento</span>
+        <button class="modal-close" onclick="closePPVModal()">✕</button>
+      </div>
+
+      <form id="form-edit-ppv" style="margin-bottom:0;">
+        <input type="hidden" id="ppv-day-index">
+        <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL PPV / EVENTO ESPECIAL</label>
+        <input type="text" id="ppv-name" placeholder="Ej. Wrestlemania, SummerSlam..." autocapitalize="words" required>
+        
+        <label style="font-size:0.75rem; color:var(--text-dim);">COLOR DEL EVENTO:</label>
+        <input type="color" id="ppv-color" value="#ffd700" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
+
+        <button type="submit" class="btn-add">Guardar PPV</button>
+      </form>
+
+      <button type="button" id="btn-delete-ppv" class="btn-delete-show" style="display:none;" onclick="deleteCurrentPPV()">Eliminar PPV</button>
     </div>
   </div>
 
@@ -522,6 +538,7 @@
 
   <nav>
     <button class="active" onclick="switchTab('home', this)">Inicio</button>
+    <button onclick="switchTab('calendar', this)">Calendario</button>
     <button onclick="switchTab('roster', this)">Roster</button>
     <button onclick="switchTab('shows', this)">Shows</button>
     <button onclick="switchTab('teams', this)">Tag Teams</button>
@@ -583,18 +600,47 @@
       });
     }
 
+    const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
     let defaultShows = [
-      { id: 'raw', name: 'RAW', color: '#b20710' },
-      { id: 'smackdown', name: 'SmackDown', color: '#0055b8' },
-      { id: 'nxt', name: 'NXT', color: '#d4a017' },
-      { id: 'evolve', name: 'EVOLVE', color: '#7b1fa2' }
+      { id: 'raw', name: 'RAW', color: '#b20710', day: 1 },
+      { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2 },
+      { id: 'evolve', name: 'EVOLVE', color: '#7b1fa2', day: 3 },
+      { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5 }
     ];
 
-    let store = JSON.parse(localStorage.getItem('universe_data')) || { roster: [], teams: [], titles: [], matches: [], shows: defaultShows };
+    let store = JSON.parse(localStorage.getItem('universe_data')) || { 
+      roster: [], 
+      teams: [], 
+      titles: [], 
+      matches: [], 
+      shows: defaultShows,
+      calendar: {
+        startMonth: 0,
+        currentYear: 1,
+        currentMonthIndex: 0,
+        ppvs: {}
+      }
+    };
+
     if(!store.teams) store.teams = [];
     if(!store.titles) store.titles = [];
     if(!store.matches) store.matches = [];
     if(!store.shows || store.shows.length === 0) store.shows = defaultShows;
+    if(!store.calendar) {
+      store.calendar = { startMonth: 0, currentYear: 1, currentMonthIndex: 0, ppvs: {} };
+    }
+    if(!store.calendar.ppvs) store.calendar.ppvs = {};
+
+    store.shows.forEach(s => {
+      if (!s.day) {
+        if (s.name.toUpperCase() === 'RAW') s.day = 1;
+        else if (s.name.toUpperCase() === 'NXT') s.day = 2;
+        else if (s.name.toUpperCase() === 'EVOLVE') s.day = 3;
+        else if (s.name.toUpperCase() === 'SMACKDOWN') s.day = 5;
+        else s.day = 1;
+      }
+    });
 
     store.roster.forEach(r => {
       if (!r.brands) {
@@ -602,16 +648,10 @@
       }
     });
 
-    let filters = {
-      brand: 'ALL',
-      alignment: 'ALL',
-      gender: 'ALL',
-      division: 'ALL',
-      search: ''
-    };
-
+    let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
     let activeWrestlerId = null;
     let activeShowId = null;
+    let activePPVDayIndex = null;
     let confirmAction = null;
 
     function handleImgError(img) {
@@ -622,9 +662,7 @@
       img.replaceWith(placeholder);
     }
 
-    function cleanName(str) {
-      return str.replace(/^["'“`«ʼ\s]+/, '');
-    }
+    function cleanName(str) { return str.replace(/^["'“`«ʼ\s]+/, ''); }
 
     function setupAutoCapitalize(inputId) {
       const input = document.getElementById(inputId);
@@ -653,6 +691,7 @@
     setupAutoCapitalize('title-name');
     setupAutoCapitalize('title-holder');
     setupAutoCapitalize('show-name');
+    setupAutoCapitalize('ppv-name');
 
     function saveData() {
       localStorage.setItem('universe_data', JSON.stringify(store));
@@ -740,6 +779,127 @@
       if (radio) radio.checked = true;
     }
 
+    /* GESTIÓN DE CALENDARIO */
+    function renderCalendar() {
+      const startMonth = store.calendar.startMonth || 0;
+      const currentMonthIndex = store.calendar.currentMonthIndex || 0;
+      
+      const absoluteMonth = startMonth + currentMonthIndex;
+      const monthDisplayIndex = absoluteMonth % 12;
+      const yearDisplay = Math.floor(absoluteMonth / 12) + 1;
+
+      document.getElementById('calendar-month-year-display').innerText = `Año ${yearDisplay} - ${MONTH_NAMES[monthDisplayIndex]}`;
+
+      const monthSelect = document.getElementById('calendar-start-month-select');
+      if (monthSelect.children.length === 0) {
+        monthSelect.innerHTML = MONTH_NAMES.map((m, idx) => `<option value="${idx}" ${idx === startMonth ? 'selected' : ''}>${m}</option>`).join('');
+      } else {
+        monthSelect.value = startMonth;
+      }
+
+      const daysContainer = document.getElementById('calendar-days-container');
+      let html = '';
+
+      const showCountsInMonth = {};
+
+      for (let day = 1; day <= 20; day++) {
+        const dayOfWeek = ((day - 1) % 5) + 1; 
+        const weekNum = Math.floor((day - 1) / 5) + 1;
+
+        const dayShows = store.shows.filter(s => parseInt(s.day) === dayOfWeek);
+
+        let cellEventsHTML = '';
+
+        dayShows.forEach(s => {
+          if (!showCountsInMonth[s.id]) showCountsInMonth[s.id] = 0;
+          showCountsInMonth[s.id]++;
+          const showNum = showCountsInMonth[s.id];
+          const eventLabel = `${s.name} #${showNum}`;
+
+          cellEventsHTML += `<div class="cell-event-badge" style="background:${s.color};" onclick="openShowModal('${s.id}')">${eventLabel}</div>`;
+        });
+
+        const ppvKey = `Y${yearDisplay}_M${monthDisplayIndex}_D${day}`;
+        const ppv = store.calendar.ppvs[ppvKey];
+
+        if (ppv) {
+          cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openPPVModal(${day}, '${ppvKey}')">🏆 ${ppv.name}</div>`;
+        } else {
+          cellEventsHTML += `<button type="button" class="btn-add-ppv-cell" onclick="openPPVModal(${day}, '${ppvKey}')">+ PPV</button>`;
+        }
+
+        html += `
+          <div class="calendar-cell ${ppv ? 'has-event' : ''}">
+            <span class="cell-day-num">Día ${day} (W${weekNum})</span>
+            ${cellEventsHTML}
+          </div>
+        `;
+      }
+
+      daysContainer.innerHTML = html;
+    }
+
+    function prevMonth() {
+      if (!store.calendar.currentMonthIndex) store.calendar.currentMonthIndex = 0;
+      if (store.calendar.currentMonthIndex > 0) {
+        store.calendar.currentMonthIndex--;
+        saveData();
+      }
+    }
+
+    function nextMonth() {
+      if (!store.calendar.currentMonthIndex) store.calendar.currentMonthIndex = 0;
+      store.calendar.currentMonthIndex++;
+      saveData();
+    }
+
+    function changeStartMonth(val) {
+      store.calendar.startMonth = parseInt(val);
+      saveData();
+    }
+
+    function openPPVModal(dayIndex, ppvKey) {
+      activePPVDayIndex = ppvKey;
+      const ppv = store.calendar.ppvs[ppvKey];
+      const btnDelete = document.getElementById('btn-delete-ppv');
+
+      if (ppv) {
+        document.getElementById('modal-ppv-title').innerText = 'Editar PPV';
+        document.getElementById('ppv-name').value = ppv.name;
+        document.getElementById('ppv-color').value = ppv.color || '#ffd700';
+        btnDelete.style.display = 'block';
+      } else {
+        document.getElementById('modal-ppv-title').innerText = `Añadir PPV (Día ${dayIndex})`;
+        document.getElementById('ppv-name').value = '';
+        document.getElementById('ppv-color').value = '#ffd700';
+        btnDelete.style.display = 'none';
+      }
+      document.getElementById('modal-ppv').classList.add('active');
+    }
+
+    function closePPVModal() {
+      document.getElementById('modal-ppv').classList.remove('active');
+      activePPVDayIndex = null;
+    }
+
+    document.getElementById('form-edit-ppv').onsubmit = (e) => {
+      e.preventDefault();
+      if (!activePPVDayIndex) return;
+      const name = document.getElementById('ppv-name').value.trim();
+      const color = document.getElementById('ppv-color').value;
+
+      store.calendar.ppvs[activePPVDayIndex] = { name, color };
+      closePPVModal();
+      saveData();
+    };
+
+    function deleteCurrentPPV() {
+      if (!activePPVDayIndex) return;
+      delete store.calendar.ppvs[activePPVDayIndex];
+      closePPVModal();
+      saveData();
+    }
+
     /* GESTIÓN DE SHOWS */
     async function openShowModal(id = null) {
       activeShowId = id;
@@ -750,6 +910,7 @@
       if (id === null) {
         document.getElementById('modal-show-title').innerText = 'Añadir Nuevo Show';
         document.getElementById('show-name').value = '';
+        document.getElementById('show-day').value = "1";
         document.getElementById('show-color').value = '#e50914';
         btnDelete.style.display = 'none';
       } else {
@@ -757,6 +918,7 @@
         if (!show) return;
         document.getElementById('modal-show-title').innerText = 'Editar Show';
         document.getElementById('show-name').value = show.name;
+        document.getElementById('show-day').value = show.day || 1;
         document.getElementById('show-color').value = show.color || '#e50914';
         
         btnDelete.innerText = `Eliminar "${show.name}"?`;
@@ -784,6 +946,7 @@
     document.getElementById('form-edit-show').onsubmit = async (e) => {
       e.preventDefault();
       const name = document.getElementById('show-name').value.trim();
+      const day = parseInt(document.getElementById('show-day').value);
       const color = document.getElementById('show-color').value;
 
       const logoFile = document.getElementById('show-logo-file').files[0];
@@ -800,12 +963,13 @@
           await saveImageToDB('show_bg_' + newId, base64Bg);
         }
 
-        store.shows.push({ id: newId, name, color });
+        store.shows.push({ id: newId, name, day, color });
       } else {
         const show = store.shows.find(s => s.id === activeShowId);
         if (show) {
           const oldName = show.name;
           show.name = name;
+          show.day = day;
           show.color = color;
 
           if (logoFile) {
@@ -1189,6 +1353,7 @@
 
       renderFilterSelect();
       renderActiveFiltersBar();
+      renderCalendar();
 
       let sortedRoster = [...store.roster].sort((a, b) => cleanName(a.name).localeCompare(cleanName(b.name)));
 
@@ -1273,6 +1438,8 @@
         : `<p style="color: var(--text-dim); text-align: center; margin-top: 20px; font-size: 0.9rem;">No hay Superstars que cumplan estos filtros.</p>`;
 
       // Render Pestaña Shows
+      const dayMap = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes' };
+
       const showsCardsHTML = await Promise.all(store.shows.map(async s => {
         const logo = await getImageFromDB('show_logo_' + s.id);
         const bg = await getImageFromDB('show_bg_' + s.id);
@@ -1286,7 +1453,7 @@
               ${logoHTML}
               <div class="card-info">
                 <span class="card-title" style="font-size:1.1rem;">${s.name}</span>
-                <span class="card-sub">Color: <span style="display:inline-block; width:12px; height:12px; background:${s.color}; border-radius:50%; vertical-align:middle;"></span> ${s.color}</span>
+                <span class="card-sub">Día: <b>${dayMap[s.day] || 'Lunes'}</b> | Color: <span style="display:inline-block; width:12px; height:12px; background:${s.color}; border-radius:50%; vertical-align:middle;"></span> ${s.color}</span>
               </div>
             </div>
           </div>
