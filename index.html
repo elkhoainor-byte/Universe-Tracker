@@ -183,7 +183,6 @@
     .edit-tab-btn { flex: 1; padding: 8px; background: #2a2a2a; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
     .edit-tab-btn.active { background: var(--accent); border-color: var(--accent); }
 
-    /* ===== CARTELERA DE HOY ===== */
     .card-slot {
       background: #1a1a1a;
       border: 1px solid var(--border);
@@ -353,6 +352,15 @@
       width: 16px;
       height: 16px;
       cursor: pointer;
+    }
+    .title-warning {
+      font-size: 0.72rem;
+      color: #ff9800;
+      margin-top: 6px;
+      padding: 6px;
+      background: #2a1f00;
+      border-radius: 4px;
+      border-left: 3px solid #ff9800;
     }
   </style>
 </head>
@@ -709,18 +717,10 @@
         "5-Way": 5,
         "2 contra 2": 4
       },
-      "Inferno": {
-        "1 contra 1": 2
-      },
-      "3 Stages of Hell": {
-        "special": true
-      },
-      "I Quit": {
-        "1 contra 1": 2
-      },
-      "Contenedor": {
-        "1 contra 1": 2
-      },
+      "Inferno": { "1 contra 1": 2 },
+      "3 Stages of Hell": { "special": true },
+      "I Quit": { "1 contra 1": 2 },
+      "Contenedor": { "1 contra 1": 2 },
       "Peleas": {
         "1 contra 1": 2,
         "Triple Threat": 3,
@@ -767,12 +767,8 @@
         "Sumisión 1 contra 1": 2,
         "No Holds Barred 1 contra 1": 2
       },
-      "Underground": {
-        "1 contra 1": 2
-      },
-      "Reglas de Bloodline": {
-        "4 vs 4 (Principal + 3 aliados por bando)": 8
-      },
+      "Underground": { "1 contra 1": 2 },
+      "Reglas de Bloodline": { "4 vs 4 (Principal + 3 aliados por bando)": 8 },
       "Hell in a Cell": {
         "1 contra 1": 2,
         "Triple Threat": 3,
@@ -789,9 +785,7 @@
         "Fatal 4-Way": 4,
         "2 contra 2": 4
       },
-      "Elimination Chamber": {
-        "6 participantes": 6
-      },
+      "Elimination Chamber": { "6 participantes": 6 },
       "Tables": {
         "1 contra 1": 2,
         "Triple Threat": 3,
@@ -848,10 +842,8 @@
 
     const MATCH_TYPE_LIST = Object.keys(MATCH_TYPES);
 
-    // ========== HELPER: Formatear resumen del combate ==========
     function formatMatchSummary(names, matchType, subType) {
       if (!names || names.length === 0) return '?';
-      
       const clean = names.map(n => n || '?');
       const sub = (subType || '').toLowerCase();
       const type = (matchType || '').toLowerCase();
@@ -877,7 +869,6 @@
       if (type === 'reglas de bloodline' && clean.length >= 8) {
         return `${clean[0]} (+ ${clean[1]}, ${clean[2]}, ${clean[3]}) vs ${clean[4]} (+ ${clean[5]}, ${clean[6]}, ${clean[7]})`;
       }
-
       return clean.join(' vs ');
     }
 
@@ -1038,6 +1029,34 @@
     function setRadioValue(name, value) { const r = document.querySelector(`input[name="${name}"][value="${value}"]`); if (r) r.checked = true; }
 
     function getTotalUniverseDays() { return (store.calendar.currentMonthIndex || 0) * 28 + (store.calendar.currentDay || 1) - 1; }
+
+    // ========== TRANSFER TITLE (cambio de campeón) ==========
+    function transferTitle(titleId, newChampionIds) {
+      const title = store.titles.find(t => t.id === titleId);
+      if (!title || !newChampionIds || newChampionIds.length === 0) return false;
+
+      const sameChamps = title.champions && 
+        title.champions.length === newChampionIds.length && 
+        title.champions.every((id, i) => id === newChampionIds[i]);
+      
+      if (sameChamps) return false; // El campeón defendió con éxito
+
+      // Guardar reinado anterior en historial
+      const daysReigned = Math.max(0, getTotalUniverseDays() - (title.reignStartDay || 0));
+      const prevNames = (title.champions || []).map(cId => {
+        const r = store.roster.find(ros => ros.id === cId);
+        return r ? r.name : 'Desconocido';
+      }).join(' & ');
+
+      if (!title.history) title.history = [];
+      title.history.unshift({ champsNames: prevNames, days: daysReigned });
+
+      // Nuevo reinado
+      title.champions = [...newChampionIds];
+      title.reignStartDay = getTotalUniverseDays();
+      title.isInaugural = false;
+      return true;
+    }
 
     // ========== CALENDAR ==========
     function renderCalendar() {
@@ -1451,6 +1470,15 @@
       }
     }
 
+    // Comprueba si al menos un campeón actual del título está entre los participantes
+    function hasChampionInMatch(slot) {
+      if (!slot.isTitleMatch || !slot.titleId) return true;
+      const title = store.titles.find(t => t.id === slot.titleId);
+      if (!title || !title.champions || title.champions.length === 0) return true;
+      const parts = (slot.participants || []).filter(Boolean);
+      return title.champions.some(cId => parts.includes(cId));
+    }
+
     function renderTodayCard() {
       ensureTodaySlots();
       const event = getCurrentEvent();
@@ -1502,7 +1530,6 @@
           `;
         }
 
-        // Combate
         let html = `
           <div class="card-slot ${isLocked ? 'locked' : ''}">
             <div class="card-slot-header">
@@ -1551,7 +1578,6 @@
             </div>
           `;
 
-          // Checkbox título
           html += renderTitleMatchBox(slot, idx, isLocked);
 
           const names = slot.participants.map(id => {
@@ -1604,7 +1630,6 @@
               </div>
             `;
 
-            // Árbitro Especial
             if (slot.matchType === "Árbitro especial invitado") {
               html += `
                 <div class="participant-box" style="margin-top:8px; grid-column: 1 / -1;">
@@ -1617,7 +1642,6 @@
               `;
             }
 
-            // Checkbox título
             html += renderTitleMatchBox(slot, idx, isLocked);
 
             const names = slot.participants.map(id => {
@@ -1637,7 +1661,7 @@
           }
         }
 
-        // Selector de ganador (solo si está finalizado)
+        // Selector de ganador
         if (isLocked && slot.type === 'combate' && slot.matchType) {
           const participantNames = (slot.participants || []).map(id => {
             const w = store.roster.find(r => r.id == id);
@@ -1673,6 +1697,10 @@
         return `<option value="${t.id}" ${slot.titleId == t.id ? 'selected' : ''}>${t.name}${champs ? ' (' + champs + ')' : ''}</option>`;
       }).join('');
 
+      const champWarning = (slot.isTitleMatch && slot.titleId && !hasChampionInMatch(slot))
+        ? `<div class="title-warning">⚠️ Al menos un campeón actual del título debe participar en el combate.</div>`
+        : '';
+
       return `
         <div class="title-match-box">
           <label>
@@ -1684,6 +1712,7 @@
               <option value="">-- Seleccionar título --</option>
               ${titlesOptions}
             </select>
+            ${champWarning}
           ` : ''}
         </div>
       `;
@@ -1701,7 +1730,30 @@
 
     function setTitleForMatch(idx, titleId) {
       if (store.todayCard.locked) return;
-      store.todayCard.slots[idx].titleId = titleId ? parseInt(titleId) : null;
+      const slot = store.todayCard.slots[idx];
+      slot.titleId = titleId ? parseInt(titleId) : null;
+
+      // Auto-rellenar campeones actuales en los primeros slots de participantes
+      if (slot.titleId) {
+        const title = store.titles.find(t => t.id === slot.titleId);
+        if (title && title.champions && title.champions.length > 0) {
+          const numNeeded = slot.participants ? slot.participants.length : 2;
+          // Poner campeones en las primeras posiciones
+          const newParts = Array(numNeeded).fill(null);
+          title.champions.forEach((cId, i) => {
+            if (i < numNeeded) newParts[i] = cId;
+          });
+          // Conservar participantes ya elegidos que no sean campeones, en slots libres
+          const existing = (slot.participants || []).filter(p => p && !title.champions.includes(p));
+          let ei = 0;
+          for (let i = 0; i < newParts.length; i++) {
+            if (newParts[i] === null && ei < existing.length) {
+              newParts[i] = existing[ei++];
+            }
+          }
+          slot.participants = newParts;
+        }
+      }
       saveData();
       renderTodayCard();
     }
@@ -1739,6 +1791,12 @@
       const num = (MATCH_TYPES[store.todayCard.slots[idx].matchType] && MATCH_TYPES[store.todayCard.slots[idx].matchType][subType]) || 2;
       store.todayCard.slots[idx].participants = Array(num).fill(null);
       store.todayCard.slots[idx].specialReferee = null;
+
+      // Si ya había título seleccionado, re-rellenar campeones
+      if (store.todayCard.slots[idx].isTitleMatch && store.todayCard.slots[idx].titleId) {
+        setTitleForMatch(idx, store.todayCard.slots[idx].titleId);
+        return;
+      }
       saveData();
       renderTodayCard();
     }
@@ -1766,15 +1824,58 @@
     }
 
     function setWinner(idx, winnerName) {
-      store.todayCard.slots[idx].winner = winnerName || '';
-      
       const slot = store.todayCard.slots[idx];
+      slot.winner = winnerName || '';
+
+      // Actualizar match en historial
       if (slot.matchId) {
         const match = store.matches.find(m => m.id === slot.matchId);
         if (match) {
           match.winner = winnerName || 'Pendiente';
         }
       }
+
+      // ===== CAMBIO AUTOMÁTICO DE TÍTULO =====
+      if (slot.isTitleMatch && slot.titleId && winnerName && winnerName !== 'Empate' && winnerName !== '') {
+        const title = store.titles.find(t => t.id === slot.titleId);
+        if (title) {
+          // Buscar el ID del ganador
+          const winnerWrestler = store.roster.find(r => r.name === winnerName);
+          if (winnerWrestler) {
+            const isCurrentChamp = (title.champions || []).includes(winnerWrestler.id);
+
+            if (!isCurrentChamp) {
+              // El campeón perdió → transferir título
+              let newChamps = [winnerWrestler.id];
+
+              // Si es título de parejas, intentar encontrar al compañero del ganador en el combate
+              if (title.type === 'tag') {
+                const parts = (slot.participants || []).filter(Boolean);
+                // Buscar compañero de equipo del ganador
+                const winnerTeam = store.teams.find(t => t.members && t.members.includes(winnerWrestler.id));
+                let partnerId = null;
+                if (winnerTeam) {
+                  partnerId = winnerTeam.members.find(m => m !== winnerWrestler.id && parts.includes(m));
+                }
+                // Si no hay team formal, tomar al otro del mismo "lado" en 2v2
+                if (!partnerId && parts.length >= 4) {
+                  // Asumimos formato A B vs C D → si ganador es A o B, partner es el otro
+                  const idxW = parts.indexOf(winnerWrestler.id);
+                  if (idxW === 0) partnerId = parts[1];
+                  else if (idxW === 1) partnerId = parts[0];
+                  else if (idxW === 2) partnerId = parts[3];
+                  else if (idxW === 3) partnerId = parts[2];
+                }
+                if (partnerId) newChamps = [winnerWrestler.id, partnerId];
+              }
+
+              transferTitle(slot.titleId, newChamps);
+            }
+            // Si el campeón ganó, no se cambia el título (defensa exitosa)
+          }
+        }
+      }
+
       saveData();
       renderTodayCard();
     }
@@ -1800,6 +1901,19 @@
 
     function finalizeTodayCard() {
       if (store.todayCard.locked) return;
+
+      // Validar combates por título
+      for (const slot of store.todayCard.slots) {
+        if (slot.type === 'combate' && slot.isTitleMatch && slot.titleId) {
+          if (!hasChampionInMatch(slot)) {
+            const title = store.titles.find(t => t.id === slot.titleId);
+            const tName = title ? title.name : 'el título';
+            alert(`⚠️ El combate por "${tName}" debe incluir al menos a un campeón actual.`);
+            return;
+          }
+        }
+      }
+
       showConfirmModal("¿Finalizar esta parrilla? Podrás elegir los ganadores después.", () => {
         store.todayCard.locked = true;
 
