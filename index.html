@@ -183,21 +183,55 @@
     .edit-tab-btn { flex: 1; padding: 8px; background: #2a2a2a; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
     .edit-tab-btn.active { background: var(--accent); border-color: var(--accent); }
 
+    /* ===== CARTELERA DE HOY – estilos mejorados ===== */
     .card-slot {
-      background: #1a1a1a;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 12px;
+      background: linear-gradient(145deg, #1c1c1c 0%, #161616 100%);
+      border: 1px solid #3a3a3a;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      position: relative;
     }
-    .card-slot.locked { opacity: 0.95; border-color: #555; }
+    .card-slot::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 12px; bottom: 12px;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: var(--accent);
+    }
+    .card-slot.locked {
+      opacity: 0.92;
+      border-color: #555;
+    }
+    .card-slot.locked::before {
+      background: #555;
+    }
     .card-slot-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2a2a2a;
     }
-    .card-slot-title { font-weight: bold; font-size: 0.95rem; color: var(--accent); }
+    .card-slot-title {
+      font-weight: bold;
+      font-size: 0.95rem;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+    }
+    .card-slot-title .slot-num {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
 
     .type-choice-btns {
       display: flex;
@@ -230,25 +264,27 @@
     .participants-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 8px;
+      gap: 10px;
+      margin-top: 10px;
     }
     .participant-box {
-      background: #252525;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px;
+      background: #222;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      padding: 8px;
     }
     .participant-box label {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: var(--text-dim);
       display: block;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
     }
     .participant-box select {
       width: 100%;
-      padding: 7px;
-      border-radius: 4px;
+      padding: 8px;
+      border-radius: 5px;
       border: 1px solid var(--border);
       background: #1a1a1a;
       color: #fff;
@@ -256,27 +292,29 @@
     }
 
     .stages-box {
-      background: #252525;
-      border: 1px solid var(--border);
+      background: #222;
+      border: 1px solid #3a3a3a;
       border-radius: 8px;
       padding: 10px;
       margin-bottom: 10px;
     }
     .stages-box label {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: var(--text-dim);
       display: block;
       margin-bottom: 4px;
     }
 
     .slot-summary {
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      margin-top: 8px;
-      padding: 8px;
-      background: #252525;
-      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #ccc;
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: #1a1a1a;
+      border-radius: 8px;
       border-left: 3px solid var(--gold-end);
+      line-height: 1.45;
+      word-break: break-word;
     }
 
     .btn-reset-slot {
@@ -316,9 +354,9 @@
     }
 
     .winner-box {
-      margin-top: 10px;
-      padding: 10px;
-      background: #1a2a1a;
+      margin-top: 12px;
+      padding: 12px;
+      background: #142214;
       border: 1px solid #2e7d32;
       border-radius: 8px;
     }
@@ -331,9 +369,9 @@
     }
 
     .title-match-box {
-      margin-top: 10px;
-      padding: 10px;
-      background: #2a2a1a;
+      margin-top: 12px;
+      padding: 12px;
+      background: #1f1f14;
       border: 1px solid var(--gold-end);
       border-radius: 8px;
     }
@@ -361,6 +399,23 @@
       background: #2a1f00;
       border-radius: 4px;
       border-left: 3px solid #ff9800;
+    }
+    .ref-warning {
+      font-size: 0.72rem;
+      color: #ff7043;
+      margin-top: 6px;
+      padding: 6px;
+      background: #2a1510;
+      border-radius: 4px;
+      border-left: 3px solid #ff7043;
+    }
+
+    .match-type-label {
+      font-size: 0.78rem;
+      color: var(--gold-end);
+      margin-bottom: 10px;
+      font-weight: bold;
+      letter-spacing: 0.3px;
     }
   </style>
 </head>
@@ -1030,7 +1085,6 @@
 
     function getTotalUniverseDays() { return (store.calendar.currentMonthIndex || 0) * 28 + (store.calendar.currentDay || 1) - 1; }
 
-    // ========== TRANSFER TITLE (cambio de campeón) ==========
     function transferTitle(titleId, newChampionIds) {
       const title = store.titles.find(t => t.id === titleId);
       if (!title || !newChampionIds || newChampionIds.length === 0) return false;
@@ -1039,9 +1093,8 @@
         title.champions.length === newChampionIds.length && 
         title.champions.every((id, i) => id === newChampionIds[i]);
       
-      if (sameChamps) return false; // El campeón defendió con éxito
+      if (sameChamps) return false;
 
-      // Guardar reinado anterior en historial
       const daysReigned = Math.max(0, getTotalUniverseDays() - (title.reignStartDay || 0));
       const prevNames = (title.champions || []).map(cId => {
         const r = store.roster.find(ros => ros.id === cId);
@@ -1051,7 +1104,6 @@
       if (!title.history) title.history = [];
       title.history.unshift({ champsNames: prevNames, days: daysReigned });
 
-      // Nuevo reinado
       title.champions = [...newChampionIds];
       title.reignStartDay = getTotalUniverseDays();
       title.isInaugural = false;
@@ -1470,7 +1522,6 @@
       }
     }
 
-    // Comprueba si al menos un campeón actual del título está entre los participantes
     function hasChampionInMatch(slot) {
       if (!slot.isTitleMatch || !slot.titleId) return true;
       const title = store.titles.find(t => t.id === slot.titleId);
@@ -1506,7 +1557,7 @@
           return `
             <div class="card-slot ${isLocked ? 'locked' : ''}">
               <div class="card-slot-header">
-                <span class="card-slot-title">Parrilla ${idx + 1}</span>
+                <span class="card-slot-title"><span class="slot-num">${idx + 1}</span> Parrilla</span>
               </div>
               ${isLocked ? '<div style="color:var(--text-dim); font-size:0.85rem;">Sin contenido</div>' : `
                 <div class="type-choice-btns">
@@ -1522,7 +1573,7 @@
           return `
             <div class="card-slot ${isLocked ? 'locked' : ''}">
               <div class="card-slot-header">
-                <span class="card-slot-title">Parrilla ${idx + 1} · Promo</span>
+                <span class="card-slot-title"><span class="slot-num">${idx + 1}</span> Promo</span>
                 ${!isLocked ? `<button class="btn-reset-slot" onclick="resetSlot(${idx})">✕</button>` : ''}
               </div>
               <div class="slot-summary">🎤 Segmento de promo</div>
@@ -1533,7 +1584,7 @@
         let html = `
           <div class="card-slot ${isLocked ? 'locked' : ''}">
             <div class="card-slot-header">
-              <span class="card-slot-title">Parrilla ${idx + 1} · Combate</span>
+              <span class="card-slot-title"><span class="slot-num">${idx + 1}</span> Combate</span>
               ${!isLocked ? `<button class="btn-reset-slot" onclick="resetSlot(${idx})">✕</button>` : ''}
             </div>
         `;
@@ -1546,7 +1597,7 @@
             </select>
           `;
         } else if (slot.matchType === "3 Stages of Hell") {
-          html += `<div style="font-size:0.8rem; color:var(--gold-end); margin-bottom:8px; font-weight:bold;">3 Stages of Hell</div>`;
+          html += `<div class="match-type-label">3 Stages of Hell</div>`;
           
           for (let s = 0; s < 3; s++) {
             html += `
@@ -1599,7 +1650,7 @@
 
           if (subKeys.length > 1 && !slot.subType) {
             html += `
-              <div style="font-size:0.8rem; color:var(--text-dim); margin-bottom:4px;">${slot.matchType}</div>
+              <div class="match-type-label">${slot.matchType}</div>
               <select class="slot-select" onchange="setSubType(${idx}, this.value)" ${isLocked ? 'disabled' : ''}>
                 <option value="">-- Elige formato --</option>
                 ${subKeys.map(s => `<option value="${s}">${s}</option>`).join('')}
@@ -1614,7 +1665,7 @@
             }
 
             html += `
-              <div style="font-size:0.8rem; color:var(--gold-end); margin-bottom:8px; font-weight:bold;">
+              <div class="match-type-label">
                 ${slot.matchType}${finalSub ? ' · ' + finalSub : ''}
               </div>
               <div class="participants-grid">
@@ -1631,13 +1682,15 @@
             `;
 
             if (slot.matchType === "Árbitro especial invitado") {
+              const missingRef = !slot.specialReferee;
               html += `
-                <div class="participant-box" style="margin-top:8px; grid-column: 1 / -1;">
+                <div class="participant-box" style="margin-top:10px; grid-column: 1 / -1;">
                   <label>Árbitro Especial:</label>
                   <select onchange="setSpecialReferee(${idx}, this.value)" ${isLocked ? 'disabled' : ''}>
                     <option value="">-- Elegir Árbitro Especial --</option>
                     ${available.map(w => `<option value="${w.id}" ${slot.specialReferee == w.id ? 'selected' : ''}>${w.name}</option>`).join('')}
                   </select>
+                  ${missingRef && !isLocked ? `<div class="ref-warning">⚠️ Debes elegir un Árbitro Especial.</div>` : ''}
                 </div>
               `;
             }
@@ -1661,7 +1714,6 @@
           }
         }
 
-        // Selector de ganador
         if (isLocked && slot.type === 'combate' && slot.matchType) {
           const participantNames = (slot.participants || []).map(id => {
             const w = store.roster.find(r => r.id == id);
@@ -1733,17 +1785,21 @@
       const slot = store.todayCard.slots[idx];
       slot.titleId = titleId ? parseInt(titleId) : null;
 
-      // Auto-rellenar campeones actuales en los primeros slots de participantes
+      // Auto-rellenar campeones en las ÚLTIMAS casillas
       if (slot.titleId) {
         const title = store.titles.find(t => t.id === slot.titleId);
         if (title && title.champions && title.champions.length > 0) {
           const numNeeded = slot.participants ? slot.participants.length : 2;
-          // Poner campeones en las primeras posiciones
           const newParts = Array(numNeeded).fill(null);
-          title.champions.forEach((cId, i) => {
-            if (i < numNeeded) newParts[i] = cId;
+          const champs = title.champions.slice(0, numNeeded);
+
+          // Colocar campeones al final
+          const startIdx = numNeeded - champs.length;
+          champs.forEach((cId, i) => {
+            newParts[startIdx + i] = cId;
           });
-          // Conservar participantes ya elegidos que no sean campeones, en slots libres
+
+          // Conservar participantes ya elegidos que no sean campeones, en slots libres (del principio)
           const existing = (slot.participants || []).filter(p => p && !title.champions.includes(p));
           let ei = 0;
           for (let i = 0; i < newParts.length; i++) {
@@ -1792,7 +1848,6 @@
       store.todayCard.slots[idx].participants = Array(num).fill(null);
       store.todayCard.slots[idx].specialReferee = null;
 
-      // Si ya había título seleccionado, re-rellenar campeones
       if (store.todayCard.slots[idx].isTitleMatch && store.todayCard.slots[idx].titleId) {
         setTitleForMatch(idx, store.todayCard.slots[idx].titleId);
         return;
@@ -1827,7 +1882,6 @@
       const slot = store.todayCard.slots[idx];
       slot.winner = winnerName || '';
 
-      // Actualizar match en historial
       if (slot.matchId) {
         const match = store.matches.find(m => m.id === slot.matchId);
         if (match) {
@@ -1835,31 +1889,24 @@
         }
       }
 
-      // ===== CAMBIO AUTOMÁTICO DE TÍTULO =====
       if (slot.isTitleMatch && slot.titleId && winnerName && winnerName !== 'Empate' && winnerName !== '') {
         const title = store.titles.find(t => t.id === slot.titleId);
         if (title) {
-          // Buscar el ID del ganador
           const winnerWrestler = store.roster.find(r => r.name === winnerName);
           if (winnerWrestler) {
             const isCurrentChamp = (title.champions || []).includes(winnerWrestler.id);
 
             if (!isCurrentChamp) {
-              // El campeón perdió → transferir título
               let newChamps = [winnerWrestler.id];
 
-              // Si es título de parejas, intentar encontrar al compañero del ganador en el combate
               if (title.type === 'tag') {
                 const parts = (slot.participants || []).filter(Boolean);
-                // Buscar compañero de equipo del ganador
                 const winnerTeam = store.teams.find(t => t.members && t.members.includes(winnerWrestler.id));
                 let partnerId = null;
                 if (winnerTeam) {
                   partnerId = winnerTeam.members.find(m => m !== winnerWrestler.id && parts.includes(m));
                 }
-                // Si no hay team formal, tomar al otro del mismo "lado" en 2v2
                 if (!partnerId && parts.length >= 4) {
-                  // Asumimos formato A B vs C D → si ganador es A o B, partner es el otro
                   const idxW = parts.indexOf(winnerWrestler.id);
                   if (idxW === 0) partnerId = parts[1];
                   else if (idxW === 1) partnerId = parts[0];
@@ -1871,7 +1918,6 @@
 
               transferTitle(slot.titleId, newChamps);
             }
-            // Si el campeón ganó, no se cambia el título (defensa exitosa)
           }
         }
       }
@@ -1902,8 +1948,12 @@
     function finalizeTodayCard() {
       if (store.todayCard.locked) return;
 
-      // Validar combates por título
+      // Validaciones
       for (const slot of store.todayCard.slots) {
+        if (slot.type === 'combate' && slot.matchType === "Árbitro especial invitado" && !slot.specialReferee) {
+          alert("⚠️ Debes elegir un Árbitro Especial en todos los combates de tipo «Árbitro especial invitado».");
+          return;
+        }
         if (slot.type === 'combate' && slot.isTitleMatch && slot.titleId) {
           if (!hasChampionInMatch(slot)) {
             const title = store.titles.find(t => t.id === slot.titleId);
