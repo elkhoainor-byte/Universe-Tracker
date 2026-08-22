@@ -212,6 +212,21 @@
     }
     .btn-dismiss:hover { background: #444444; color: #ffffff; }
 
+    .btn-delete-show {
+      width: 100%;
+      padding: 10px;
+      background: #c62828;
+      color: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+    .btn-delete-show:hover { background: #b71c1c; }
+
     .checkbox-list { max-height: 120px; overflow-y: auto; background: #2a2a2a; border: 1px solid var(--border); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
     .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
 
@@ -393,6 +408,8 @@
 
         <button type="submit" id="btn-save-show" class="btn-add">Guardar Show</button>
       </form>
+
+      <button type="button" id="btn-delete-show" class="btn-delete-show" style="display:none;" onclick="deleteCurrentShow()">Eliminar Show</button>
     </div>
   </div>
 
@@ -728,17 +745,22 @@
       activeShowId = id;
       document.getElementById('show-logo-file').value = '';
       document.getElementById('show-bg-file').value = '';
+      const btnDelete = document.getElementById('btn-delete-show');
 
       if (id === null) {
         document.getElementById('modal-show-title').innerText = 'Añadir Nuevo Show';
         document.getElementById('show-name').value = '';
         document.getElementById('show-color').value = '#e50914';
+        btnDelete.style.display = 'none';
       } else {
         const show = store.shows.find(s => s.id === id);
         if (!show) return;
         document.getElementById('modal-show-title').innerText = 'Editar Show';
         document.getElementById('show-name').value = show.name;
         document.getElementById('show-color').value = show.color || '#e50914';
+        
+        btnDelete.innerText = `Eliminar "${show.name}"?`;
+        btnDelete.style.display = 'block';
       }
       document.getElementById('modal-show').classList.add('active');
     }
@@ -746,6 +768,17 @@
     function closeShowModal() {
       document.getElementById('modal-show').classList.remove('active');
       activeShowId = null;
+    }
+
+    function deleteCurrentShow() {
+      if (activeShowId === null) return;
+      const show = store.shows.find(s => s.id === activeShowId);
+      if (show) {
+        showConfirmModal(`¿Seguro que quieres eliminar el show "${show.name}"?`, () => {
+          deleteItem('shows', activeShowId);
+          closeShowModal();
+        });
+      }
     }
 
     document.getElementById('form-edit-show').onsubmit = async (e) => {
@@ -1256,7 +1289,6 @@
                 <span class="card-sub">Color: <span style="display:inline-block; width:12px; height:12px; background:${s.color}; border-radius:50%; vertical-align:middle;"></span> ${s.color}</span>
               </div>
             </div>
-            <button class="btn-del" onclick="deleteItem('shows', '${s.id}', event)">✕</button>
           </div>
         `;
       }));
