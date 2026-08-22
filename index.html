@@ -40,8 +40,28 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
     .hero-welcome h1 { font-size: 1.8rem; margin-bottom: 8px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-    .hero-welcome p { color: var(--text-dim); font-size: 0.95rem; }
+    .hero-welcome p { color: var(--text-dim); font-size: 0.95rem; margin-bottom: 20px; }
     
+    .home-actions-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .btn-universe-action {
+      padding: 14px 20px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-universe-action:active { transform: scale(0.98); }
+    .btn-continue-universe { background: #2e7d32; color: #fff; }
+    .btn-new-universe { background: var(--accent); color: #fff; }
+
     .quick-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
     .quick-stat-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; text-align: center; }
     .quick-stat-num { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
@@ -245,16 +265,16 @@
     
     .show-logo-img { height: 45px; width: 65px; object-fit: contain; }
 
-    /* ESTILOS DEL CALENDARIO */
+    /* ESTILOS DEL CALENDARIO (7 DÍAS: LUN A DOM) */
     .calendar-header-controls { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px; }
     .calendar-title-text { font-weight: bold; font-size: 1.1rem; color: var(--accent); }
-    .calendar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 15px; }
-    .calendar-day-header { text-align: center; font-size: 0.75rem; font-weight: bold; color: var(--text-dim); padding: 5px 0; background: #1a1a1a; border-radius: 4px; border: 1px solid var(--border); }
-    .calendar-cell { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; min-height: 75px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; font-size: 0.7rem; position: relative; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 15px; }
+    .calendar-day-header { text-align: center; font-size: 0.65rem; font-weight: bold; color: var(--text-dim); padding: 5px 0; background: #1a1a1a; border-radius: 4px; border: 1px solid var(--border); }
+    .calendar-cell { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; min-height: 80px; padding: 3px; display: flex; flex-direction: column; justify-content: space-between; font-size: 0.65rem; position: relative; }
     .calendar-cell.has-event { border-color: var(--accent); }
-    .cell-day-num { font-size: 0.65rem; color: var(--text-dim); position: absolute; top: 2px; right: 4px; }
-    .cell-event-badge { padding: 3px 4px; border-radius: 4px; font-weight: bold; font-size: 0.65rem; text-align: center; color: #fff; margin-top: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-    .btn-add-ppv-cell { font-size: 0.6rem; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); border-radius: 4px; padding: 2px; cursor: pointer; margin-top: 2px; text-align: center; }
+    .cell-day-num { font-size: 0.6rem; color: var(--text-dim); position: absolute; top: 2px; right: 3px; }
+    .cell-event-badge { padding: 3px 2px; border-radius: 4px; font-weight: bold; font-size: 0.6rem; text-align: center; color: #fff; margin-top: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .btn-add-ppv-cell { font-size: 0.55rem; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); border-radius: 4px; padding: 2px 0; cursor: pointer; margin-top: 2px; text-align: center; width: 100%; }
     .btn-add-ppv-cell:hover { border-color: var(--accent); color: #fff; }
   </style>
 </head>
@@ -265,8 +285,13 @@
   <!-- TAB 0: PRINCIPAL / INICIO -->
   <div id="tab-home" class="tab-content active">
     <div class="hero-welcome">
-      <h1>Bienvenido a tu modo universo</h1>
+      <h1>Bienvenido a tu Modo Universo</h1>
       <p>Gestiona tu roster, personaliza shows, registra tus campeonatos e historiales de combates en un solo lugar.</p>
+      
+      <div class="home-actions-container">
+        <button class="btn-universe-action btn-continue-universe" onclick="continueUniverse()">▶ Seguir Universo</button>
+        <button class="btn-universe-action btn-new-universe" onclick="confirmResetUniverse()">🔄 Iniciar Nuevo Universo</button>
+      </div>
     </div>
 
     <div class="quick-stats-grid">
@@ -297,17 +322,14 @@
       <button class="btn-add" style="margin:0; padding:6px 12px;" onclick="nextMonth()">Sig. ▶</button>
     </div>
 
-    <form style="flex-direction:row; gap:10px; align-items:center;">
-      <label style="font-size:0.75rem; color:var(--text-dim); white-space:nowrap;">INICIAR EN MES:</label>
-      <select id="calendar-start-month-select" onchange="changeStartMonth(this.value)" style="margin:0; flex:1;"></select>
-    </form>
-
     <div class="calendar-grid">
       <div class="calendar-day-header">LUN</div>
       <div class="calendar-day-header">MAR</div>
       <div class="calendar-day-header">MIÉ</div>
       <div class="calendar-day-header">JUE</div>
       <div class="calendar-day-header">VIE</div>
+      <div class="calendar-day-header" style="color:#ffd700;">SÁB</div>
+      <div class="calendar-day-header" style="color:#ffd700;">DOM</div>
       <div id="calendar-days-container" style="display:contents;"></div>
     </div>
   </div>
@@ -369,6 +391,31 @@
     <div id="list-matches"></div>
   </div>
 
+  <!-- MODAL CONFIGURACIÓN INICIAL MES -->
+  <div id="modal-start-month" class="modal-overlay">
+    <div class="modal-box" style="margin-top: 50px;">
+      <div class="modal-header">
+        <span class="modal-title">📅 Configurar Universo</span>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--text-dim); text-align: center;">¿En qué mes comienza tu universo?</p>
+      <select id="select-initial-month" style="width:100%; padding: 12px;">
+        <option value="0">Enero</option>
+        <option value="1">Febrero</option>
+        <option value="2">Marzo</option>
+        <option value="3">Abril</option>
+        <option value="4">Mayo</option>
+        <option value="5">Junio</option>
+        <option value="6">Julio</option>
+        <option value="7">Agosto</option>
+        <option value="8">Septiembre</option>
+        <option value="9">Octubre</option>
+        <option value="10">Noviembre</option>
+        <option value="11">Diciembre</option>
+      </select>
+      <button type="button" class="btn-add" style="padding:12px;" onclick="confirmStartMonth()">Confirmar e Iniciar</button>
+    </div>
+  </div>
+
   <!-- MODAL CREAR/EDITAR SHOW -->
   <div id="modal-show" class="modal-overlay">
     <div class="modal-box">
@@ -388,6 +435,8 @@
           <option value="3">Miércoles</option>
           <option value="4">Jueves</option>
           <option value="5">Viernes</option>
+          <option value="6">Sábado</option>
+          <option value="7">Domingo</option>
         </select>
 
         <label style="font-size:0.75rem; color:var(--text-dim);">COLOR REPRESENTATIVO:</label>
@@ -410,22 +459,22 @@
   <div id="modal-ppv" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <span class="modal-title" id="modal-ppv-title">Gestionar PPV / Evento</span>
+        <span class="modal-title" id="modal-ppv-title">Gestionar PLE / Evento</span>
         <button class="modal-close" onclick="closePPVModal()">✕</button>
       </div>
 
       <form id="form-edit-ppv" style="margin-bottom:0;">
         <input type="hidden" id="ppv-day-index">
-        <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL PPV / EVENTO ESPECIAL</label>
+        <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL PLE / EVENTO ESPECIAL</label>
         <input type="text" id="ppv-name" placeholder="Ej. Wrestlemania, SummerSlam..." autocapitalize="words" required>
         
         <label style="font-size:0.75rem; color:var(--text-dim);">COLOR DEL EVENTO:</label>
         <input type="color" id="ppv-color" value="#ffd700" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
 
-        <button type="submit" class="btn-add">Guardar PPV</button>
+        <button type="submit" class="btn-add">Guardar PLE</button>
       </form>
 
-      <button type="button" id="btn-delete-ppv" class="btn-delete-show" style="display:none;" onclick="deleteCurrentPPV()">Eliminar PPV</button>
+      <button type="button" id="btn-delete-ppv" class="btn-delete-show" style="display:none;" onclick="deleteCurrentPPV()">Eliminar PLE</button>
     </div>
   </div>
 
@@ -590,6 +639,16 @@
       tx.objectStore("images").delete(key);
     }
 
+    function clearIndexedDB() {
+      return new Promise((resolve) => {
+        if (!db) { resolve(); return; }
+        const tx = db.transaction("images", "readwrite");
+        const store = tx.objectStore("images");
+        store.clear();
+        tx.oncomplete = () => resolve();
+      });
+    }
+
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         if (!file) { resolve(null); return; }
@@ -609,44 +668,32 @@
       { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5 }
     ];
 
-    let store = JSON.parse(localStorage.getItem('universe_data')) || { 
-      roster: [], 
-      teams: [], 
-      titles: [], 
-      matches: [], 
-      shows: defaultShows,
-      calendar: {
-        startMonth: 0,
-        currentYear: 1,
-        currentMonthIndex: 0,
-        ppvs: {}
-      }
-    };
+    function createEmptyStore() {
+      return { 
+        roster: [], 
+        teams: [], 
+        titles: [], 
+        matches: [], 
+        shows: [...defaultShows],
+        calendar: {
+          configured: false,
+          startMonth: 0,
+          currentMonthIndex: 0,
+          ppvs: {}
+        }
+      };
+    }
+
+    let store = JSON.parse(localStorage.getItem('universe_data')) || createEmptyStore();
 
     if(!store.teams) store.teams = [];
     if(!store.titles) store.titles = [];
     if(!store.matches) store.matches = [];
     if(!store.shows || store.shows.length === 0) store.shows = defaultShows;
     if(!store.calendar) {
-      store.calendar = { startMonth: 0, currentYear: 1, currentMonthIndex: 0, ppvs: {} };
+      store.calendar = { configured: false, startMonth: 0, currentMonthIndex: 0, ppvs: {} };
     }
     if(!store.calendar.ppvs) store.calendar.ppvs = {};
-
-    store.shows.forEach(s => {
-      if (!s.day) {
-        if (s.name.toUpperCase() === 'RAW') s.day = 1;
-        else if (s.name.toUpperCase() === 'NXT') s.day = 2;
-        else if (s.name.toUpperCase() === 'EVOLVE') s.day = 3;
-        else if (s.name.toUpperCase() === 'SMACKDOWN') s.day = 5;
-        else s.day = 1;
-      }
-    });
-
-    store.roster.forEach(r => {
-      if (!r.brands) {
-        r.brands = r.brand ? [r.brand] : ['RAW'];
-      }
-    });
 
     let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
     let activeWrestlerId = null;
@@ -664,45 +711,41 @@
 
     function cleanName(str) { return str.replace(/^["'“`«ʼ\s]+/, ''); }
 
-    function setupAutoCapitalize(inputId) {
-      const input = document.getElementById(inputId);
-      if(!input) return;
-
-      input.addEventListener('input', () => {
-        const value = input.value;
-        if (value.length > 0) {
-          const capitalized = value.split(' ').map(word => {
-            if (word.length === 0) return '';
-            return word.charAt(0).toUpperCase() + word.slice(1);
-          }).join(' ');
-          
-          if (capitalized !== value) {
-            const start = input.selectionStart;
-            const end = input.selectionEnd;
-            input.value = capitalized;
-            input.setSelectionRange(start, end);
-          }
-        }
-      });
-    }
-
-    setupAutoCapitalize('edit-name');
-    setupAutoCapitalize('team-name');
-    setupAutoCapitalize('title-name');
-    setupAutoCapitalize('title-holder');
-    setupAutoCapitalize('show-name');
-    setupAutoCapitalize('ppv-name');
-
     function saveData() {
       localStorage.setItem('universe_data', JSON.stringify(store));
       render();
+    }
+
+    function continueUniverse() {
+      const rosterBtn = document.querySelectorAll('nav button')[2];
+      switchTab('roster', rosterBtn);
+    }
+
+    function confirmResetUniverse() {
+      showConfirmModal("⚠️ ¿Seguro que quieres reiniciar todo el universo de cero? Se borrarán todos los luchadores, combates, marcas y configuraciones.", async () => {
+        await clearIndexedDB();
+        store = createEmptyStore();
+        saveData();
+      });
     }
 
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-' + tabId).classList.add('active');
-      btn.classList.add('active');
+      if (btn) btn.classList.add('active');
+
+      if (tabId === 'calendar' && !store.calendar.configured) {
+        document.getElementById('modal-start-month').classList.add('active');
+      }
+    }
+
+    function confirmStartMonth() {
+      const val = parseInt(document.getElementById('select-initial-month').value);
+      store.calendar.startMonth = val;
+      store.calendar.configured = true;
+      document.getElementById('modal-start-month').classList.remove('active');
+      saveData();
     }
 
     function onFilterChange(select) {
@@ -779,7 +822,7 @@
       if (radio) radio.checked = true;
     }
 
-    /* GESTIÓN DE CALENDARIO */
+    /* CALENDARIO CON CONTEO CORRELATIVO Y SÁBADOS/DOMINGOS */
     function renderCalendar() {
       const startMonth = store.calendar.startMonth || 0;
       const currentMonthIndex = store.calendar.currentMonthIndex || 0;
@@ -790,30 +833,33 @@
 
       document.getElementById('calendar-month-year-display').innerText = `Año ${yearDisplay} - ${MONTH_NAMES[monthDisplayIndex]}`;
 
-      const monthSelect = document.getElementById('calendar-start-month-select');
-      if (monthSelect.children.length === 0) {
-        monthSelect.innerHTML = MONTH_NAMES.map((m, idx) => `<option value="${idx}" ${idx === startMonth ? 'selected' : ''}>${m}</option>`).join('');
-      } else {
-        monthSelect.value = startMonth;
+      // Calcular conteo previo de shows de meses anteriores
+      const globalShowCounts = {};
+      store.shows.forEach(s => globalShowCounts[s.id] = 0);
+
+      for (let m = 0; m < currentMonthIndex; m++) {
+        for (let day = 1; day <= 28; day++) {
+          const dayOfWeek = ((day - 1) % 7) + 1;
+          store.shows.filter(s => parseInt(s.day) === dayOfWeek).forEach(s => {
+            globalShowCounts[s.id]++;
+          });
+        }
       }
 
       const daysContainer = document.getElementById('calendar-days-container');
       let html = '';
 
-      const showCountsInMonth = {};
-
-      for (let day = 1; day <= 20; day++) {
-        const dayOfWeek = ((day - 1) % 5) + 1; 
-        const weekNum = Math.floor((day - 1) / 5) + 1;
+      // Meses de 28 días exactos (4 semanas completas de 7 días)
+      for (let day = 1; day <= 28; day++) {
+        const dayOfWeek = ((day - 1) % 7) + 1; 
+        const weekNum = Math.floor((day - 1) / 7) + 1;
 
         const dayShows = store.shows.filter(s => parseInt(s.day) === dayOfWeek);
-
         let cellEventsHTML = '';
 
         dayShows.forEach(s => {
-          if (!showCountsInMonth[s.id]) showCountsInMonth[s.id] = 0;
-          showCountsInMonth[s.id]++;
-          const showNum = showCountsInMonth[s.id];
+          globalShowCounts[s.id]++;
+          const showNum = globalShowCounts[s.id];
           const eventLabel = `${s.name} #${showNum}`;
 
           cellEventsHTML += `<div class="cell-event-badge" style="background:${s.color};" onclick="openShowModal('${s.id}')">${eventLabel}</div>`;
@@ -825,12 +871,12 @@
         if (ppv) {
           cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openPPVModal(${day}, '${ppvKey}')">🏆 ${ppv.name}</div>`;
         } else {
-          cellEventsHTML += `<button type="button" class="btn-add-ppv-cell" onclick="openPPVModal(${day}, '${ppvKey}')">+ PPV</button>`;
+          cellEventsHTML += `<button type="button" class="btn-add-ppv-cell" onclick="openPPVModal(${day}, '${ppvKey}')">+ PLE</button>`;
         }
 
         html += `
           <div class="calendar-cell ${ppv ? 'has-event' : ''}">
-            <span class="cell-day-num">Día ${day} (W${weekNum})</span>
+            <span class="cell-day-num">Día ${day}</span>
             ${cellEventsHTML}
           </div>
         `;
@@ -853,23 +899,18 @@
       saveData();
     }
 
-    function changeStartMonth(val) {
-      store.calendar.startMonth = parseInt(val);
-      saveData();
-    }
-
     function openPPVModal(dayIndex, ppvKey) {
       activePPVDayIndex = ppvKey;
       const ppv = store.calendar.ppvs[ppvKey];
       const btnDelete = document.getElementById('btn-delete-ppv');
 
       if (ppv) {
-        document.getElementById('modal-ppv-title').innerText = 'Editar PPV';
+        document.getElementById('modal-ppv-title').innerText = 'Editar Evento Especial';
         document.getElementById('ppv-name').value = ppv.name;
         document.getElementById('ppv-color').value = ppv.color || '#ffd700';
         btnDelete.style.display = 'block';
       } else {
-        document.getElementById('modal-ppv-title').innerText = `Añadir PPV (Día ${dayIndex})`;
+        document.getElementById('modal-ppv-title').innerText = `Añadir PLE (Día ${dayIndex})`;
         document.getElementById('ppv-name').value = '';
         document.getElementById('ppv-color').value = '#ffd700';
         btnDelete.style.display = 'none';
@@ -1438,7 +1479,7 @@
         : `<p style="color: var(--text-dim); text-align: center; margin-top: 20px; font-size: 0.9rem;">No hay Superstars que cumplan estos filtros.</p>`;
 
       // Render Pestaña Shows
-      const dayMap = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes' };
+      const dayMap = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 7: 'Domingo' };
 
       const showsCardsHTML = await Promise.all(store.shows.map(async s => {
         const logo = await getImageFromDB('show_logo_' + s.id);
