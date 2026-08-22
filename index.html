@@ -38,7 +38,9 @@
     /* Indicador de Filtros Activos */
     .active-filters-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 0.8rem; padding-top: 4px; border-top: 1px dashed var(--border); margin-top: 4px; }
     .active-filters-label { font-weight: bold; color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; }
-    .filter-badge { background: #333; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; border: 1px solid var(--accent); display: inline-flex; align-items: center; gap: 4px; }
+    .filter-badge { background: #333; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; border: 1px solid var(--accent); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: background 0.2s; }
+    .filter-badge:hover { background: var(--accent); }
+    .filter-badge .close-icon { font-weight: bold; margin-left: 2px; font-size: 0.8rem; }
 
     .card { background: var(--card-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .card-info { display: flex; flex-direction: column; gap: 6px; }
@@ -284,6 +286,12 @@
       render();
     }
 
+    // Función para eliminar un filtro activo haciendo clic en su etiqueta
+    function clearFilter(filterType) {
+      filters[filterType] = 'ALL';
+      render();
+    }
+
     // Configuración estructural de opciones para los filtros
     const filterGroupsConfig = [
       {
@@ -343,15 +351,17 @@
       const container = document.getElementById('active-filters-container');
       const activeBadges = [];
 
-      if (filters.brand !== 'ALL') activeBadges.push(`Marca: ${filters.brand}`);
-      if (filters.alignment !== 'ALL') activeBadges.push(`Alineación: ${filters.alignment}`);
-      if (filters.gender !== 'ALL') activeBadges.push(`Género: ${filters.gender}`);
-      if (filters.division !== 'ALL') activeBadges.push(`División: ${filters.division}`);
+      if (filters.brand !== 'ALL') activeBadges.push({ type: 'brand', label: `Marca: ${filters.brand}` });
+      if (filters.alignment !== 'ALL') activeBadges.push({ type: 'alignment', label: `Alineación: ${filters.alignment}` });
+      if (filters.gender !== 'ALL') activeBadges.push({ type: 'gender', label: `Género: ${filters.gender}` });
+      if (filters.division !== 'ALL') activeBadges.push({ type: 'division', label: `División: ${filters.division}` });
 
       if (activeBadges.length === 0) {
         container.innerHTML = `<span class="active-filters-label">Filtrado por:</span> <span style="color: var(--text-dim); font-size: 0.75rem;">Ninguno (Mostrando todos)</span>`;
       } else {
-        const badgesHTML = activeBadges.map(b => `<span class="filter-badge">📌 ${b}</span>`).join('');
+        const badgesHTML = activeBadges.map(b => 
+          `<span class="filter-badge" onclick="clearFilter('${b.type}')" title="Toca para quitar filtro">📌 ${b.label} <span class="close-icon">✕</span></span>`
+        ).join('');
         container.innerHTML = `<span class="active-filters-label">Filtrado por:</span> ${badgesHTML}`;
       }
     }
