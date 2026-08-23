@@ -291,6 +291,47 @@
       font-size: 0.82rem;
     }
 
+    /* NUEVO: layout de bandos izquierda / derecha */
+    .participants-sides {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      align-items: stretch;
+    }
+    .side-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #1f1f1f;
+      border-radius: 8px;
+      padding: 8px;
+      border: 1px solid #3a3a3a;
+    }
+    .side-column.left { border-color: #2e7d32; }
+    .side-column.right { border-color: #c62828; }
+    .side-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: center;
+      margin-bottom: 2px;
+      color: var(--text-dim);
+    }
+    .side-column.left .side-label { color: #81c784; }
+    .side-column.right .side-label { color: #e57373; }
+    .side-vs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: var(--accent);
+      font-size: 0.95rem;
+      min-width: 28px;
+      padding: 0 2px;
+    }
+
     .stages-box {
       background: #222;
       border: 1px solid #3a3a3a;
@@ -628,7 +669,7 @@
     <div id="list-titles"></div>
   </div>
 
-  <!-- TAB CARTELERA DE HOY (sin historial al final) -->
+  <!-- TAB CARTELERA DE HOY -->
   <div id="tab-matches" class="tab-content">
     <div id="today-card-header" style="margin-bottom:14px; font-weight:bold; color:var(--gold-end); font-size:1.15rem;"></div>
     <div id="today-slots-container"></div>
@@ -1070,8 +1111,6 @@
       return clean.join(' vs ');
     }
 
-    /** Divide participantes en lado izquierdo / derecho según tipo de combate.
-        Si número impar: ganador a la izquierda, resto a la derecha. */
     function splitSides(participants, matchType, subType, winnerName) {
       const ids = (participants || []).filter(Boolean);
       const sub = (subType || '').toLowerCase();
@@ -1104,7 +1143,6 @@
           left = ids.slice(0, 4);
           right = ids.slice(4, 8);
         } else {
-          // 2 vs 2 genérico
           left = ids.slice(0, Math.ceil(ids.length / 2));
           right = ids.slice(Math.ceil(ids.length / 2));
         }
@@ -1112,7 +1150,6 @@
         left = [ids[0]];
         right = [ids[1]];
       } else if (ids.length % 2 === 1 && winnerName) {
-        // Impar: ganador a la izquierda
         const winnerW = store.roster.find(r => r.name === winnerName);
         const winnerId = winnerW ? winnerW.id : null;
         if (winnerId && ids.includes(winnerId)) {
@@ -1143,6 +1180,19 @@
         type === 'reglas de bloodline' || type === 'wargames' ||
         type === 'por equipos'
       );
+    }
+
+    function getTeamSideCounts(matchType, subType, total) {
+      const sub = (subType || '').toLowerCase();
+      const type = (matchType || '').toLowerCase();
+      if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) return { left: 1, right: 2 };
+      if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) return { left: 1, right: 3 };
+      if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) return { left: 2, right: 3 };
+      if (sub.includes('3 contra 3') || sub.includes('3 vs 3') || type === 'wargames') return { left: 3, right: 3 };
+      if (sub.includes('4 contra 4') || sub.includes('4 vs 4') || type === 'reglas de bloodline') return { left: 4, right: 4 };
+      if (sub.includes('2 contra 2') || sub.includes('2 vs 2')) return { left: 2, right: 2 };
+      const mid = Math.ceil(total / 2);
+      return { left: mid, right: total - mid };
     }
 
     // ========== CORE ==========
@@ -1332,17 +1382,6 @@
     }
 
     // ========== CALENDAR ==========
-    function isEventPast(dayInView, showNumber, showName) {
-      const curM = store.calendar.currentMonthIndex || 0;
-      const curD = store.calendar.currentDay || 1;
-      const viewM = store.calendar.currentMonthIndex || 0;
-      const label = showNumber != null ? `${showName} #${showNumber}` : showName;
-      const hasMatches = store.matches.some(m => m.show === label || m.eventKey === label);
-      if (hasMatches) return true;
-      if (dayInView < curD && viewM === curM) return true;
-      return false;
-    }
-
     function renderCalendar() {
       const startMonth = store.calendar.startMonth || 0;
       const currentMonthIndex = store.calendar.currentMonthIndex || 0;
@@ -1405,7 +1444,7 @@
       saveData();
     }
 
-    // ========== PAST EVENT RESULTS ==========
+    // ========== PAST EVENT RESULTS (CORREGIDO: resalta todo el equipo ganador) ==========
     async function openPastEvent(eventName, showNumber) {
       const label = showNumber != null ? `${eventName} #${showNumber}` : eventName;
       const matches = store.matches.filter(m =>
@@ -1429,13 +1468,28 @@
         const parts = m.participants || [];
         const { left, right } = splitSides(parts, m.matchType, m.subType, m.winner);
         const winnerName = m.winner || '';
+        const isTeam = isTeamBasedMatch(m.matchType, m.subType);
+
+        // Determinar el lado ganador completo
+        let winningSideIds = [];
+        if (winnerName && winnerName !== 'Empate' && winnerName !== 'Pendiente') {
+          const winnerW = store.roster.find(r => r.name === winnerName);
+          if (winnerW) {
+            if (isTeam) {
+              if (left.includes(winnerW.id)) winningSideIds = left;
+              else if (right.includes(winnerW.id)) winningSideIds = right;
+            } else {
+              winningSideIds = [winnerW.id];
+            }
+          }
+        }
 
         async function sideHTML(ids, sideClass) {
           const wraps = await Promise.all(ids.map(async id => {
             const w = store.roster.find(r => r.id == id);
             const name = w ? w.name : '?';
             const img = w ? await getImageFromDB('wrestler_' + w.id) : null;
-            const isWinner = winnerName && name === winnerName;
+            const isWinner = winningSideIds.includes(id);
             const imgTag = img
               ? `<img src="${img}" class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" alt="${name}">`
               : `<div class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;">👤</div>`;
@@ -1755,10 +1809,10 @@
       let championsArr = [];
       if (type === 'tag') {
         if (champ1 && champ2) championsArr = [champ1, champ2];
-        else if (!champ1 && !champ2) championsArr = []; // Vacante
+        else if (!champ1 && !champ2) championsArr = [];
         else { alert("Para título por parejas elige ambos campeones o déjalos vacíos (Vacante)."); return; }
       } else {
-        championsArr = champ1 ? [champ1] : []; // Vacante permitido
+        championsArr = champ1 ? [champ1] : [];
       }
 
       const fileInput = document.getElementById('title-image-file');
@@ -1880,7 +1934,7 @@
     function hasChampionInMatch(slot) {
       if (!slot.isTitleMatch || !slot.titleId) return true;
       const title = store.titles.find(t => t.id === slot.titleId);
-      if (!title || !title.champions || title.champions.length === 0) return true; // Vacante → cualquiera puede pelear por él
+      if (!title || !title.champions || title.champions.length === 0) return true;
       const parts = (slot.participants || []).filter(Boolean);
       return title.champions.some(cId => parts.includes(cId));
     }
@@ -1971,16 +2025,26 @@
           }
 
           html += `
-            <div class="participants-grid">
-              ${slot.participants.map((p, pIdx) => `
+            <div class="participants-sides">
+              <div class="side-column left">
+                <div class="side-label">Luchador 1</div>
                 <div class="participant-box">
-                  <label>Luchador ${pIdx + 1}</label>
-                  <select onchange="setParticipant(${idx}, ${pIdx}, this.value)" ${isLocked ? 'disabled' : ''}>
+                  <select onchange="setParticipant(${idx}, 0, this.value)" ${isLocked ? 'disabled' : ''}>
                     <option value="">-- Elegir --</option>
-                    ${available.map(w => `<option value="${w.id}" ${p == w.id ? 'selected' : ''}>${w.name}</option>`).join('')}
+                    ${available.map(w => `<option value="${w.id}" ${slot.participants[0] == w.id ? 'selected' : ''}>${w.name}</option>`).join('')}
                   </select>
                 </div>
-              `).join('')}
+              </div>
+              <div class="side-vs">VS</div>
+              <div class="side-column right">
+                <div class="side-label">Luchador 2</div>
+                <div class="participant-box">
+                  <select onchange="setParticipant(${idx}, 1, this.value)" ${isLocked ? 'disabled' : ''}>
+                    <option value="">-- Elegir --</option>
+                    ${available.map(w => `<option value="${w.id}" ${slot.participants[1] == w.id ? 'selected' : ''}>${w.name}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
             </div>
           `;
 
@@ -2023,8 +2087,39 @@
               <div class="match-type-label">
                 ${slot.matchType}${finalSub ? ' · ' + finalSub : ''}
               </div>
-              <div class="participants-grid">
-                ${slot.participants.map((p, pIdx) => `
+            `;
+
+            const isTeam = isTeamBasedMatch(slot.matchType, finalSub);
+
+            if (isTeam) {
+              // ===== LAYOUT BANDOS IZQUIERDA / DERECHA =====
+              const sides = getTeamSideCounts(slot.matchType, finalSub, numParticipants);
+              html += `<div class="participants-sides">`;
+              
+              // Columna izquierda
+              html += `<div class="side-column left"><div class="side-label">Equipo A (${sides.left})</div>`;
+              for (let i = 0; i < sides.left; i++) {
+                const p = slot.participants[i];
+                html += `
+                  <div class="participant-box">
+                    <label>Luchador ${i + 1}</label>
+                    <select onchange="setParticipant(${idx}, ${i}, this.value)" ${isLocked ? 'disabled' : ''}>
+                      <option value="">-- Elegir --</option>
+                      ${available.map(w => `<option value="${w.id}" ${p == w.id ? 'selected' : ''}>${w.name}</option>`).join('')}
+                    </select>
+                  </div>
+                `;
+              }
+              html += `</div>`;
+
+              html += `<div class="side-vs">VS</div>`;
+
+              // Columna derecha
+              html += `<div class="side-column right"><div class="side-label">Equipo B (${sides.right})</div>`;
+              for (let i = 0; i < sides.right; i++) {
+                const pIdx = sides.left + i;
+                const p = slot.participants[pIdx];
+                html += `
                   <div class="participant-box">
                     <label>Luchador ${pIdx + 1}</label>
                     <select onchange="setParticipant(${idx}, ${pIdx}, this.value)" ${isLocked ? 'disabled' : ''}>
@@ -2032,14 +2127,30 @@
                       ${available.map(w => `<option value="${w.id}" ${p == w.id ? 'selected' : ''}>${w.name}</option>`).join('')}
                     </select>
                   </div>
-                `).join('')}
-              </div>
-            `;
+                `;
+              }
+              html += `</div></div>`;
+            } else {
+              // Layout normal (grid) para combates individuales / multi-man
+              html += `
+                <div class="participants-grid">
+                  ${slot.participants.map((p, pIdx) => `
+                    <div class="participant-box">
+                      <label>Luchador ${pIdx + 1}</label>
+                      <select onchange="setParticipant(${idx}, ${pIdx}, this.value)" ${isLocked ? 'disabled' : ''}>
+                        <option value="">-- Elegir --</option>
+                        ${available.map(w => `<option value="${w.id}" ${p == w.id ? 'selected' : ''}>${w.name}</option>`).join('')}
+                      </select>
+                    </div>
+                  `).join('')}
+                </div>
+              `;
+            }
 
             if (slot.matchType === "Árbitro especial invitado") {
               const missingRef = !slot.specialReferee;
               html += `
-                <div class="participant-box" style="margin-top:10px; grid-column: 1 / -1;">
+                <div class="participant-box" style="margin-top:10px;">
                   <label>Árbitro Especial:</label>
                   <select onchange="setSpecialReferee(${idx}, this.value)" ${isLocked ? 'disabled' : ''}>
                     <option value="">-- Elegir Árbitro Especial --</option>
@@ -2128,9 +2239,7 @@
     function toggleTitleMatch(idx, checked) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx].isTitleMatch = checked;
-      if (!checked) {
-        store.todayCard.slots[idx].titleId = null;
-      }
+      if (!checked) store.todayCard.slots[idx].titleId = null;
       saveData();
       renderTodayCard();
     }
@@ -2147,15 +2256,11 @@
           const newParts = Array(numNeeded).fill(null);
           const champs = title.champions.slice(0, numNeeded);
           const startIdx = numNeeded - champs.length;
-          champs.forEach((cId, i) => {
-            newParts[startIdx + i] = cId;
-          });
+          champs.forEach((cId, i) => { newParts[startIdx + i] = cId; });
           const existing = (slot.participants || []).filter(p => p && !title.champions.includes(p));
           let ei = 0;
           for (let i = 0; i < newParts.length; i++) {
-            if (newParts[i] === null && ei < existing.length) {
-              newParts[i] = existing[ei++];
-            }
+            if (newParts[i] === null && ei < existing.length) newParts[i] = existing[ei++];
           }
           slot.participants = newParts;
         }
@@ -2234,9 +2339,7 @@
 
       if (slot.matchId) {
         const match = store.matches.find(m => m.id === slot.matchId);
-        if (match) {
-          match.winner = winnerName || 'Pendiente';
-        }
+        if (match) match.winner = winnerName || 'Pendiente';
       }
 
       if (slot.isTitleMatch && slot.titleId && winnerName && winnerName !== 'Empate' && winnerName !== '') {
@@ -2245,17 +2348,13 @@
           const winnerWrestler = store.roster.find(r => r.name === winnerName);
           if (winnerWrestler) {
             const isCurrentChamp = (title.champions || []).includes(winnerWrestler.id);
-
             if (!isCurrentChamp) {
               let newChamps = [winnerWrestler.id];
-
               if (title.type === 'tag') {
                 const parts = (slot.participants || []).filter(Boolean);
                 const winnerTeam = store.teams.find(t => t.members && t.members.includes(winnerWrestler.id));
                 let partnerId = null;
-                if (winnerTeam) {
-                  partnerId = winnerTeam.members.find(m => m !== winnerWrestler.id && parts.includes(m));
-                }
+                if (winnerTeam) partnerId = winnerTeam.members.find(m => m !== winnerWrestler.id && parts.includes(m));
                 if (!partnerId && parts.length >= 4) {
                   const idxW = parts.indexOf(winnerWrestler.id);
                   if (idxW === 0) partnerId = parts[1];
@@ -2265,7 +2364,6 @@
                 }
                 if (partnerId) newChamps = [winnerWrestler.id, partnerId];
               }
-
               transferTitle(slot.titleId, newChamps);
             }
           }
@@ -2280,16 +2378,10 @@
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx] = {
         id: Date.now() + idx,
-        type: null,
-        matchType: null,
-        subType: null,
-        stages: [null, null, null],
-        participants: [],
-        specialReferee: null,
-        winner: '',
-        matchId: null,
-        titleId: null,
-        isTitleMatch: false
+        type: null, matchType: null, subType: null,
+        stages: [null, null, null], participants: [],
+        specialReferee: null, winner: '', matchId: null,
+        titleId: null, isTitleMatch: false
       };
       saveData();
       renderTodayCard();
@@ -2306,8 +2398,7 @@
         if (slot.type === 'combate' && slot.isTitleMatch && slot.titleId) {
           if (!hasChampionInMatch(slot)) {
             const title = store.titles.find(t => t.id === slot.titleId);
-            const tName = title ? title.name : 'el título';
-            alert(`⚠️ El combate por "${tName}" debe incluir al menos a un campeón actual.`);
+            alert(`⚠️ El combate por "${title ? title.name : 'el título'}" debe incluir al menos a un campeón actual.`);
             return;
           }
         }
@@ -2322,15 +2413,9 @@
             store.matches.push({
               id: matchId,
               show: store.todayCard.eventName + (store.todayCard.showNumber ? ' #' + store.todayCard.showNumber : ''),
-              card: '🎤 Promo',
-              winner: 'Promo',
-              titleId: null,
-              isDefense: false,
-              eventName: store.todayCard.eventName,
-              showNumber: store.todayCard.showNumber,
-              participants: [],
-              matchType: null,
-              subType: null
+              card: '🎤 Promo', winner: 'Promo', titleId: null, isDefense: false,
+              eventName: store.todayCard.eventName, showNumber: store.todayCard.showNumber,
+              participants: [], matchType: null, subType: null
             });
             slot.matchId = matchId;
           } else if (slot.type === 'combate' && slot.matchType) {
@@ -2346,7 +2431,6 @@
             } else {
               const sub = slot.subType || '';
               cardText = `${formatMatchSummary(names, slot.matchType, sub)} (${slot.matchType}${sub ? ' · ' + sub : ''})`;
-              
               if (slot.matchType === "Árbitro especial invitado" && slot.specialReferee) {
                 const ref = store.roster.find(r => r.id == slot.specialReferee);
                 if (ref) cardText += ` [Árbitro Especial: ${ref.name}]`;
@@ -2363,14 +2447,9 @@
             store.matches.push({
               id: matchId,
               show: store.todayCard.eventName + (store.todayCard.showNumber ? ' #' + store.todayCard.showNumber : ''),
-              card: cardText,
-              winner: 'Pendiente',
-              titleId: titleId,
-              isDefense: !!titleId,
-              eventName: store.todayCard.eventName,
-              showNumber: store.todayCard.showNumber,
-              matchType: slot.matchType,
-              subType: slot.subType || null,
+              card: cardText, winner: 'Pendiente', titleId: titleId, isDefense: !!titleId,
+              eventName: store.todayCard.eventName, showNumber: store.todayCard.showNumber,
+              matchType: slot.matchType, subType: slot.subType || null,
               stages: slot.stages ? [...slot.stages] : null,
               participants: (slot.participants || []).filter(Boolean),
               specialReferee: slot.specialReferee || null
@@ -2486,7 +2565,7 @@
           });
         }
         return m.card.toLowerCase().includes(name);
-      }).slice().reverse(); // más reciente primero
+      }).slice().reverse();
 
       let wins = 0, losses = 0, draws = 0;
       const historyHTML = matches.map(m => {
@@ -2497,7 +2576,6 @@
         if (!winner || winner === 'pendiente' || winner === '' || winner === 'empate' || winner === 'promo') {
           draws++;
         } else if (isTeamBasedMatch(m.matchType, m.subType) && m.participants && m.participants.length) {
-          // Combate por equipos / handicap → victoria/derrota de todo el bando
           const { left, right } = splitSides(m.participants, m.matchType, m.subType, m.winner);
           const winnerW = store.roster.find(r => r.name.toLowerCase() === winner);
           const winnerId = winnerW ? winnerW.id : null;
@@ -2510,21 +2588,15 @@
             else if (wrestlerOnRight) { losses++; outcomeClass = 'loss'; outcomeLabel = 'Derrota (equipo)'; }
             else draws++;
           } else {
-            // Ganó el lado derecho
             if (wrestlerOnRight) { wins++; outcomeClass = 'win'; outcomeLabel = 'Victoria (equipo)'; }
             else if (wrestlerOnLeft) { losses++; outcomeClass = 'loss'; outcomeLabel = 'Derrota (equipo)'; }
             else draws++;
           }
         } else {
-          // Individual / Rumble / Chamber / multi-man individual → solo un ganador
           if (winner === name || winner.includes(name)) {
-            wins++;
-            outcomeClass = 'win';
-            outcomeLabel = 'Victoria';
+            wins++; outcomeClass = 'win'; outcomeLabel = 'Victoria';
           } else {
-            losses++;
-            outcomeClass = 'loss';
-            outcomeLabel = 'Derrota';
+            losses++; outcomeClass = 'loss'; outcomeLabel = 'Derrota';
           }
         }
 
