@@ -57,11 +57,11 @@
     #list-shows .card { height: 90px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
     #list-shows .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); z-index: 1; }
     .card-left { display: flex; align-items: center; gap: 12px; flex: 1; height: 100%; overflow: hidden; }
-    .avatar-wrapper { width: 85px; height: 100%; flex-shrink: 0; position: relative; background-size: cover; background-position: center; background-repeat: no-repeat; border-right: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+    .avatar-wrapper { width: 85px; height: 100%; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center; }
     .wrestler-avatar { width: 100%; height: 100%; object-fit: cover; object-position: top center; background: transparent; display: block; }
     .wrestler-avatar-placeholder { font-size: 1.4rem; color: var(--text-dim); }
     .card-info { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; justify-content: center; overflow: hidden; height: 100%; flex: 1; }
-    .card-title { font-weight: bold; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px #000; }
+    .card-title { font-family: 'Arial Black', Impact, 'Arial Narrow', sans-serif; font-weight: 900; font-size: 1rem; letter-spacing: 0.5px; text-transform: uppercase; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 5px rgba(0,0,0,0.9), 0 0 10px rgba(229,9,20,0.35); }
     .card-sub { font-size: 0.8rem; color: var(--text-dim); }
     .tags-container { display: flex; flex-wrap: wrap; gap: 4px; max-height: 68px; overflow: hidden; }
     .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: bold; text-transform: uppercase; }
@@ -2045,14 +2045,17 @@
           else titleBadges += `<span class="tag tag-champ">🏆</span>`;
         }
         const avatar = img ? `<img src="${img}" class="wrestler-avatar" onerror="handleImgError(this)">` : `<div class="wrestler-avatar-placeholder">👤</div>`;
-        // FIX: restaurar imagen de fondo del show en la celda del roster
-        let bgStyle = '';
-        if (brands.length > 0) {
-          const showObj = store.shows.find(s => s.name === brands[0]);
-          if (showObj && showBgCache[showObj.id]) {
-            bgStyle = `background-image:url('${showBgCache[showObj.id]}');`;
-          }
+            // FIX: restaurar imagen de fondo del show en la celda del roster
+      let bgStyle = '';
+      let brandColor = '#000000';
+      if (brands.length > 0) {
+        const showObj = store.shows.find(s => s.name === brands[0]);
+        if (showObj) brandColor = showObj.color || '#000000';
+        if (showObj && showBgCache[showObj.id]) {
+        bgStyle = `background-image:url('${showBgCache[showObj.id]}');`;
         }
+      }
+
         return `<div class="card" style="${bgStyle}" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
       }));
       document.getElementById('list-roster').innerHTML = rosterCards.length ? rosterCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay luchadores.</p>`;
@@ -2062,7 +2065,10 @@
         const dayNames = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
         const logoHTML = logo ? `<img src="${logo}" class="show-logo-img">` : '';
         const bgStyle = bg ? `background-image:url('${bg}');` : '';
-        return `<div class="card" style="${bgStyle}" onclick="openShowModal('${s.id}')"><div class="card-left" style="padding-left:12px;">${logoHTML}<div class="card-info"><span class="card-title">${s.name}</span><span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span></div></div></div>`;
+        const isChamp = heldTitles.length > 0;
+        const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, ${isChamp ? '#ffd700' : '#000000'}) 1;`;
+        return `<div class="card" style="${bgStyle} ${borderStyle}" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
+
       }));
       document.getElementById('list-shows').innerHTML = showCards.length ? showCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay shows.</p>`;
       document.getElementById('list-teams').innerHTML = store.teams.map(t => {
