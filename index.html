@@ -183,6 +183,7 @@
     .edit-tab-btn { flex: 1; padding: 8px; background: #2a2a2a; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
     .edit-tab-btn.active { background: var(--accent); border-color: var(--accent); }
 
+    /* ===== CARTELERA DE HOY – estilos mejorados ===== */
     .card-slot {
       background: linear-gradient(145deg, #1c1c1c 0%, #161616 100%);
       border: 1px solid #3a3a3a;
@@ -200,154 +201,363 @@
       border-radius: 0 4px 4px 0;
       background: var(--accent);
     }
-    .card-slot.locked { opacity: 0.92; border-color: #555; }
-    .card-slot.locked::before { background: #555; }
-    .card-slot-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2a2a2a;
+    .card-slot.locked {
+      opacity: 0.92;
+      border-color: #555;
     }
-    .card-slot-title { font-weight: bold; font-size: 0.95rem; color: var(--accent); letter-spacing: 0.3px; }
+    .card-slot.locked::before {
+      background: #555;
+    }
+    .card-slot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .card-slot-title {
+      font-weight: bold;
+      font-size: 0.95rem;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+    }
     .card-slot-title .slot-num {
-      display: inline-block; background: var(--accent); color: #fff; font-size: 0.7rem;
-      padding: 2px 7px; border-radius: 10px; margin-right: 6px; vertical-align: middle;
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-right: 6px;
+      vertical-align: middle;
     }
 
-    .type-choice-btns { display: flex; gap: 10px; margin-top: 6px; }
-    .type-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; }
+    .type-choice-btns {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .type-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
     .type-btn.combate { background: var(--accent); color: #fff; }
     .type-btn.promo { background: #455a64; color: #fff; }
 
     .slot-select {
-      width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border);
-      background: #2a2a2a; color: #fff; font-size: 0.9rem; margin-bottom: 8px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #2a2a2a;
+      color: #fff;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
     }
 
-    .participants-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-    .participant-box { background: #222; border: 1px solid #3a3a3a; border-radius: 8px; padding: 8px; }
+    .participants-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .participant-box {
+      background: #222;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      padding: 8px;
+    }
     .participant-box label {
-      font-size: 0.68rem; color: var(--text-dim); display: block; margin-bottom: 4px;
-      text-transform: uppercase; letter-spacing: 0.4px;
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      display: block;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
     }
     .participant-box select {
-      width: 100%; padding: 8px; border-radius: 5px; border: 1px solid var(--border);
-      background: #1a1a1a; color: #fff; font-size: 0.82rem;
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 0.82rem;
     }
 
-    .stages-box { background: #222; border: 1px solid #3a3a3a; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
-    .stages-box label { font-size: 0.72rem; color: var(--text-dim); display: block; margin-bottom: 4px; }
+    .stages-box {
+      background: #222;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .stages-box label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      display: block;
+      margin-bottom: 4px;
+    }
 
     .slot-summary {
-      font-size: 0.82rem; color: #ccc; margin-top: 12px; padding: 10px 12px;
-      background: #1a1a1a; border-radius: 8px; border-left: 3px solid var(--gold-end);
-      line-height: 1.45; word-break: break-word;
+      font-size: 0.82rem;
+      color: #ccc;
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      border-left: 3px solid var(--gold-end);
+      line-height: 1.45;
+      word-break: break-word;
     }
 
     .btn-reset-slot {
-      background: none; border: 1px solid var(--border); color: var(--text-dim);
-      padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
     }
     .btn-reset-slot:hover { border-color: var(--accent); color: var(--accent); }
 
     .btn-finalize {
-      background: #2e7d32; color: #fff; border: none; padding: 12px; border-radius: 8px;
-      font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; font-size: 0.95rem;
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+      font-size: 0.95rem;
     }
     .btn-next-show {
-      background: var(--gold-end); color: #000; border: none; padding: 14px; border-radius: 8px;
-      font-weight: bold; cursor: pointer; width: 100%; margin-top: 12px; font-size: 1rem;
+      background: var(--gold-end);
+      color: #000;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 12px;
+      font-size: 1rem;
     }
 
     .winner-box {
-      margin-top: 12px; padding: 12px; background: #142214; border: 1px solid #2e7d32; border-radius: 8px;
+      margin-top: 12px;
+      padding: 12px;
+      background: #142214;
+      border: 1px solid #2e7d32;
+      border-radius: 8px;
     }
-    .winner-box label { font-size: 0.75rem; color: #4caf50; font-weight: bold; display: block; margin-bottom: 6px; }
+    .winner-box label {
+      font-size: 0.75rem;
+      color: #4caf50;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 6px;
+    }
 
     .title-match-box {
-      margin-top: 12px; padding: 12px; background: #1f1f14; border: 1px solid var(--gold-end); border-radius: 8px;
+      margin-top: 12px;
+      padding: 12px;
+      background: #1f1f14;
+      border: 1px solid var(--gold-end);
+      border-radius: 8px;
     }
     .title-match-box label {
-      font-size: 0.75rem; color: var(--gold-end); font-weight: bold;
-      display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;
+      font-size: 0.75rem;
+      color: var(--gold-end);
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      cursor: pointer;
     }
-    .title-match-box input[type="checkbox"] { accent-color: var(--gold-end); width: 16px; height: 16px; cursor: pointer; }
+    .title-match-box input[type="checkbox"] {
+      accent-color: var(--gold-end);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
     .title-warning {
-      font-size: 0.72rem; color: #ff9800; margin-top: 6px; padding: 6px;
-      background: #2a1f00; border-radius: 4px; border-left: 3px solid #ff9800;
+      font-size: 0.72rem;
+      color: #ff9800;
+      margin-top: 6px;
+      padding: 6px;
+      background: #2a1f00;
+      border-radius: 4px;
+      border-left: 3px solid #ff9800;
     }
     .ref-warning {
-      font-size: 0.72rem; color: #ff7043; margin-top: 6px; padding: 6px;
-      background: #2a1510; border-radius: 4px; border-left: 3px solid #ff7043;
+      font-size: 0.72rem;
+      color: #ff7043;
+      margin-top: 6px;
+      padding: 6px;
+      background: #2a1510;
+      border-radius: 4px;
+      border-left: 3px solid #ff7043;
     }
 
     .match-type-label {
-      font-size: 0.78rem; color: var(--gold-end); margin-bottom: 10px; font-weight: bold; letter-spacing: 0.3px;
+      font-size: 0.78rem;
+      color: var(--gold-end);
+      margin-bottom: 10px;
+      font-weight: bold;
+      letter-spacing: 0.3px;
     }
 
+    /* ===== CARTELERA PASADA (resultados) ===== */
     .past-match-card {
       background: linear-gradient(160deg, #1a1a1a 0%, #121212 100%);
-      border: 1px solid #444; border-radius: 14px; margin-bottom: 20px; overflow: hidden;
+      border: 1px solid #444;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      overflow: hidden;
       box-shadow: 0 6px 20px rgba(0,0,0,0.55);
     }
     .past-match-header {
-      text-align: center; padding: 12px 10px 8px;
-      background: linear-gradient(90deg, #1f1f1f, #2a1a1a, #1f1f1f); border-bottom: 1px solid #333;
+      text-align: center;
+      padding: 12px 10px 8px;
+      background: linear-gradient(90deg, #1f1f1f, #2a1a1a, #1f1f1f);
+      border-bottom: 1px solid #333;
     }
     .past-match-type {
-      font-size: 0.82rem; font-weight: 800; color: #e0e0e0; letter-spacing: 0.6px; text-transform: uppercase;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #e0e0e0;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
     }
     .past-match-title-gold {
-      display: block; margin-top: 6px; font-size: 0.88rem; font-weight: 900; color: var(--gold-end);
-      text-shadow: 0 0 10px rgba(255,215,0,0.45); letter-spacing: 0.4px;
+      display: block;
+      margin-top: 6px;
+      font-size: 0.88rem;
+      font-weight: 900;
+      color: var(--gold-end);
+      text-shadow: 0 0 10px rgba(255,215,0,0.45);
+      letter-spacing: 0.4px;
     }
-    .past-match-body { display: flex; align-items: stretch; min-height: 140px; }
+    .past-match-body {
+      display: flex;
+      align-items: stretch;
+      min-height: 140px;
+    }
     .past-side {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 6px; padding: 12px 6px; position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 6px;
+      position: relative;
     }
     .past-side.left { background: linear-gradient(90deg, rgba(46,125,50,0.12), transparent); }
     .past-side.right { background: linear-gradient(270deg, rgba(198,40,40,0.12), transparent); }
-    .past-side-imgs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 100%; }
+    .past-side-imgs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      max-width: 100%;
+    }
     .past-wrestler-wrap {
-      display: flex; flex-direction: column; align-items: center; gap: 2px; width: 72px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      width: 72px;
     }
     .past-wrestler-img {
-      width: 68px; height: 90px; object-fit: cover; object-position: top center;
-      border-radius: 6px; border: 2px solid #444; background: #222;
+      width: 68px;
+      height: 90px;
+      object-fit: cover;
+      object-position: top center;
+      border-radius: 6px;
+      border: 2px solid #444;
+      background: #222;
     }
     .past-wrestler-img.winner-border {
-      border-color: #4caf50; box-shadow: 0 0 10px rgba(76,175,80,0.55);
+      border-color: #4caf50;
+      box-shadow: 0 0 10px rgba(76,175,80,0.55);
     }
     .past-winner-label {
-      font-size: 0.58rem; font-weight: 900; color: #4caf50; letter-spacing: 1px;
-      text-transform: uppercase; background: rgba(20,40,20,0.9); padding: 1px 5px;
-      border-radius: 4px; border: 1px solid #4caf50;
+      font-size: 0.58rem;
+      font-weight: 900;
+      color: #4caf50;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(20,40,20,0.9);
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #4caf50;
     }
     .past-wrestler-name {
-      font-size: 0.62rem; font-weight: 700; text-align: center; color: #eee;
-      line-height: 1.15; max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-align: center;
+      color: #eee;
+      line-height: 1.15;
+      max-width: 72px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .past-vs {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 8px 4px; min-width: 36px; background: #0d0d0d;
-      border-left: 1px solid #333; border-right: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 4px;
+      min-width: 36px;
+      background: #0d0d0d;
+      border-left: 1px solid #333;
+      border-right: 1px solid #333;
     }
     .past-vs-text {
-      font-size: 1.1rem; font-weight: 900; color: var(--accent); text-shadow: 0 0 8px rgba(229,9,20,0.5);
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--accent);
+      text-shadow: 0 0 8px rgba(229,9,20,0.5);
     }
     .past-match-names {
-      text-align: center; padding: 10px 12px 14px; font-size: 0.9rem; font-weight: 800;
-      color: #fff; letter-spacing: 0.3px; border-top: 1px solid #333; background: #161616;
+      text-align: center;
+      padding: 10px 12px 14px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.3px;
+      border-top: 1px solid #333;
+      background: #161616;
     }
     .past-promo-card {
-      background: #1a1a1a; border: 1px solid #444; border-radius: 12px; padding: 18px;
-      text-align: center; margin-bottom: 16px; color: var(--text-dim); font-size: 0.95rem;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      margin-bottom: 16px;
+      color: var(--text-dim);
+      font-size: 0.95rem;
     }
     .modal-box.wide { max-width: 560px; }
   </style>
 </head>
 <body>
 
-  <header>ð® MODO UNIVERSO</header>
+  <header>🎮 MODO UNIVERSO</header>
 
   <!-- TAB HOME -->
   <div id="tab-home" class="tab-content active">
@@ -355,56 +565,56 @@
       <h1>Bienvenido a tu Modo Universo</h1>
       <p>Gestiona tu roster, personaliza shows, registra tus campeonatos e historiales de combates en un solo lugar.</p>
       <div class="home-actions-container">
-        <button class="btn-universe-action btn-continue-universe" onclick="continueUniverse()">â¶ Seguir Universo</button>
-        <button class="btn-universe-action btn-new-universe" onclick="confirmResetUniverse()">ð Iniciar Nuevo Universo</button>
+        <button class="btn-universe-action btn-continue-universe" onclick="continueUniverse()">▶ Seguir Universo</button>
+        <button class="btn-universe-action btn-new-universe" onclick="confirmResetUniverse()">🔄 Iniciar Nuevo Universo</button>
       </div>
     </div>
     <div class="quick-stats-grid">
       <div class="quick-stat-box"><div class="quick-stat-num" id="stat-total-roster">0</div><div class="quick-stat-label">Superstars</div></div>
       <div class="quick-stat-box"><div class="quick-stat-num" id="stat-total-shows">0</div><div class="quick-stat-label">Shows / Marcas</div></div>
-      <div class="quick-stat-box"><div class="quick-stat-num" id="stat-total-titles">0</div><div class="quick-stat-label">TÃ­tulos</div></div>
+      <div class="quick-stat-box"><div class="quick-stat-num" id="stat-total-titles">0</div><div class="quick-stat-label">Títulos</div></div>
       <div class="quick-stat-box"><div class="quick-stat-num" id="stat-total-matches">0</div><div class="quick-stat-label">Combates</div></div>
     </div>
   </div>
 
   <!-- TAB CALENDARIO -->
   <div id="tab-calendar" class="tab-content">
-    <button class="btn-trigger-add" onclick="openCalendarEditModal()">âï¸ Editar Calendario / Acontecimiento</button>
+    <button class="btn-trigger-add" onclick="openCalendarEditModal()">✏️ Editar Calendario / Acontecimiento</button>
     <div class="calendar-header-controls">
-      <button class="btn-add" style="margin:0; padding:6px 12px;" onclick="prevMonth()">â Anter.</button>
-      <div class="calendar-title-text" id="calendar-month-year-display">AÃ±o 1 - Enero</div>
-      <button class="btn-add" style="margin:0; padding:6px 12px;" onclick="nextMonth()">Sig. â¶</button>
+      <button class="btn-add" style="margin:0; padding:6px 12px;" onclick="prevMonth()">◀ Anter.</button>
+      <div class="calendar-title-text" id="calendar-month-year-display">Año 1 - Enero</div>
+      <button class="btn-add" style="margin:0; padding:6px 12px;" onclick="nextMonth()">Sig. ▶</button>
     </div>
     <div class="calendar-grid">
-      <div class="calendar-day-header">LUN</div><div class="calendar-day-header">MAR</div><div class="calendar-day-header">MIÃ</div>
+      <div class="calendar-day-header">LUN</div><div class="calendar-day-header">MAR</div><div class="calendar-day-header">MIÉ</div>
       <div class="calendar-day-header">JUE</div><div class="calendar-day-header">VIE</div>
-      <div class="calendar-day-header" style="color:#ffd700;">SÃB</div><div class="calendar-day-header" style="color:#ffd700;">DOM</div>
+      <div class="calendar-day-header" style="color:#ffd700;">SÁB</div><div class="calendar-day-header" style="color:#ffd700;">DOM</div>
       <div id="calendar-days-container" style="display:contents;"></div>
     </div>
   </div>
 
   <!-- TAB ROSTER -->
   <div id="tab-roster" class="tab-content">
-    <button class="btn-trigger-add" onclick="openWrestlerModal(null)">â AÃ±adir Luchador</button>
+    <button class="btn-trigger-add" onclick="openWrestlerModal(null)">➕ Añadir Luchador</button>
     <div class="filters-wrapper">
-      <span class="filter-header">ð Seleccionar Filtros</span>
+      <span class="filter-header">🔍 Seleccionar Filtros</span>
       <select id="filter-select-all" onchange="onFilterChange(this)"></select>
       <div class="active-filters-bar" id="active-filters-container"></div>
     </div>
-    <div class="search-box"><input type="text" id="roster-search" placeholder="ð Buscar luchador por nombre..." autocapitalize="words" oninput="onSearchInput(this.value)"></div>
+    <div class="search-box"><input type="text" id="roster-search" placeholder="🔎 Buscar luchador por nombre..." autocapitalize="words" oninput="onSearchInput(this.value)"></div>
     <div id="list-roster"></div>
   </div>
 
   <!-- TAB SHOWS -->
   <div id="tab-shows" class="tab-content">
-    <button class="btn-trigger-add" onclick="openShowModal(null)">â AÃ±adir Nuevo Show</button>
+    <button class="btn-trigger-add" onclick="openShowModal(null)">➕ Añadir Nuevo Show</button>
     <div id="list-shows"></div>
   </div>
 
   <!-- TAB TAG TEAMS -->
   <div id="tab-teams" class="tab-content">
     <form id="form-teams">
-      <input type="text" id="team-name" placeholder="Nombre del Tag Team / FacciÃ³n" autocapitalize="words" required>
+      <input type="text" id="team-name" placeholder="Nombre del Tag Team / Ficción" autocapitalize="words" required>
       <label style="font-size:0.75rem; color:var(--text-dim);">SELECCIONA MIEMBROS DEL ROSTER:</label>
       <div class="checkbox-list" id="team-members-select"></div>
       <button type="submit" class="btn-add">Crear Tag Team</button>
@@ -412,18 +622,18 @@
     <div id="list-teams"></div>
   </div>
 
-  <!-- TAB TÃTULOS -->
+  <!-- TAB TÍTULOS -->
   <div id="tab-titles" class="tab-content">
-    <button class="btn-trigger-add" onclick="openTitleModal(null)">â AÃ±adir Campeonato</button>
+    <button class="btn-trigger-add" onclick="openTitleModal(null)">➕ Añadir Campeonato</button>
     <div id="list-titles"></div>
   </div>
 
-  <!-- TAB CARTELERA DE HOY -->
+  <!-- TAB CARTELERA DE HOY (sin historial al final) -->
   <div id="tab-matches" class="tab-content">
     <div id="today-card-header" style="margin-bottom:14px; font-weight:bold; color:var(--gold-end); font-size:1.15rem;"></div>
     <div id="today-slots-container"></div>
-    <button id="btn-finalize-card" class="btn-finalize" style="display:none;" onclick="finalizeTodayCard()">ð Finalizar Parrilla</button>
-    <button id="btn-next-show" class="btn-next-show" style="display:none;" onclick="goToNextShow()">â­ Siguiente Show</button>
+    <button id="btn-finalize-card" class="btn-finalize" style="display:none;" onclick="finalizeTodayCard()">🔒 Finalizar Parrilla</button>
+    <button id="btn-next-show" class="btn-next-show" style="display:none;" onclick="goToNextShow()">⏭ Siguiente Show</button>
   </div>
 
   <!-- MODAL RESULTADOS DE EVENTO PASADO -->
@@ -431,39 +641,40 @@
     <div class="modal-box wide">
       <div class="modal-header">
         <span class="modal-title" id="past-event-title">Cartelera</span>
-        <button class="modal-close" onclick="closePastEventModal()">â</button>
+        <button class="modal-close" onclick="closePastEventModal()">✕</button>
       </div>
       <div id="past-event-body"></div>
     </div>
   </div>
 
-  <!-- MODAL TÃTULOS -->
+  <!-- MODAL TÍTULOS -->
   <div id="modal-title" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <span class="modal-title" id="modal-title-header">AÃ±adir Campeonato</span>
-        <button class="modal-close" onclick="closeTitleModal()">â</button>
+        <span class="modal-title" id="modal-title-header">Añadir Campeonato</span>
+        <button class="modal-close" onclick="closeTitleModal()">✕</button>
       </div>
       <form id="form-edit-title" style="margin-bottom:0;">
         <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL CAMPEONATO</label>
         <input type="text" id="title-name-input" placeholder="Ej. WWE Championship..." autocapitalize="words" required>
-        <label style="font-size:0.75rem; color:var(--text-dim);">TIPO DE TÃTULO</label>
+        <label style="font-size:0.75rem; color:var(--text-dim);">TIPO DE TÍTULO</label>
         <select id="title-type-select" onchange="onTitleTypeChange()">
-          <option value="individual">Individual (1 CampeÃ³n)</option>
+          <option value="individual">Individual (1 Campeón)</option>
           <option value="tag">Por Parejas / Tag Team (2 Campeones)</option>
         </select>
-        <label style="font-size:0.75rem; color:var(--text-dim);">CAMPEÃN 1 (DEL ROSTER) â o Vacante</label>
-        <select id="title-champ1-select"><option value="">-- Vacante --</option></select>
+        <label style="font-size:0.75rem; color:var(--text-dim);">CAMPEÓN 1 (DEL ROSTER) — deja vacío para Vacante</label>
+        <select id="title-champ1-select"><option value="">-- Vacante / Ninguno --</option></select>
         <div id="champ2-wrapper" style="display:none; flex-direction:column; gap:4px;">
-          <label style="font-size:0.75rem; color:var(--text-dim);">CAMPEÃN 2 (DEL ROSTER) â o Vacante</label>
-          <select id="title-champ2-select"><option value="">-- Vacante --</option></select>
+          <label style="font-size:0.75rem; color:var(--text-dim);">CAMPEÓN 2 (DEL ROSTER) — deja vacío para Vacante</label>
+          <select id="title-champ2-select"><option value="">-- Vacante / Ninguno --</option></select>
         </div>
+        <button type="button" class="btn-dismiss" style="margin-top:8px;" onclick="setTitleVacant()">🗑 Dejar vacante</button>
         <div class="option-selector-wrapper" style="margin-top:4px;">
           <label class="option-checkbox-item" style="font-size:0.85rem;">
-            <input type="checkbox" id="title-is-inaugural" checked> Â¿Es el reinado inaugural?
+            <input type="checkbox" id="title-is-inaugural" checked> ¿Es el reinado inaugural?
           </label>
         </div>
-        <label style="font-size:0.75rem; color:var(--text-dim);">IMAGEN DEL TÃTULO / CINTURÃN</label>
+        <label style="font-size:0.75rem; color:var(--text-dim);">IMAGEN DEL TÍTULO / CINTURÓN</label>
         <input type="file" id="title-image-file" accept="image/*">
         <button type="submit" class="btn-add" id="btn-save-title">Guardar Campeonato</button>
       </form>
@@ -471,19 +682,18 @@
         <hr style="border-color:var(--border);">
         <label style="font-size:0.75rem; color:var(--text-dim);">REINADO ACTUAL</label>
         <div class="stats-summary">
-          <div class="stat-card"><div class="stat-val" id="title-stat-days" style="color:var(--gold-end);">0</div><div class="stat-lbl">DÃ­as Vigente</div></div>
+          <div class="stat-card"><div class="stat-val" id="title-stat-days" style="color:var(--gold-end);">0</div><div class="stat-lbl">Días Vigente</div></div>
           <div class="stat-card"><div class="stat-val" id="title-stat-defenses" style="color:#4caf50;">0</div><div class="stat-lbl">Defensas</div></div>
           <div class="stat-card"><div class="stat-val" id="title-stat-reigns" style="color:#2196f3;">1</div><div class="stat-lbl">Reinados</div></div>
         </div>
         <div>
-          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">DEFENSAS Y COMBATES POR ESTE TÃTULO</label>
+          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">DEFENSAS Y COMBATES POR ESTE TÍTULO</label>
           <div id="title-matches-history" style="max-height:120px; overflow-y:auto; background:#1a1a1a; padding:8px; border-radius:6px; border:1px solid var(--border);"></div>
         </div>
         <div>
           <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">HISTORIAL DE CAMPEONES</label>
           <div id="title-champs-history" style="max-height:120px; overflow-y:auto; background:#1a1a1a; padding:8px; border-radius:6px; border:1px solid var(--border);"></div>
         </div>
-        <button type="button" class="btn-add" style="background:#666; margin-top:0;" onclick="vacateCurrentTitle()">Dejar vacante</button>
         <button type="button" class="btn-delete-show" onclick="deleteCurrentTitle()">Eliminar Campeonato</button>
       </div>
     </div>
@@ -493,15 +703,15 @@
   <div id="modal-calendar-edit" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <span class="modal-title">ðï¸ GestiÃ³n del Calendario</span>
-        <button class="modal-close" onclick="closeCalendarEditModal()">â</button>
+        <span class="modal-title">🗓️ Gestión del Calendario</span>
+        <button class="modal-close" onclick="closeCalendarEditModal()">✕</button>
       </div>
       <div class="edit-tab-selector">
-        <button type="button" class="edit-tab-btn active" id="btn-tab-mode-ple" onclick="switchCalendarEditMode('ple')">AÃ±adir / Editar PLE</button>
-        <button type="button" class="edit-tab-btn" id="btn-tab-mode-show" onclick="switchCalendarEditMode('show')">AÃ±adir / Editar Show</button>
+        <button type="button" class="edit-tab-btn active" id="btn-tab-mode-ple" onclick="switchCalendarEditMode('ple')">Añadir / Editar PLE</button>
+        <button type="button" class="edit-tab-btn" id="btn-tab-mode-show" onclick="switchCalendarEditMode('show')">Añadir / Editar Show</button>
       </div>
       <form id="form-cal-ple" style="margin-bottom:0;">
-        <label style="font-size:0.75rem; color:var(--text-dim);">DÃA DEL MES (1 AL 28 DE ESTE MES)</label>
+        <label style="font-size:0.75rem; color:var(--text-dim);">DÍA DEL MES (1 AL 28 DE ESTE MES)</label>
         <input type="number" id="cal-ple-day" min="1" max="28" value="1" required onchange="onPLEDaySelectChange()">
         <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL PLE / EVENTO ESPECIAL</label>
         <input type="text" id="cal-ple-name" placeholder="Ej. Backlash, Royal Rumble..." autocapitalize="words" required>
@@ -510,17 +720,17 @@
         <label style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">MARCAS QUE PARTICIPAN EN ESTE PLE:</label>
         <div class="option-checkboxes" id="cal-ple-brands-container"></div>
         <button type="submit" class="btn-add">Guardar Evento Especial (PLE)</button>
-        <button type="button" id="btn-del-cal-ple" class="btn-delete-show" style="display:none;" onclick="deletePLEFromModal()">Eliminar PLE de este dÃ­a</button>
+        <button type="button" id="btn-del-cal-ple" class="btn-delete-show" style="display:none;" onclick="deletePLEFromModal()">Eliminar PLE de este día</button>
       </form>
       <form id="form-cal-show" style="display:none; margin-bottom:0;">
         <label style="font-size:0.75rem; color:var(--text-dim);">SELECCIONAR O CREAR SHOW</label>
         <select id="cal-show-select" onchange="onShowSelectChange()"><option value="NEW">-- [Nuevo Show] --</option></select>
         <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL SHOW</label>
         <input type="text" id="cal-show-name" placeholder="Ej. RAW, NXT..." autocapitalize="words" required>
-        <label style="font-size:0.75rem; color:var(--text-dim);">DÃA DE EMISIÃN SEMANAL:</label>
+        <label style="font-size:0.75rem; color:var(--text-dim);">DÍA DE EMISIÓN SEMANAL:</label>
         <select id="cal-show-day">
-          <option value="1">Lunes</option><option value="2">Martes</option><option value="3">MiÃ©rcoles</option>
-          <option value="4">Jueves</option><option value="5">Viernes</option><option value="6">SÃ¡bado</option><option value="7">Domingo</option>
+          <option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option>
+          <option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option><option value="7">Domingo</option>
         </select>
         <label style="font-size:0.75rem; color:var(--text-dim);">COLOR REPRESENTATIVO:</label>
         <input type="color" id="cal-show-color" value="#e50914" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
@@ -533,8 +743,8 @@
   <!-- MODAL START MONTH -->
   <div id="modal-start-month" class="modal-overlay">
     <div class="modal-box" style="margin-top:50px;">
-      <div class="modal-header"><span class="modal-title">ð Configurar Universo</span></div>
-      <p style="font-size:0.9rem; color:var(--text-dim); text-align:center;">Â¿En quÃ© mes comienza tu universo?</p>
+      <div class="modal-header"><span class="modal-title">📅 Configurar Universo</span></div>
+      <p style="font-size:0.9rem; color:var(--text-dim); text-align:center;">¿En qué mes comienza tu universo?</p>
       <select id="select-initial-month" style="width:100%; padding:12px;">
         <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option>
         <option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option>
@@ -549,17 +759,17 @@
     <div class="modal-box">
       <div class="modal-header">
         <span class="modal-title" id="modal-show-title">Personalizar Show</span>
-        <button class="modal-close" onclick="closeShowModal()">â</button>
+        <button class="modal-close" onclick="closeShowModal()">✕</button>
       </div>
       <form id="form-edit-show" style="margin-bottom:0;">
         <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL SHOW</label>
         <input type="text" id="show-name" placeholder="Ej. RAW, SmackDown..." autocapitalize="words" required>
-        <label style="font-size:0.75rem; color:var(--text-dim);">DÃA DE LA SEMANA DE DISPUTA:</label>
+        <label style="font-size:0.75rem; color:var(--text-dim);">DÍA DE LA SEMANA DE DISPUTA:</label>
         <select id="show-day">
-          <option value="1">Lunes</option><option value="2">Martes</option><option value="3">MiÃ©rcoles</option>
-          <option value="4">Jueves</option><option value="5">Viernes</option><option value="6">SÃ¡bado</option><option value="7">Domingo</option>
+          <option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option>
+          <option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option><option value="7">Domingo</option>
         </select>
-        <label style="font-size:0.75rem; color:var(--text-dim);">NÃMERO DE PARRILLAS POR SHOW:</label>
+        <label style="font-size:0.75rem; color:var(--text-dim);">NÚMERO DE PARRILLAS POR SHOW:</label>
         <input type="number" id="show-parrillas" min="1" max="20" value="6" required>
         <label style="font-size:0.75rem; color:var(--text-dim);">COLOR REPRESENTATIVO:</label>
         <input type="color" id="show-color" value="#e50914" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
@@ -581,7 +791,7 @@
           <div id="modal-avatar-container"></div>
           <span class="modal-title" id="modal-wrestler-title">Ficha de Luchador</span>
         </div>
-        <button class="modal-close" onclick="closeWrestlerModal()">â</button>
+        <button class="modal-close" onclick="closeWrestlerModal()">✕</button>
       </div>
       <form id="form-edit-wrestler" style="margin-bottom:0;">
         <label style="font-size:0.75rem; color:var(--text-dim);">DATOS GENERALES</label>
@@ -589,25 +799,25 @@
         <label style="font-size:0.75rem; color:var(--text-dim);">IMAGEN DE FOTO:</label>
         <input type="file" id="edit-image-file" accept="image/*">
         <div class="option-selector-wrapper">
-          <span class="option-selector-label">MARCAS / SHOWS (SELECCIÃN MÃLTIPLE):</span>
+          <span class="option-selector-label">MARCAS / SHOWS (SELECCIÓN MÚLTIPLE):</span>
           <div class="option-checkboxes" id="edit-brands-container"></div>
         </div>
         <div class="option-selector-wrapper">
-          <span class="option-selector-label">ALINEACIÃN:</span>
+          <span class="option-selector-label">ALINEACIÓN:</span>
           <div class="option-checkboxes" id="edit-alignment-container">
             <label class="option-checkbox-item"><input type="radio" name="edit-alignment" value="Face" checked> Face</label>
             <label class="option-checkbox-item"><input type="radio" name="edit-alignment" value="Heel"> Heel</label>
           </div>
         </div>
         <div class="option-selector-wrapper">
-          <span class="option-selector-label">GÃNERO:</span>
+          <span class="option-selector-label">GÉNERO:</span>
           <div class="option-checkboxes" id="edit-gender-container">
             <label class="option-checkbox-item"><input type="radio" name="edit-gender" value="Men" checked> Men</label>
             <label class="option-checkbox-item"><input type="radio" name="edit-gender" value="Women"> Women</label>
           </div>
         </div>
         <div class="option-selector-wrapper">
-          <span class="option-selector-label">DIVISIÃN:</span>
+          <span class="option-selector-label">DIVISIÓN:</span>
           <div class="option-checkboxes" id="edit-division-container">
             <label class="option-checkbox-item"><input type="radio" name="edit-division" value="Main Eventer"> Main Eventer</label>
             <label class="option-checkbox-item"><input type="radio" name="edit-division" value="Midcarder" checked> Midcarder</label>
@@ -621,7 +831,7 @@
       </form>
       <div id="modal-extra-stats">
         <div style="margin-bottom:12px;">
-          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">RÃCORD GLOBAL</label>
+          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">RÉCORD GLOBAL</label>
           <div class="stats-summary">
             <div class="stat-card"><div class="stat-val" id="stat-wins" style="color:#4caf50;">0</div><div class="stat-lbl">Victorias</div></div>
             <div class="stat-card"><div class="stat-val" id="stat-losses" style="color:#f44336;">0</div><div class="stat-lbl">Derrotas</div></div>
@@ -629,11 +839,11 @@
           </div>
         </div>
         <div style="margin-bottom:12px;">
-          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">ð HISTORIAL DE TÃTULOS</label>
+          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">🏆 HISTORIAL DE TÍTULOS</label>
           <div id="wrestler-titles-history" style="max-height:140px; overflow-y:auto; background:#1a1a1a; padding:8px; border-radius:6px; border:1px solid var(--border);"></div>
         </div>
         <div class="h2h-section" style="margin-bottom:12px;">
-          <span class="h2h-header">âï¸ COMPARADOR HEAD-TO-HEAD (H2H)</span>
+          <span class="h2h-header">⚔️ COMPARADOR HEAD-TO-HEAD (H2H)</span>
           <select id="h2h-opponent" onchange="renderH2H()"><option value="">-- Selecciona un rival --</option></select>
           <div id="h2h-result" style="font-size:0.85rem; color:var(--text-dim); text-align:center;">Selecciona un rival para ver el historial cara a cara.</div>
         </div>
@@ -649,7 +859,7 @@
   <!-- CONFIRM MODAL -->
   <div id="modal-confirm" class="confirm-modal-overlay">
     <div class="confirm-box">
-      <div class="confirm-text" id="confirm-modal-text">Â¿Seguro que quieres realizar esta acciÃ³n?</div>
+      <div class="confirm-text" id="confirm-modal-text">¿Seguro que quieres realizar esta acción?</div>
       <div class="confirm-actions">
         <button class="btn-confirm-accept" id="btn-confirm-accept">Aceptar</button>
         <button class="btn-confirm-cancel" onclick="closeConfirmModal()">Cancelar</button>
@@ -663,89 +873,163 @@
     <button id="nav-btn-roster" onclick="switchTab('roster', this)">Roster</button>
     <button onclick="switchTab('shows', this)">Shows</button>
     <button onclick="switchTab('teams', this)">Tag Teams</button>
-    <button onclick="switchTab('titles', this)">TÃ­tulos</button>
+    <button onclick="switchTab('titles', this)">Títulos</button>
     <button onclick="switchTab('matches', this)">Cartelera de hoy</button>
   </nav>
-
-  <script>
-
+    <script>
     // ========== MATCH TYPE DEFINITIONS ==========
     const STAGES_OF_HELL_OPTIONS = [
       "Normal", "Extreme Rules", "Inferno", "I Quit", "Contenedor",
       "Hell in a Cell", "Steel Cage", "Tables", "Ladder", "TLC",
-      "SumisiÃ³n", "Ambulancia", "AtaÃºd", "Falls Count Anywhere",
+      "Sumisión", "Ambulancia", "Ataúd", "Falls Count Anywhere",
       "Last Man Standing", "No Holds Barred"
     ];
 
     const MATCH_TYPES = {
       "Normal": {
-        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6, "8-Way": 8
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "5-Way": 5,
+        "6-Way": 6,
+        "8-Way": 8
       },
       "Por equipos": {
-        "2 contra 2": 4, "2 contra 2 mixto": 4, "3 contra 3": 6, "4 contra 4": 8,
-        "1 contra 2 Handicap": 3, "1 contra 2 Handicap Tornado por parejas": 3,
-        "1 contra 3 Handicap": 4, "2 contra 3 Handicap": 5,
-        "2 contra 2 Tornado por parejas": 4, "3 contra 3 Tornado por parejas": 6,
-        "Triple Threat Tornado por parejas": 6, "4-Way Tornado por parejas": 8
+        "2 contra 2": 4,
+        "2 contra 2 mixto": 4,
+        "3 contra 3": 6,
+        "4 contra 4": 8,
+        "1 contra 2 Handicap": 3,
+        "1 contra 2 Handicap Tornado por parejas": 3,
+        "1 contra 3 Handicap": 4,
+        "2 contra 3 Handicap": 5,
+        "2 contra 2 Tornado por parejas": 4,
+        "3 contra 3 Tornado por parejas": 6,
+        "Triple Threat Tornado por parejas": 6,
+        "4-Way Tornado por parejas": 8
       },
       "Extreme Rules": {
-        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "2 contra 2": 4
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "5-Way": 5,
+        "2 contra 2": 4
       },
       "Inferno": { "1 contra 1": 2 },
       "3 Stages of Hell": { "special": true },
       "I Quit": { "1 contra 1": 2 },
       "Contenedor": { "1 contra 1": 2 },
       "Peleas": {
-        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "2 contra 2": 4,
-        "1 contra 2 Handicap": 3, "6-Way": 6, "8-Way": 8
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "2 contra 2": 4,
+        "1 contra 2 Handicap": 3,
+        "6-Way": 6,
+        "8-Way": 8
       },
-      "Royal Rumble": { "10 participantes": 10, "20 participantes": 20, "30 participantes": 30 },
-      "Ãrbitro especial invitado": {
-        "Normal 1 contra 1": 2, "Normal Triple Threat": 3, "Normal Fatal 4-Way": 4,
-        "Normal 5-Way": 5, "Normal 6-Way": 6,
-        "Por equipos 2 contra 2": 4, "Por equipos 3 contra 3": 6,
-        "Por equipos 1 contra 2 Handicap": 3, "Por equipos 1 contra 2 Handicap Tornado por parejas": 3,
-        "Por equipos 1 contra 3 Handicap": 4, "Por equipos 2 contra 3 Handicap": 5,
-        "Por equipos 2 contra 2 Tornado por parejas": 4, "Por equipos 3 contra 3 Tornado por parejas": 6,
+      "Royal Rumble": {
+        "10 participantes": 10,
+        "20 participantes": 20,
+        "30 participantes": 30
+      },
+      "Árbitro especial invitado": {
+        "Normal 1 contra 1": 2,
+        "Normal Triple Threat": 3,
+        "Normal Fatal 4-Way": 4,
+        "Normal 5-Way": 5,
+        "Normal 6-Way": 6,
+        "Por equipos 2 contra 2": 4,
+        "Por equipos 3 contra 3": 6,
+        "Por equipos 1 contra 2 Handicap": 3,
+        "Por equipos 1 contra 2 Handicap Tornado por parejas": 3,
+        "Por equipos 1 contra 3 Handicap": 4,
+        "Por equipos 2 contra 3 Handicap": 5,
+        "Por equipos 2 contra 2 Tornado por parejas": 4,
+        "Por equipos 3 contra 3 Tornado por parejas": 6,
         "Por equipos Triple Threat Tornado por parejas": 6,
-        "Extreme Rules 1 contra 1": 2, "Extreme Rules Triple Threat": 3, "Extreme Rules Fatal 4-Way": 4,
-        "Extreme Rules 5-Way": 5, "Extreme Rules 2 contra 2": 4,
-        "Hell in a Cell 1 contra 1": 2, "Hell in a Cell Triple Threat": 3, "Hell in a Cell Fatal 4-Way": 4,
-        "Hell in a Cell 6-Way": 6, "Hell in a Cell 2 contra 2": 4,
-        "Iron Man 1 contra 1": 2, "Falls Count Anywhere 1 contra 1": 2,
-        "Falls Count Anywhere Triple Threat": 3, "Falls Count Anywhere Fatal 4-Way": 4,
-        "SumisiÃ³n 1 contra 1": 2, "No Holds Barred 1 contra 1": 2
+        "Extreme Rules 1 contra 1": 2,
+        "Extreme Rules Triple Threat": 3,
+        "Extreme Rules Fatal 4-Way": 4,
+        "Extreme Rules 5-Way": 5,
+        "Extreme Rules 2 contra 2": 4,
+        "Hell in a Cell 1 contra 1": 2,
+        "Hell in a Cell Triple Threat": 3,
+        "Hell in a Cell Fatal 4-Way": 4,
+        "Hell in a Cell 6-Way": 6,
+        "Hell in a Cell 2 contra 2": 4,
+        "Iron Man 1 contra 1": 2,
+        "Falls Count Anywhere 1 contra 1": 2,
+        "Falls Count Anywhere Triple Threat": 3,
+        "Falls Count Anywhere Fatal 4-Way": 4,
+        "Sumisión 1 contra 1": 2,
+        "No Holds Barred 1 contra 1": 2
       },
       "Underground": { "1 contra 1": 2 },
       "Reglas de Bloodline": { "4 vs 4 (Principal + 3 aliados por bando)": 8 },
       "Hell in a Cell": {
-        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6,
-        "2 contra 2": 4, "3 contra 3": 6, "Triple Threat Tornado por parejas": 6
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "5-Way": 5,
+        "6-Way": 6,
+        "2 contra 2": 4,
+        "3 contra 3": 6,
+        "Triple Threat Tornado por parejas": 6
       },
-      "Steel Cage": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "2 contra 2": 4 },
+      "Steel Cage": {
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "2 contra 2": 4
+      },
       "Elimination Chamber": { "6 participantes": 6 },
       "Tables": {
-        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5,
-        "2 contra 2": 4, "3 contra 3": 6, "6-Way": 6, "Triple Threat Tornado por parejas": 6
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "5-Way": 5,
+        "2 contra 2": 4,
+        "3 contra 3": 6,
+        "6-Way": 6,
+        "Triple Threat Tornado por parejas": 6
       },
       "Ladder": {
-        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6, "8-Way": 8,
-        "2 contra 2": 4, "3 contra 3": 6, "4 contra 4": 8,
-        "Triple Threat Tornado por parejas": 6, "4-Way Tornado por parejas": 8
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "5-Way": 5,
+        "6-Way": 6,
+        "8-Way": 8,
+        "2 contra 2": 4,
+        "3 contra 3": 6,
+        "4 contra 4": 8,
+        "Triple Threat Tornado por parejas": 6,
+        "4-Way Tornado por parejas": 8
       },
       "TLC": {
-        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5,
-        "2 contra 2": 4, "3 contra 3": 6, "Triple Threat Tornado por parejas": 6
+        "1 contra 1": 2,
+        "Triple Threat": 3,
+        "Fatal 4-Way": 4,
+        "5-Way": 5,
+        "2 contra 2": 4,
+        "3 contra 3": 6,
+        "Triple Threat Tornado por parejas": 6
       },
       "Gauntlet": {
-        "4 participantes": 4, "5 participantes": 5, "6 participantes": 6, "8 participantes": 8,
-        "10 participantes": 10, "20 participantes": 20, "30 participantes": 30
+        "4 participantes": 4,
+        "5 participantes": 5,
+        "6 participantes": 6,
+        "8 participantes": 8,
+        "10 participantes": 10,
+        "20 participantes": 20,
+        "30 participantes": 30
       },
       "Turmoil Gauntlet": { "Turmoil Gauntlet": 2 },
       "Eliminator Gauntlet": { "Eliminator Gauntlet": 2 },
-      "SumisiÃ³n": { "1 contra 1": 2 },
+      "Sumisión": { "1 contra 1": 2 },
       "Ambulancia": { "1 contra 1": 2 },
-      "AtaÃºd": { "1 contra 1": 2 },
+      "Ataúd": { "1 contra 1": 2 },
       "Battle Royal": { "Battle Royal": 8 },
       "Falls Count Anywhere": { "1 contra 1": 2 },
       "WarGames": { "WarGames": 8 },
@@ -786,6 +1070,8 @@
       return clean.join(' vs ');
     }
 
+    /** Divide participantes en lado izquierdo / derecho según tipo de combate.
+        Si número impar: ganador a la izquierda, resto a la derecha. */
     function splitSides(participants, matchType, subType, winnerName) {
       const ids = (participants || []).filter(Boolean);
       const sub = (subType || '').toLowerCase();
@@ -803,35 +1089,60 @@
 
       if (isTeamSplit) {
         if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) {
-          left = ids.slice(0, 1); right = ids.slice(1, 3);
+          left = ids.slice(0, 1);
+          right = ids.slice(1, 3);
         } else if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) {
-          left = ids.slice(0, 1); right = ids.slice(1, 4);
+          left = ids.slice(0, 1);
+          right = ids.slice(1, 4);
         } else if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) {
-          left = ids.slice(0, 2); right = ids.slice(2, 5);
+          left = ids.slice(0, 2);
+          right = ids.slice(2, 5);
         } else if (sub.includes('3 contra 3') || sub.includes('3 vs 3') || type === 'wargames') {
-          left = ids.slice(0, 3); right = ids.slice(3, 6);
+          left = ids.slice(0, 3);
+          right = ids.slice(3, 6);
         } else if (sub.includes('4 contra 4') || sub.includes('4 vs 4') || type === 'reglas de bloodline') {
-          left = ids.slice(0, 4); right = ids.slice(4, 8);
+          left = ids.slice(0, 4);
+          right = ids.slice(4, 8);
         } else {
+          // 2 vs 2 genérico
           left = ids.slice(0, Math.ceil(ids.length / 2));
           right = ids.slice(Math.ceil(ids.length / 2));
         }
       } else if (ids.length === 2) {
-        left = [ids[0]]; right = [ids[1]];
+        left = [ids[0]];
+        right = [ids[1]];
       } else if (ids.length % 2 === 1 && winnerName) {
+        // Impar: ganador a la izquierda
         const winnerW = store.roster.find(r => r.name === winnerName);
         const winnerId = winnerW ? winnerW.id : null;
         if (winnerId && ids.includes(winnerId)) {
           left = [winnerId];
           right = ids.filter(id => id !== winnerId);
         } else {
-          left = [ids[0]]; right = ids.slice(1);
+          left = [ids[0]];
+          right = ids.slice(1);
         }
       } else {
         const mid = Math.ceil(ids.length / 2);
-        left = ids.slice(0, mid); right = ids.slice(mid);
+        left = ids.slice(0, mid);
+        right = ids.slice(mid);
       }
       return { left, right };
+    }
+
+    function isTeamBasedMatch(matchType, subType) {
+      const sub = (subType || '').toLowerCase();
+      const type = (matchType || '').toLowerCase();
+      return (
+        sub.includes('2 contra 2') || sub.includes('2 vs 2') ||
+        sub.includes('3 contra 3') || sub.includes('3 vs 3') ||
+        sub.includes('4 contra 4') || sub.includes('4 vs 4') ||
+        sub.includes('1 contra 2') || sub.includes('1 vs 2') ||
+        sub.includes('1 contra 3') || sub.includes('1 vs 3') ||
+        sub.includes('2 contra 3') || sub.includes('2 vs 3') ||
+        type === 'reglas de bloodline' || type === 'wargames' ||
+        type === 'por equipos'
+      );
     }
 
     // ========== CORE ==========
@@ -910,10 +1221,10 @@
       img.onerror = null;
       const ph = document.createElement('div');
       ph.className = 'wrestler-avatar-placeholder';
-      ph.innerHTML = 'ð¤';
+      ph.innerHTML = '👤';
       img.replaceWith(ph);
     }
-    function cleanName(str) { return str ? str.replace(/^["'""`Â«Ê¼\s]+/, '') : ''; }
+    function cleanName(str) { return str ? str.replace(/^["'“`«ʼ\s]+/, '') : ''; }
     function saveData() { localStorage.setItem('universe_data', JSON.stringify(store)); render(); }
 
     function unlockNav() {
@@ -924,7 +1235,7 @@
     }
     function continueUniverse() { unlockNav(); switchTab('roster', document.getElementById('nav-btn-roster')); }
     function confirmResetUniverse() {
-      showConfirmModal("â ï¸ Â¿Seguro que quieres reiniciar todo el universo de cero?", async () => {
+      showConfirmModal("⚠️ ¿Seguro que quieres reiniciar todo el universo de cero?", async () => {
         await clearIndexedDB();
         store = createEmptyStore();
         saveData();
@@ -962,15 +1273,15 @@
       const brandOptions = [{ val: 'ALL', text: 'Todas las marcas' }].concat(store.shows.map(s => ({ val: s.name, text: s.name })));
       const filterGroupsConfig = [
         { type: 'brand', label: 'Marca', options: brandOptions },
-        { type: 'alignment', label: 'AlineaciÃ³n', options: [{ val: 'ALL', text: 'Todas' }, { val: 'Face', text: 'Face' }, { val: 'Heel', text: 'Heel' }] },
-        { type: 'gender', label: 'GÃ©nero', options: [{ val: 'ALL', text: 'Todos' }, { val: 'Men', text: 'Men' }, { val: 'Women', text: 'Women' }] },
-        { type: 'division', label: 'DivisiÃ³n', options: [{ val: 'ALL', text: 'Todas' }, { val: 'Main Eventer', text: 'Main Eventer' }, { val: 'Midcarder', text: 'Midcarder' }, { val: 'Tag Team', text: 'Tag Team' }, { val: 'Inactivo', text: 'Inactivo' }] }
+        { type: 'alignment', label: 'Alineación', options: [{ val: 'ALL', text: 'Todas' }, { val: 'Face', text: 'Face' }, { val: 'Heel', text: 'Heel' }] },
+        { type: 'gender', label: 'Género', options: [{ val: 'ALL', text: 'Todos' }, { val: 'Men', text: 'Men' }, { val: 'Women', text: 'Women' }] },
+        { type: 'division', label: 'División', options: [{ val: 'ALL', text: 'Todas' }, { val: 'Main Eventer', text: 'Main Eventer' }, { val: 'Midcarder', text: 'Midcarder' }, { val: 'Tag Team', text: 'Tag Team' }, { val: 'Inactivo', text: 'Inactivo' }] }
       ];
       const select = document.getElementById('filter-select-all');
       select.innerHTML = filterGroupsConfig.map(group => {
         const optionsHTML = group.options.map(opt => {
           const isActive = filters[group.type] === opt.val;
-          return `<option value="${group.type}:${opt.val}" ${isActive ? 'selected' : ''}>${isActive ? '[â]' : '[â]'} ${group.label}: ${opt.text}</option>`;
+          return `<option value="${group.type}:${opt.val}" ${isActive ? 'selected' : ''}>${isActive ? '[☑]' : '[☐]'} ${group.label}: ${opt.text}</option>`;
         }).join('');
         return `<optgroup label="${group.label}">${optionsHTML}</optgroup>`;
       }).join('');
@@ -979,12 +1290,12 @@
       const container = document.getElementById('active-filters-container');
       const activeBadges = [];
       if (filters.brand !== 'ALL') activeBadges.push({ type: 'brand', label: `Marca: ${filters.brand}` });
-      if (filters.alignment !== 'ALL') activeBadges.push({ type: 'alignment', label: `AlineaciÃ³n: ${filters.alignment}` });
-      if (filters.gender !== 'ALL') activeBadges.push({ type: 'gender', label: `GÃ©nero: ${filters.gender}` });
-      if (filters.division !== 'ALL') activeBadges.push({ type: 'division', label: `DivisiÃ³n: ${filters.division}` });
+      if (filters.alignment !== 'ALL') activeBadges.push({ type: 'alignment', label: `Alineación: ${filters.alignment}` });
+      if (filters.gender !== 'ALL') activeBadges.push({ type: 'gender', label: `Género: ${filters.gender}` });
+      if (filters.division !== 'ALL') activeBadges.push({ type: 'division', label: `División: ${filters.division}` });
       if (filters.search !== '') activeBadges.push({ type: 'search', label: `Nombre: "${filters.search}"` });
       if (activeBadges.length === 0) container.innerHTML = `<span class="active-filters-label">Filtrado por:</span> <span style="color:var(--text-dim); font-size:0.75rem;">Ninguno</span>`;
-      else container.innerHTML = `<span class="active-filters-label">Filtrado por:</span> ` + activeBadges.map(b => `<span class="filter-badge" onclick="clearFilter('${b.type}')">ð ${b.label} <span class="close-icon">â</span></span>`).join('');
+      else container.innerHTML = `<span class="active-filters-label">Filtrado por:</span> ` + activeBadges.map(b => `<span class="filter-badge" onclick="clearFilter('${b.type}')">📌 ${b.label} <span class="close-icon">✕</span></span>`).join('');
     }
 
     function getRadioValue(name) { const s = document.querySelector(`input[name="${name}"]:checked`); return s ? s.value : ''; }
@@ -994,7 +1305,8 @@
 
     function transferTitle(titleId, newChampionIds) {
       const title = store.titles.find(t => t.id === titleId);
-      if (!title || !newChampionIds || newChampionIds.length === 0) return false;
+      if (!title) return false;
+      if (!newChampionIds) newChampionIds = [];
 
       const sameChamps = title.champions && 
         title.champions.length === newChampionIds.length && 
@@ -1003,10 +1315,12 @@
       if (sameChamps) return false;
 
       const daysReigned = Math.max(0, getTotalUniverseDays() - (title.reignStartDay || 0));
-      const prevNames = (title.champions || []).map(cId => {
-        const r = store.roster.find(ros => ros.id === cId);
-        return r ? r.name : 'Desconocido';
-      }).join(' & ') || 'Vacante';
+      const prevNames = (title.champions || []).length
+        ? (title.champions || []).map(cId => {
+            const r = store.roster.find(ros => ros.id === cId);
+            return r ? r.name : 'Desconocido';
+          }).join(' & ')
+        : 'Vacante';
 
       if (!title.history) title.history = [];
       title.history.unshift({ champsNames: prevNames, days: daysReigned });
@@ -1035,7 +1349,7 @@
       const absoluteMonth = startMonth + currentMonthIndex;
       const monthDisplayIndex = absoluteMonth % 12;
       const yearDisplay = Math.floor(absoluteMonth / 12) + 1;
-      document.getElementById('calendar-month-year-display').innerText = `AÃ±o ${yearDisplay} - ${MONTH_NAMES[monthDisplayIndex]}`;
+      document.getElementById('calendar-month-year-display').innerText = `Año ${yearDisplay} - ${MONTH_NAMES[monthDisplayIndex]}`;
 
       const globalShowCounts = {};
       store.shows.forEach(s => globalShowCounts[s.id] = 0);
@@ -1067,14 +1381,14 @@
         if (ppv) {
           const pastPle = store.matches.some(m => m.show === ppv.name || m.eventName === ppv.name);
           if (pastPle) {
-            cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openPastEvent('${ppv.name.replace(/'/g, "\\'")}', null)">ð ${ppv.name}</div>`;
+            cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openPastEvent('${ppv.name.replace(/'/g, "\\'")}', null)">🏆 ${ppv.name}</div>`;
           } else {
-            cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openCalendarEditModal(${day}, 'ple')">ð ${ppv.name}</div>`;
+            cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openCalendarEditModal(${day}, 'ple')">🏆 ${ppv.name}</div>`;
           }
         }
         const isCurrent = day === (store.calendar.currentDay || 1);
         html += `<div class="calendar-cell ${ppv || isCurrent ? 'has-event' : ''}" style="${isCurrent ? 'outline:2px solid var(--gold-end);' : ''}">
-          <span class="cell-day-num">DÃ­a ${day}${isCurrent ? ' â' : ''}</span>
+          <span class="cell-day-num">Día ${day}${isCurrent ? ' ●' : ''}</span>
           <div class="cell-events-wrapper">${cellEventsHTML}</div>
         </div>`;
       }
@@ -1098,7 +1412,7 @@
         m.show === label ||
         (m.eventName === eventName && (showNumber == null || m.showNumber === showNumber))
       );
-      document.getElementById('past-event-title').innerText = `ðº ${label}`;
+      document.getElementById('past-event-title').innerText = `📺 ${label}`;
       const body = document.getElementById('past-event-body');
 
       if (!matches.length) {
@@ -1108,8 +1422,8 @@
       }
 
       const cards = await Promise.all(matches.map(async m => {
-        if (m.card === 'ð¤ Promo' || m.winner === 'Promo') {
-          return `<div class="past-promo-card">ð¤ Segmento de promo</div>`;
+        if (m.card === '🎤 Promo' || m.winner === 'Promo') {
+          return `<div class="past-promo-card">🎤 Segmento de promo</div>`;
         }
 
         const parts = m.participants || [];
@@ -1122,17 +1436,11 @@
             const name = w ? w.name : '?';
             const img = w ? await getImageFromDB('wrestler_' + w.id) : null;
             const isWinner = winnerName && name === winnerName;
-            // For team matches, highlight whole winning side
-            let isSideWinner = isWinner;
-            if (!isWinner && winnerName && parts.length >= 2) {
-              const outcome = getMatchOutcomeForWrestler(m, name);
-              isSideWinner = outcome === 'win';
-            }
             const imgTag = img
-              ? `<img src="${img}" class="past-wrestler-img ${isSideWinner ? 'winner-border' : ''}" alt="${name}">`
-              : `<div class="past-wrestler-img ${isSideWinner ? 'winner-border' : ''}" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;">ð¤</div>`;
+              ? `<img src="${img}" class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" alt="${name}">`
+              : `<div class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;">👤</div>`;
             return `<div class="past-wrestler-wrap">
-              ${isSideWinner ? '<span class="past-winner-label">GANADOR</span>' : '<span style="height:16px;"></span>'}
+              ${isWinner ? '<span class="past-winner-label">GANADOR</span>' : '<span style="height:16px;"></span>'}
               ${imgTag}
               <span class="past-wrestler-name">${name}</span>
             </div>`;
@@ -1144,16 +1452,16 @@
         const rightH = await sideHTML(right, 'right');
 
         let typeLine = m.matchType || '';
-        if (m.subType) typeLine += (typeLine ? ' Â· ' : '') + m.subType;
+        if (m.subType) typeLine += (typeLine ? ' · ' : '') + m.subType;
         if (m.matchType === '3 Stages of Hell' && m.stages) {
-          const st = (m.stages || []).filter(Boolean).join(' â ');
-          if (st) typeLine += (typeLine ? ' Â· ' : '') + st;
+          const st = (m.stages || []).filter(Boolean).join(' → ');
+          if (st) typeLine += (typeLine ? ' · ' : '') + st;
         }
 
         let titleGold = '';
         if (m.titleId) {
           const t = store.titles.find(tt => tt.id === m.titleId);
-          if (t) titleGold = `<span class="past-match-title-gold">ð ${t.name}</span>`;
+          if (t) titleGold = `<span class="past-match-title-gold">🏆 ${t.name}</span>`;
         }
 
         const namesLine = formatMatchSummary(
@@ -1255,7 +1563,7 @@
     }
     function populateShowSelect() {
       const select = document.getElementById('cal-show-select');
-      select.innerHTML = `<option value="NEW">-- [AÃ±adir Nuevo Show] --</option>` + store.shows.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      select.innerHTML = `<option value="NEW">-- [Añadir Nuevo Show] --</option>` + store.shows.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
       onShowSelectChange();
     }
     function onShowSelectChange() {
@@ -1309,7 +1617,7 @@
       document.getElementById('show-bg-file').value = '';
       const btnDelete = document.getElementById('btn-delete-show');
       if (id === null) {
-        document.getElementById('modal-show-title').innerText = 'AÃ±adir Nuevo Show';
+        document.getElementById('modal-show-title').innerText = 'Añadir Nuevo Show';
         document.getElementById('show-name').value = '';
         document.getElementById('show-day').value = "1";
         document.getElementById('show-parrillas').value = 6;
@@ -1332,7 +1640,7 @@
     function deleteCurrentShow() {
       if (activeShowId === null) return;
       const show = store.shows.find(s => s.id === activeShowId);
-      if (show) showConfirmModal(`Â¿Seguro que quieres eliminar el show "${show.name}"?`, () => { deleteItem('shows', activeShowId); closeShowModal(); });
+      if (show) showConfirmModal(`¿Seguro que quieres eliminar el show "${show.name}"?`, () => { deleteItem('shows', activeShowId); closeShowModal(); });
     }
     document.getElementById('form-edit-show').onsubmit = async (e) => {
       e.preventDefault();
@@ -1382,9 +1690,13 @@
     }
     function populateRosterDropdowns() {
       const sorted = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
-      const optionsHTML = `<option value="">-- Vacante --</option>` + sorted.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+      const optionsHTML = `<option value="">-- Vacante / Ninguno --</option>` + sorted.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
       document.getElementById('title-champ1-select').innerHTML = optionsHTML;
       document.getElementById('title-champ2-select').innerHTML = optionsHTML;
+    }
+    function setTitleVacant() {
+      document.getElementById('title-champ1-select').value = '';
+      document.getElementById('title-champ2-select').value = '';
     }
     function openTitleModal(id = null) {
       activeTitleId = id;
@@ -1393,7 +1705,7 @@
       const statsContainer = document.getElementById('title-stats-container');
       const inauguralCheck = document.getElementById('title-is-inaugural');
       if (id === null) {
-        document.getElementById('modal-title-header').innerText = 'AÃ±adir Campeonato';
+        document.getElementById('modal-title-header').innerText = 'Añadir Campeonato';
         document.getElementById('title-name-input').value = '';
         document.getElementById('title-type-select').value = 'individual';
         onTitleTypeChange();
@@ -1409,8 +1721,8 @@
         document.getElementById('title-name-input').value = title.name;
         document.getElementById('title-type-select').value = title.type || 'individual';
         onTitleTypeChange();
-        document.getElementById('title-champ1-select').value = (title.champions && title.champions[0]) || '';
-        document.getElementById('title-champ2-select').value = (title.champions && title.champions[1]) || '';
+        document.getElementById('title-champ1-select').value = title.champions[0] || '';
+        document.getElementById('title-champ2-select').value = title.champions[1] || '';
         inauguralCheck.checked = !!title.isInaugural;
         document.getElementById('btn-save-title').innerText = 'Guardar Cambios';
         statsContainer.style.display = 'flex';
@@ -1419,8 +1731,8 @@
         const titleMatches = store.matches.filter(m => m.titleId === id);
         document.getElementById('title-stat-defenses').innerText = titleMatches.filter(m => m.isDefense).length;
         document.getElementById('title-stat-reigns').innerText = (title.history ? title.history.length : 0) + 1;
-        document.getElementById('title-matches-history').innerHTML = titleMatches.length ? titleMatches.map(m => `<div style="font-size:0.75rem; border-bottom:1px dashed #444; padding:4px 0;"><b>${m.show}:</b> ${m.card}<br><span style="color:var(--text-dim);">ð ${m.winner}</span></div>`).join('') : '<span style="font-size:0.75rem; color:var(--text-dim);">Sin combates.</span>';
-        document.getElementById('title-champs-history').innerHTML = (title.history && title.history.length) ? title.history.map(h => `<div style="font-size:0.75rem; border-bottom:1px dashed #444; padding:4px 0;">ð <b>${h.champsNames}</b> (${h.days} dÃ­as)</div>`).join('') : '<span style="font-size:0.75rem; color:var(--text-dim);">Este es el reinado inaugural.</span>';
+        document.getElementById('title-matches-history').innerHTML = titleMatches.length ? titleMatches.map(m => `<div style="font-size:0.75rem; border-bottom:1px dashed #444; padding:4px 0;"><b>${m.show}:</b> ${m.card}<br><span style="color:var(--text-dim);">👑 ${m.winner}</span></div>`).join('') : '<span style="font-size:0.75rem; color:var(--text-dim);">Sin combates.</span>';
+        document.getElementById('title-champs-history').innerHTML = (title.history && title.history.length) ? title.history.map(h => `<div style="font-size:0.75rem; border-bottom:1px dashed #444; padding:4px 0;">👑 <b>${h.champsNames}</b> (${h.days} días)</div>`).join('') : '<span style="font-size:0.75rem; color:var(--text-dim);">Este es el reinado inaugural.</span>';
       }
       document.getElementById('modal-title').classList.add('active');
     }
@@ -1428,30 +1740,7 @@
     function deleteCurrentTitle() {
       if (activeTitleId === null) return;
       const title = store.titles.find(t => t.id === activeTitleId);
-      if (title) showConfirmModal(`Â¿Eliminar el campeonato "${title.name}"?`, () => { deleteItem('titles', activeTitleId); closeTitleModal(); });
-    }
-    function vacateCurrentTitle() {
-      if (activeTitleId === null) return;
-      const title = store.titles.find(t => t.id === activeTitleId);
-      if (!title) return;
-      if (!title.champions || title.champions.length === 0) {
-        alert('El tÃ­tulo ya estÃ¡ vacante.');
-        return;
-      }
-      showConfirmModal(`Â¿Dejar vacante el campeonato "${title.name}"?`, () => {
-        const daysReigned = Math.max(0, getTotalUniverseDays() - (title.reignStartDay || 0));
-        const prevNames = (title.champions || []).map(cId => {
-          const r = store.roster.find(ros => ros.id === cId);
-          return r ? r.name : 'Desconocido';
-        }).join(' & ');
-        if (!title.history) title.history = [];
-        title.history.unshift({ champsNames: prevNames, days: daysReigned });
-        title.champions = [];
-        title.reignStartDay = getTotalUniverseDays();
-        title.isInaugural = false;
-        closeTitleModal();
-        saveData();
-      });
+      if (title) showConfirmModal(`¿Eliminar el campeonato "${title.name}"?`, () => { deleteItem('titles', activeTitleId); closeTitleModal(); });
     }
     document.getElementById('form-edit-title').onsubmit = async (e) => {
       e.preventDefault();
@@ -1463,11 +1752,13 @@
       const champ2 = (type === 'tag' && champ2Val) ? parseInt(champ2Val) : null;
       const isInaugural = document.getElementById('title-is-inaugural').checked;
 
-      // Permitir vacante
       let championsArr = [];
-      if (champ1) {
-        if (type === 'tag' && champ2) championsArr = [champ1, champ2];
-        else championsArr = [champ1];
+      if (type === 'tag') {
+        if (champ1 && champ2) championsArr = [champ1, champ2];
+        else if (!champ1 && !champ2) championsArr = []; // Vacante
+        else { alert("Para título por parejas elige ambos campeones o déjalos vacíos (Vacante)."); return; }
+      } else {
+        championsArr = champ1 ? [champ1] : []; // Vacante permitido
       }
 
       const fileInput = document.getElementById('title-image-file');
@@ -1479,17 +1770,23 @@
         const title = store.titles.find(t => t.id === activeTitleId);
         if (title) {
           if (fileInput.files[0]) await saveImageToDB('title_' + title.id, await fileToBase64(fileInput.files[0]));
-          const prevChamps = title.champions || [];
-          const sameChamps = prevChamps.length === championsArr.length && prevChamps.every((v,i) => v === championsArr[i]);
+          const sameChamps = (title.champions || []).length === championsArr.length &&
+            (title.champions || []).every((v,i) => v === championsArr[i]);
           if (!sameChamps) {
             const daysReigned = Math.max(0, getTotalUniverseDays() - (title.reignStartDay || 0));
-            const prevNames = prevChamps.map(cId => { const r = store.roster.find(ros => ros.id === cId); return r ? r.name : 'Desconocido'; }).join(' & ') || 'Vacante';
+            const prevNames = (title.champions || []).length
+              ? title.champions.map(cId => { const r = store.roster.find(ros => ros.id === cId); return r ? r.name : 'Desconocido'; }).join(' & ')
+              : 'Vacante';
             if (!title.history) title.history = [];
             title.history.unshift({ champsNames: prevNames, days: daysReigned });
             title.reignStartDay = getTotalUniverseDays();
             title.isInaugural = false;
-          } else title.isInaugural = isInaugural;
-          title.name = name; title.type = type; title.champions = championsArr;
+          } else {
+            title.isInaugural = isInaugural;
+          }
+          title.name = name;
+          title.type = type;
+          title.champions = championsArr;
         }
       }
       closeTitleModal();
@@ -1583,7 +1880,7 @@
     function hasChampionInMatch(slot) {
       if (!slot.isTitleMatch || !slot.titleId) return true;
       const title = store.titles.find(t => t.id === slot.titleId);
-      if (!title || !title.champions || title.champions.length === 0) return true; // vacante: cualquiera
+      if (!title || !title.champions || title.champions.length === 0) return true; // Vacante → cualquiera puede pelear por él
       const parts = (slot.participants || []).filter(Boolean);
       return title.champions.some(cId => parts.includes(cId));
     }
@@ -1598,14 +1895,14 @@
 
       if (!event) {
         header.innerText = 'Hoy no hay show programado';
-        container.innerHTML = '<p style="color:var(--text-dim); text-align:center; padding:20px 0;">Avanza el calendario o configura un show/PLE para este dÃ­a.</p>';
+        container.innerHTML = '<p style="color:var(--text-dim); text-align:center; padding:20px 0;">Avanza el calendario o configura un show/PLE para este día.</p>';
         btnFinalize.style.display = 'none';
         btnNext.style.display = 'none';
         return;
       }
 
       const numberText = event.showNumber ? ` #${event.showNumber}` : '';
-      header.innerHTML = `ðº ${event.name}${numberText} ${store.todayCard.locked ? 'ð (Finalizado)' : ''}`;
+      header.innerHTML = `📺 ${event.name}${numberText} ${store.todayCard.locked ? '🔒 (Finalizado)' : ''}`;
 
       const isLocked = store.todayCard.locked;
       const available = getAvailableWrestlers(event.brands);
@@ -1619,8 +1916,8 @@
               </div>
               ${isLocked ? '<div style="color:var(--text-dim); font-size:0.85rem;">Sin contenido</div>' : `
                 <div class="type-choice-btns">
-                  <button class="type-btn combate" onclick="setSlotType(${idx}, 'combate')">âï¸ Combate</button>
-                  <button class="type-btn promo" onclick="setSlotType(${idx}, 'promo')">ð¤ Promo</button>
+                  <button class="type-btn combate" onclick="setSlotType(${idx}, 'combate')">⚔️ Combate</button>
+                  <button class="type-btn promo" onclick="setSlotType(${idx}, 'promo')">🎤 Promo</button>
                 </div>
               `}
             </div>
@@ -1632,9 +1929,9 @@
             <div class="card-slot ${isLocked ? 'locked' : ''}">
               <div class="card-slot-header">
                 <span class="card-slot-title"><span class="slot-num">${idx + 1}</span> Promo</span>
-                ${!isLocked ? `<button class="btn-reset-slot" onclick="resetSlot(${idx})">â</button>` : ''}
+                ${!isLocked ? `<button class="btn-reset-slot" onclick="resetSlot(${idx})">✕</button>` : ''}
               </div>
-              <div class="slot-summary">ð¤ Segmento de promo</div>
+              <div class="slot-summary">🎤 Segmento de promo</div>
             </div>
           `;
         }
@@ -1643,7 +1940,7 @@
           <div class="card-slot ${isLocked ? 'locked' : ''}">
             <div class="card-slot-header">
               <span class="card-slot-title"><span class="slot-num">${idx + 1}</span> Combate</span>
-              ${!isLocked ? `<button class="btn-reset-slot" onclick="resetSlot(${idx})">â</button>` : ''}
+              ${!isLocked ? `<button class="btn-reset-slot" onclick="resetSlot(${idx})">✕</button>` : ''}
             </div>
         `;
 
@@ -1656,18 +1953,23 @@
           `;
         } else if (slot.matchType === "3 Stages of Hell") {
           html += `<div class="match-type-label">3 Stages of Hell</div>`;
+          
           for (let s = 0; s < 3; s++) {
             html += `
               <div class="stages-box">
                 <label>Combate ${s + 1}:</label>
                 <select class="slot-select" style="margin-bottom:0;" onchange="setStage(${idx}, ${s}, this.value)" ${isLocked ? 'disabled' : ''}>
-                  <option value="">-- Elige estipulaciÃ³n --</option>
+                  <option value="">-- Elige estipulación --</option>
                   ${STAGES_OF_HELL_OPTIONS.map(opt => `<option value="${opt}" ${slot.stages && slot.stages[s] === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                 </select>
               </div>
             `;
           }
-          if (!slot.participants || slot.participants.length !== 2) slot.participants = [null, null];
+
+          if (!slot.participants || slot.participants.length !== 2) {
+            slot.participants = [null, null];
+          }
+
           html += `
             <div class="participants-grid">
               ${slot.participants.map((p, pIdx) => `
@@ -1681,19 +1983,26 @@
               `).join('')}
             </div>
           `;
+
           html += renderTitleMatchBox(slot, idx, isLocked);
-          const names = slot.participants.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; });
-          const stagesText = (slot.stages || []).filter(Boolean).join(' â ');
+
+          const names = slot.participants.map(id => {
+            const w = store.roster.find(r => r.id == id);
+            return w ? w.name : '?';
+          });
+          const stagesText = (slot.stages || []).filter(Boolean).join(' → ');
           let summary = formatMatchSummary(names, slot.matchType, slot.subType);
           if (stagesText) summary += '<br>' + stagesText;
           if (slot.isTitleMatch && slot.titleId) {
             const t = store.titles.find(tt => tt.id == slot.titleId);
-            if (t) summary += `<br><span style="color:var(--gold-end);">ð ${t.name}</span>`;
+            if (t) summary += `<br><span style="color:var(--gold-end);">🏆 ${t.name}</span>`;
           }
           html += `<div class="slot-summary">${summary}</div>`;
+
         } else {
           const subTypes = MATCH_TYPES[slot.matchType] || {};
           const subKeys = Object.keys(subTypes).filter(k => k !== 'special');
+
           if (subKeys.length > 1 && !slot.subType) {
             html += `
               <div class="match-type-label">${slot.matchType}</div>
@@ -1705,11 +2014,15 @@
           } else {
             const finalSub = slot.subType || subKeys[0];
             const numParticipants = (MATCH_TYPES[slot.matchType] && MATCH_TYPES[slot.matchType][finalSub]) || 2;
+
             if (!slot.participants || slot.participants.length !== numParticipants) {
               slot.participants = Array(numParticipants).fill(null);
             }
+
             html += `
-              <div class="match-type-label">${slot.matchType}${finalSub ? ' Â· ' + finalSub : ''}</div>
+              <div class="match-type-label">
+                ${slot.matchType}${finalSub ? ' · ' + finalSub : ''}
+              </div>
               <div class="participants-grid">
                 ${slot.participants.map((p, pIdx) => `
                   <div class="participant-box">
@@ -1722,29 +2035,35 @@
                 `).join('')}
               </div>
             `;
-            if (slot.matchType === "Ãrbitro especial invitado") {
+
+            if (slot.matchType === "Árbitro especial invitado") {
               const missingRef = !slot.specialReferee;
               html += `
                 <div class="participant-box" style="margin-top:10px; grid-column: 1 / -1;">
-                  <label>Ãrbitro Especial:</label>
+                  <label>Árbitro Especial:</label>
                   <select onchange="setSpecialReferee(${idx}, this.value)" ${isLocked ? 'disabled' : ''}>
-                    <option value="">-- Elegir Ãrbitro Especial --</option>
+                    <option value="">-- Elegir Árbitro Especial --</option>
                     ${available.map(w => `<option value="${w.id}" ${slot.specialReferee == w.id ? 'selected' : ''}>${w.name}</option>`).join('')}
                   </select>
-                  ${missingRef && !isLocked ? `<div class="ref-warning">â ï¸ Debes elegir un Ãrbitro Especial.</div>` : ''}
+                  ${missingRef && !isLocked ? `<div class="ref-warning">⚠️ Debes elegir un Árbitro Especial.</div>` : ''}
                 </div>
               `;
             }
+
             html += renderTitleMatchBox(slot, idx, isLocked);
-            const names = slot.participants.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; });
+
+            const names = slot.participants.map(id => {
+              const w = store.roster.find(r => r.id == id);
+              return w ? w.name : '?';
+            });
             let summary = formatMatchSummary(names, slot.matchType, finalSub);
-            if (slot.matchType === "Ãrbitro especial invitado" && slot.specialReferee) {
+            if (slot.matchType === "Árbitro especial invitado" && slot.specialReferee) {
               const ref = store.roster.find(r => r.id == slot.specialReferee);
-              if (ref) summary += `<br><span style="color:var(--gold-end);">Ãrbitro Especial: ${ref.name}</span>`;
+              if (ref) summary += `<br><span style="color:var(--gold-end);">Árbitro Especial: ${ref.name}</span>`;
             }
             if (slot.isTitleMatch && slot.titleId) {
               const t = store.titles.find(tt => tt.id == slot.titleId);
-              if (t) summary += `<br><span style="color:var(--gold-end);">ð ${t.name}</span>`;
+              if (t) summary += `<br><span style="color:var(--gold-end);">🏆 ${t.name}</span>`;
             }
             html += `<div class="slot-summary">${summary}</div>`;
           }
@@ -1755,9 +2074,10 @@
             const w = store.roster.find(r => r.id == id);
             return w ? { id: w.id, name: w.name } : null;
           }).filter(Boolean);
+
           html += `
             <div class="winner-box">
-              <label>ð Elegir ganador:</label>
+              <label>🏆 Elegir ganador:</label>
               <select class="slot-select" style="margin-bottom:0;" onchange="setWinner(${idx}, this.value)">
                 <option value="">-- Seleccionar ganador --</option>
                 ${participantNames.map(p => `<option value="${p.name}" ${slot.winner === p.name ? 'selected' : ''}>${p.name}</option>`).join('')}
@@ -1766,6 +2086,7 @@
             </div>
           `;
         }
+
         html += `</div>`;
         return html;
       }).join('');
@@ -1780,21 +2101,22 @@
           const r = store.roster.find(ros => ros.id === cId);
           return r ? r.name : '?';
         }).join(' & ');
-        const champLabel = champs || 'Vacante';
-        return `<option value="${t.id}" ${slot.titleId == t.id ? 'selected' : ''}>${t.name} (${champLabel})</option>`;
+        return `<option value="${t.id}" ${slot.titleId == t.id ? 'selected' : ''}>${t.name}${champs ? ' (' + champs + ')' : ' (Vacante)'}</option>`;
       }).join('');
+
       const champWarning = (slot.isTitleMatch && slot.titleId && !hasChampionInMatch(slot))
-        ? `<div class="title-warning">â ï¸ Al menos un campeÃ³n actual del tÃ­tulo debe participar en el combate.</div>`
+        ? `<div class="title-warning">⚠️ Al menos un campeón actual del título debe participar en el combate.</div>`
         : '';
+
       return `
         <div class="title-match-box">
           <label>
             <input type="checkbox" ${slot.isTitleMatch ? 'checked' : ''} onchange="toggleTitleMatch(${idx}, this.checked)" ${isLocked ? 'disabled' : ''}>
-            Â¿Es por un tÃ­tulo?
+            ¿Es por un título?
           </label>
           ${slot.isTitleMatch ? `
             <select class="slot-select" style="margin-bottom:0;" onchange="setTitleForMatch(${idx}, this.value)" ${isLocked ? 'disabled' : ''}>
-              <option value="">-- Seleccionar tÃ­tulo --</option>
+              <option value="">-- Seleccionar título --</option>
               ${titlesOptions}
             </select>
             ${champWarning}
@@ -1806,7 +2128,9 @@
     function toggleTitleMatch(idx, checked) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx].isTitleMatch = checked;
-      if (!checked) store.todayCard.slots[idx].titleId = null;
+      if (!checked) {
+        store.todayCard.slots[idx].titleId = null;
+      }
       saveData();
       renderTodayCard();
     }
@@ -1815,6 +2139,7 @@
       if (store.todayCard.locked) return;
       const slot = store.todayCard.slots[idx];
       slot.titleId = titleId ? parseInt(titleId) : null;
+
       if (slot.titleId) {
         const title = store.titles.find(t => t.id === slot.titleId);
         if (title && title.champions && title.champions.length > 0) {
@@ -1822,11 +2147,15 @@
           const newParts = Array(numNeeded).fill(null);
           const champs = title.champions.slice(0, numNeeded);
           const startIdx = numNeeded - champs.length;
-          champs.forEach((cId, i) => { newParts[startIdx + i] = cId; });
+          champs.forEach((cId, i) => {
+            newParts[startIdx + i] = cId;
+          });
           const existing = (slot.participants || []).filter(p => p && !title.champions.includes(p));
           let ei = 0;
           for (let i = 0; i < newParts.length; i++) {
-            if (newParts[i] === null && ei < existing.length) newParts[i] = existing[ei++];
+            if (newParts[i] === null && ei < existing.length) {
+              newParts[i] = existing[ei++];
+            }
           }
           slot.participants = newParts;
         }
@@ -1868,6 +2197,7 @@
       const num = (MATCH_TYPES[store.todayCard.slots[idx].matchType] && MATCH_TYPES[store.todayCard.slots[idx].matchType][subType]) || 2;
       store.todayCard.slots[idx].participants = Array(num).fill(null);
       store.todayCard.slots[idx].specialReferee = null;
+
       if (store.todayCard.slots[idx].isTitleMatch && store.todayCard.slots[idx].titleId) {
         setTitleForMatch(idx, store.todayCard.slots[idx].titleId);
         return;
@@ -1904,7 +2234,9 @@
 
       if (slot.matchId) {
         const match = store.matches.find(m => m.id === slot.matchId);
-        if (match) match.winner = winnerName || 'Pendiente';
+        if (match) {
+          match.winner = winnerName || 'Pendiente';
+        }
       }
 
       if (slot.isTitleMatch && slot.titleId && winnerName && winnerName !== 'Empate' && winnerName !== '') {
@@ -1913,8 +2245,10 @@
           const winnerWrestler = store.roster.find(r => r.name === winnerName);
           if (winnerWrestler) {
             const isCurrentChamp = (title.champions || []).includes(winnerWrestler.id);
+
             if (!isCurrentChamp) {
               let newChamps = [winnerWrestler.id];
+
               if (title.type === 'tag') {
                 const parts = (slot.participants || []).filter(Boolean);
                 const winnerTeam = store.teams.find(t => t.members && t.members.includes(winnerWrestler.id));
@@ -1929,19 +2263,15 @@
                   else if (idxW === 2) partnerId = parts[3];
                   else if (idxW === 3) partnerId = parts[2];
                 }
-                // Also for team sides via splitSides
-                if (!partnerId) {
-                  const { left, right } = splitSides(parts, slot.matchType, slot.subType, winnerName);
-                  const side = left.includes(winnerWrestler.id) ? left : right;
-                  partnerId = side.find(id => id !== winnerWrestler.id);
-                }
                 if (partnerId) newChamps = [winnerWrestler.id, partnerId];
               }
+
               transferTitle(slot.titleId, newChamps);
             }
           }
         }
       }
+
       saveData();
       renderTodayCard();
     }
@@ -1949,9 +2279,17 @@
     function resetSlot(idx) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx] = {
-        id: Date.now() + idx, type: null, matchType: null, subType: null,
-        stages: [null, null, null], participants: [], specialReferee: null,
-        winner: '', matchId: null, titleId: null, isTitleMatch: false
+        id: Date.now() + idx,
+        type: null,
+        matchType: null,
+        subType: null,
+        stages: [null, null, null],
+        participants: [],
+        specialReferee: null,
+        winner: '',
+        matchId: null,
+        titleId: null,
+        isTitleMatch: false
       };
       saveData();
       renderTodayCard();
@@ -1959,31 +2297,40 @@
 
     function finalizeTodayCard() {
       if (store.todayCard.locked) return;
+
       for (const slot of store.todayCard.slots) {
-        if (slot.type === 'combate' && slot.matchType === "Ãrbitro especial invitado" && !slot.specialReferee) {
-          alert("â ï¸ Debes elegir un Ãrbitro Especial en todos los combates de tipo Â«Ãrbitro especial invitadoÂ».");
+        if (slot.type === 'combate' && slot.matchType === "Árbitro especial invitado" && !slot.specialReferee) {
+          alert("⚠️ Debes elegir un Árbitro Especial en todos los combates de tipo «Árbitro especial invitado».");
           return;
         }
         if (slot.type === 'combate' && slot.isTitleMatch && slot.titleId) {
           if (!hasChampionInMatch(slot)) {
             const title = store.titles.find(t => t.id === slot.titleId);
-            const tName = title ? title.name : 'el tÃ­tulo';
-            alert(`â ï¸ El combate por "${tName}" debe incluir al menos a un campeÃ³n actual.`);
+            const tName = title ? title.name : 'el título';
+            alert(`⚠️ El combate por "${tName}" debe incluir al menos a un campeón actual.`);
             return;
           }
         }
       }
-      showConfirmModal("Â¿Finalizar esta parrilla? PodrÃ¡s elegir los ganadores despuÃ©s.", () => {
+
+      showConfirmModal("¿Finalizar esta parrilla? Podrás elegir los ganadores después.", () => {
         store.todayCard.locked = true;
+
         store.todayCard.slots.forEach(slot => {
           if (slot.type === 'promo') {
             const matchId = Date.now() + Math.random();
             store.matches.push({
               id: matchId,
               show: store.todayCard.eventName + (store.todayCard.showNumber ? ' #' + store.todayCard.showNumber : ''),
-              card: 'ð¤ Promo', winner: 'Promo', titleId: null, isDefense: false,
-              eventName: store.todayCard.eventName, showNumber: store.todayCard.showNumber,
-              participants: [], matchType: null, subType: null
+              card: '🎤 Promo',
+              winner: 'Promo',
+              titleId: null,
+              isDefense: false,
+              eventName: store.todayCard.eventName,
+              showNumber: store.todayCard.showNumber,
+              participants: [],
+              matchType: null,
+              subType: null
             });
             slot.matchId = matchId;
           } else if (slot.type === 'combate' && slot.matchType) {
@@ -1991,30 +2338,39 @@
               const w = store.roster.find(r => r.id == id);
               return w ? w.name : '?';
             }).filter(n => n !== '?');
+
             let cardText = '';
             if (slot.matchType === "3 Stages of Hell") {
-              const stages = (slot.stages || []).filter(Boolean).join(' â ');
+              const stages = (slot.stages || []).filter(Boolean).join(' → ');
               cardText = `${formatMatchSummary(names, slot.matchType, slot.subType)} (3 Stages of Hell: ${stages})`;
             } else {
               const sub = slot.subType || '';
-              cardText = `${formatMatchSummary(names, slot.matchType, sub)} (${slot.matchType}${sub ? ' Â· ' + sub : ''})`;
-              if (slot.matchType === "Ãrbitro especial invitado" && slot.specialReferee) {
+              cardText = `${formatMatchSummary(names, slot.matchType, sub)} (${slot.matchType}${sub ? ' · ' + sub : ''})`;
+              
+              if (slot.matchType === "Árbitro especial invitado" && slot.specialReferee) {
                 const ref = store.roster.find(r => r.id == slot.specialReferee);
-                if (ref) cardText += ` [Ãrbitro Especial: ${ref.name}]`;
+                if (ref) cardText += ` [Árbitro Especial: ${ref.name}]`;
               }
             }
+
             const titleId = (slot.isTitleMatch && slot.titleId) ? slot.titleId : null;
             if (titleId) {
               const t = store.titles.find(tt => tt.id === titleId);
-              if (t) cardText += ` ð ${t.name}`;
+              if (t) cardText += ` 🏆 ${t.name}`;
             }
+
             const matchId = Date.now() + Math.random();
             store.matches.push({
               id: matchId,
               show: store.todayCard.eventName + (store.todayCard.showNumber ? ' #' + store.todayCard.showNumber : ''),
-              card: cardText, winner: 'Pendiente', titleId: titleId, isDefense: !!titleId,
-              eventName: store.todayCard.eventName, showNumber: store.todayCard.showNumber,
-              matchType: slot.matchType, subType: slot.subType || null,
+              card: cardText,
+              winner: 'Pendiente',
+              titleId: titleId,
+              isDefense: !!titleId,
+              eventName: store.todayCard.eventName,
+              showNumber: store.todayCard.showNumber,
+              matchType: slot.matchType,
+              subType: slot.subType || null,
               stages: slot.stages ? [...slot.stages] : null,
               participants: (slot.participants || []).filter(Boolean),
               specialReferee: slot.specialReferee || null
@@ -2023,6 +2379,7 @@
             slot.winner = '';
           }
         });
+
         saveData();
         renderTodayCard();
       });
@@ -2039,6 +2396,7 @@
         safety++;
         if (safety > 60) break;
       } while (!getCurrentEvent());
+
       store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
       saveData();
       renderTodayCard();
@@ -2048,7 +2406,7 @@
     function dismissCurrentWrestler() {
       if (activeWrestlerId === null) return;
       const wrestler = store.roster.find(r => r.id === activeWrestlerId);
-      if (wrestler) showConfirmModal(`Â¿Despedir a ${wrestler.name}?`, () => { deleteItem('roster', activeWrestlerId); closeWrestlerModal(); });
+      if (wrestler) showConfirmModal(`¿Despedir a ${wrestler.name}?`, () => { deleteItem('roster', activeWrestlerId); closeWrestlerModal(); });
     }
     async function openWrestlerModal(id = null) {
       activeWrestlerId = id;
@@ -2058,13 +2416,13 @@
       document.getElementById('edit-image-file').value = '';
       document.getElementById('edit-brands-container').innerHTML = store.shows.map(s => `<label class="option-checkbox-item"><input type="checkbox" value="${s.name}"> ${s.name}</label>`).join('');
       if (id === null) {
-        document.getElementById('modal-wrestler-title').innerText = 'AÃ±adir Luchador';
+        document.getElementById('modal-wrestler-title').innerText = 'Añadir Luchador';
         document.getElementById('edit-name').value = '';
-        avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; border-radius:50%; font-size:1rem;">ð¤</div>`;
+        avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; border-radius:50%; font-size:1rem;">👤</div>`;
         document.querySelectorAll('#edit-brands-container input').forEach((cb, idx) => cb.checked = idx === 0);
         setRadioValue('edit-alignment', 'Face'); setRadioValue('edit-gender', 'Men'); setRadioValue('edit-division', 'Midcarder');
         document.getElementById('edit-team').innerHTML = `<option value="">-- Ninguno --</option>` + store.teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-        btnSave.innerText = 'AÃ±adir a Roster'; btnSave.style.background = 'var(--accent)';
+        btnSave.innerText = 'Añadir a Roster'; btnSave.style.background = 'var(--accent)';
         extraStats.style.display = 'none';
       } else {
         const wrestler = store.roster.find(r => r.id === id);
@@ -2072,7 +2430,7 @@
         document.getElementById('modal-wrestler-title').innerText = wrestler.name;
         document.getElementById('edit-name').value = wrestler.name;
         const base64Img = await getImageFromDB('wrestler_' + wrestler.id);
-        avatarContainer.innerHTML = base64Img ? `<img src="${base64Img}" class="wrestler-avatar" style="width:40px; height:40px; border-radius:50%;">` : `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; border-radius:50%; font-size:1rem;">ð¤</div>`;
+        avatarContainer.innerHTML = base64Img ? `<img src="${base64Img}" class="wrestler-avatar" style="width:40px; height:40px; border-radius:50%;">` : `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; border-radius:50%; font-size:1rem;">👤</div>`;
         const wrestlerBrands = wrestler.brands || (wrestler.brand ? [wrestler.brand] : []);
         document.querySelectorAll('#edit-brands-container input').forEach(cb => cb.checked = wrestlerBrands.includes(cb.value));
         setRadioValue('edit-alignment', wrestler.alignment || 'Face');
@@ -2096,7 +2454,7 @@
       const newTeamId = document.getElementById('edit-team').value ? parseInt(document.getElementById('edit-team').value) : null;
       const fileInput = document.getElementById('edit-image-file');
       if (activeWrestlerId === null) {
-        if (store.roster.find(r => r.name.toLowerCase() === newName.toLowerCase()) && !confirm(`Ya existe "${newName}". Â¿AÃ±adir de todos modos?`)) return;
+        if (store.roster.find(r => r.name.toLowerCase() === newName.toLowerCase()) && !confirm(`Ya existe "${newName}". ¿Añadir de todos modos?`)) return;
         const newId = Date.now();
         if (fileInput.files[0]) await saveImageToDB('wrestler_' + newId, await fileToBase64(fileInput.files[0]));
         store.roster.push({ id: newId, name: newName, brands: checkedBrands, alignment: getRadioValue('edit-alignment') || 'Face', gender: getRadioValue('edit-gender') || 'Men', division: getRadioValue('edit-division') || 'Midcarder', teamId: newTeamId });
@@ -2104,7 +2462,7 @@
       } else {
         const wrestler = store.roster.find(r => r.id === activeWrestlerId);
         if (wrestler) {
-          if (store.roster.find(r => r.id !== activeWrestlerId && r.name.toLowerCase() === newName.toLowerCase()) && !confirm(`Ya existe otro "${newName}". Â¿Guardar?`)) return;
+          if (store.roster.find(r => r.id !== activeWrestlerId && r.name.toLowerCase() === newName.toLowerCase()) && !confirm(`Ya existe otro "${newName}". ¿Guardar?`)) return;
           if (fileInput.files[0]) await saveImageToDB('wrestler_' + wrestler.id, await fileToBase64(fileInput.files[0]));
           const oldTeamId = wrestler.teamId;
           wrestler.name = newName; wrestler.brands = checkedBrands; wrestler.alignment = getRadioValue('edit-alignment'); wrestler.gender = getRadioValue('edit-gender'); wrestler.division = getRadioValue('edit-division'); wrestler.teamId = newTeamId;
@@ -2118,90 +2476,70 @@
       closeWrestlerModal();
     };
 
-    // ========== HELPERS: Team match outcomes + reverse history ==========
-    function getMatchOutcomeForWrestler(m, wrestlerName) {
-      if (!m || !wrestlerName) return 'draw';
-      const nameLower = wrestlerName.toLowerCase();
-      const winnerRaw = (m.winner || '').trim();
-      const winnerLower = winnerRaw.toLowerCase();
+    function updateWrestlerStats(wrestler) {
+      const name = wrestler.name.toLowerCase();
+      const matches = store.matches.filter(m => {
+        if (m.participants && m.participants.length) {
+          return m.participants.some(id => {
+            const r = store.roster.find(rr => rr.id == id);
+            return r && r.name.toLowerCase() === name;
+          });
+        }
+        return m.card.toLowerCase().includes(name);
+      }).slice().reverse(); // más reciente primero
 
-      if (!winnerRaw || winnerLower === 'pendiente' || winnerLower === 'promo' || winnerLower === '') return 'draw';
-      if (winnerLower === 'empate') return 'draw';
+      let wins = 0, losses = 0, draws = 0;
+      const historyHTML = matches.map(m => {
+        const winnerRaw = (m.winner || '').trim();
+        const winner = winnerRaw.toLowerCase();
+        let outcomeClass = 'draw', outcomeLabel = 'Pendiente / Empate';
 
-      const parts = (m.participants || []).filter(Boolean);
-      if (parts.length >= 2 && m.matchType) {
-        const { left, right } = splitSides(parts, m.matchType, m.subType, winnerRaw);
-        const leftNames = left.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : ''; });
-        const rightNames = right.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : ''; });
-        const isOnLeft = leftNames.some(n => n.toLowerCase() === nameLower);
-        const isOnRight = rightNames.some(n => n.toLowerCase() === nameLower);
-        const winnerOnLeft = leftNames.some(n => n.toLowerCase() === winnerLower);
-        const winnerOnRight = rightNames.some(n => n.toLowerCase() === winnerLower);
+        if (!winner || winner === 'pendiente' || winner === '' || winner === 'empate' || winner === 'promo') {
+          draws++;
+        } else if (isTeamBasedMatch(m.matchType, m.subType) && m.participants && m.participants.length) {
+          // Combate por equipos / handicap → victoria/derrota de todo el bando
+          const { left, right } = splitSides(m.participants, m.matchType, m.subType, m.winner);
+          const winnerW = store.roster.find(r => r.name.toLowerCase() === winner);
+          const winnerId = winnerW ? winnerW.id : null;
+          const isLeftWin = winnerId && left.includes(winnerId);
+          const wrestlerOnLeft = left.includes(wrestler.id);
+          const wrestlerOnRight = right.includes(wrestler.id);
 
-        const sub = (m.subType || '').toLowerCase();
-        const type = (m.matchType || '').toLowerCase();
-        const isTeam = sub.includes('contra') || sub.includes('vs') ||
-          type === 'reglas de bloodline' || type === 'wargames' ||
-          left.length > 1 || right.length > 1;
-
-        if (isTeam && (winnerOnLeft || winnerOnRight)) {
-          if (winnerOnLeft) {
-            if (isOnLeft) return 'win';
-            if (isOnRight) return 'loss';
+          if (isLeftWin) {
+            if (wrestlerOnLeft) { wins++; outcomeClass = 'win'; outcomeLabel = 'Victoria (equipo)'; }
+            else if (wrestlerOnRight) { losses++; outcomeClass = 'loss'; outcomeLabel = 'Derrota (equipo)'; }
+            else draws++;
           } else {
-            if (isOnRight) return 'win';
-            if (isOnLeft) return 'loss';
+            // Ganó el lado derecho
+            if (wrestlerOnRight) { wins++; outcomeClass = 'win'; outcomeLabel = 'Victoria (equipo)'; }
+            else if (wrestlerOnLeft) { losses++; outcomeClass = 'loss'; outcomeLabel = 'Derrota (equipo)'; }
+            else draws++;
+          }
+        } else {
+          // Individual / Rumble / Chamber / multi-man individual → solo un ganador
+          if (winner === name || winner.includes(name)) {
+            wins++;
+            outcomeClass = 'win';
+            outcomeLabel = 'Victoria';
+          } else {
+            losses++;
+            outcomeClass = 'loss';
+            outcomeLabel = 'Derrota';
           }
         }
 
-        if (winnerLower === nameLower) return 'win';
-        if (isOnLeft || isOnRight) return 'loss';
-      }
-
-      if (winnerLower === nameLower || winnerLower.includes(nameLower)) return 'win';
-      if ((m.card || '').toLowerCase().includes(nameLower)) return 'loss';
-      return 'draw';
-    }
-
-    function wrestlerParticipatedInMatch(m, wrestlerName) {
-      const nameLower = wrestlerName.toLowerCase();
-      if (m.participants && m.participants.length) {
-        return m.participants.some(id => {
-          const w = store.roster.find(r => r.id == id);
-          return w && w.name.toLowerCase() === nameLower;
-        });
-      }
-      return (m.card || '').toLowerCase().includes(nameLower);
-    }
-
-    function updateWrestlerStats(wrestler) {
-      const name = wrestler.name;
-      const matches = store.matches.filter(m => wrestlerParticipatedInMatch(m, name));
-      // Orden inverso: mÃ¡s reciente arriba, mÃ¡s antiguo abajo
-      const matchesNewestFirst = matches.slice().reverse();
-
-      let wins = 0, losses = 0, draws = 0;
-      const historyHTML = matchesNewestFirst.map(m => {
-        const outcome = getMatchOutcomeForWrestler(m, name);
-        let outcomeClass = 'draw', outcomeLabel = 'Pendiente / Empate';
-        if (outcome === 'win') { wins++; outcomeClass = 'win'; outcomeLabel = 'Victoria'; }
-        else if (outcome === 'loss') { losses++; outcomeClass = 'loss'; outcomeLabel = 'Derrota'; }
-        else draws++;
         return `<div class="match-item ${outcomeClass}"><strong>${m.show}:</strong> ${m.card}<br><span style="color:var(--text-dim); font-size:0.75rem;">Resultado: ${m.winner} (${outcomeLabel})</span></div>`;
       }).join('');
 
       document.getElementById('stat-wins').innerText = wins;
       document.getElementById('stat-losses').innerText = losses;
       document.getElementById('stat-draws').innerText = draws;
-      document.getElementById('wrestler-history-list').innerHTML = matches.length
-        ? historyHTML
-        : `<p style="font-size:0.8rem; color:var(--text-dim);">No hay combates registrados.</p>`;
+      document.getElementById('wrestler-history-list').innerHTML = matches.length ? historyHTML : `<p style="font-size:0.8rem; color:var(--text-dim);">No hay combates registrados.</p>`;
 
-      const nameLower = name.toLowerCase();
       const titleStats = {};
       store.titles.forEach(t => {
         const isCurrent = t.champions && t.champions.includes(wrestler.id);
-        const pastReigns = (t.history || []).filter(h => h.champsNames.toLowerCase().includes(nameLower));
+        const pastReigns = (t.history || []).filter(h => h.champsNames.toLowerCase().includes(name));
         let totalDays = 0;
         let times = pastReigns.length;
         pastReigns.forEach(h => totalDays += (h.days || 0));
@@ -2212,8 +2550,8 @@
         if (times > 0) titleStats[t.name] = { times, days: totalDays };
       });
       const titlesHTML = Object.keys(titleStats).length
-        ? Object.entries(titleStats).map(([tName, s]) => `<div style="font-size:0.78rem; border-bottom:1px dashed #444; padding:4px 0;">ð <b>${tName}</b><br><span style="color:var(--text-dim);">${s.times}x | ${s.days} dÃ­as totales</span></div>`).join('')
-        : '<span style="font-size:0.75rem; color:var(--text-dim);">Sin tÃ­tulos en su historial.</span>';
+        ? Object.entries(titleStats).map(([tName, s]) => `<div style="font-size:0.78rem; border-bottom:1px dashed #444; padding:4px 0;">🏆 <b>${tName}</b><br><span style="color:var(--text-dim);">${s.times}x | ${s.days} días totales</span></div>`).join('')
+        : '<span style="font-size:0.75rem; color:var(--text-dim);">Sin títulos en su historial.</span>';
       document.getElementById('wrestler-titles-history').innerHTML = titlesHTML;
     }
 
@@ -2221,18 +2559,16 @@
       const wrestler = store.roster.find(r => r.id === activeWrestlerId);
       const opponent = store.roster.find(r => r.id === parseInt(document.getElementById('h2h-opponent').value));
       if (!wrestler || !opponent) { document.getElementById('h2h-result').innerHTML = 'Selecciona un rival.'; return; }
-      const shared = store.matches.filter(m =>
-        wrestlerParticipatedInMatch(m, wrestler.name) && wrestlerParticipatedInMatch(m, opponent.name)
-      );
+      const wName = wrestler.name.toLowerCase(), oName = opponent.name.toLowerCase();
+      const shared = store.matches.filter(m => m.card.toLowerCase().includes(wName) && m.card.toLowerCase().includes(oName));
       let wWins = 0, oWins = 0, draws = 0;
       const list = shared.map(m => {
-        const wOut = getMatchOutcomeForWrestler(m, wrestler.name);
-        const oOut = getMatchOutcomeForWrestler(m, opponent.name);
+        const winner = m.winner.toLowerCase();
         let res = 'Empate / Sin resultado';
-        if (wOut === 'win') { wWins++; res = `GanÃ³ ${wrestler.name}`; }
-        else if (oOut === 'win') { oWins++; res = `GanÃ³ ${opponent.name}`; }
+        if (winner.includes(wName)) { wWins++; res = `Ganó ${wrestler.name}`; }
+        else if (winner.includes(oName)) { oWins++; res = `Ganó ${opponent.name}`; }
         else draws++;
-        return `<div style="font-size:0.75rem; border-bottom:1px dashed #444; padding:3px 0;">ð ${m.show}: ${m.card} (<b>${res}</b>)</div>`;
+        return `<div style="font-size:0.75rem; border-bottom:1px dashed #444; padding:3px 0;">📌 ${m.show}: ${m.card} (<b>${res}</b>)</div>`;
       }).join('');
       document.getElementById('h2h-result').innerHTML = `<div style="font-weight:bold; font-size:1rem; margin-bottom:5px;">${wrestler.name} <span style="color:var(--accent);">${wWins} - ${oWins}</span> ${opponent.name}</div><div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">Empates/Pendientes: ${draws}</div>${shared.length ? list : '<div style="font-size:0.75rem;">Sin combates entre ellos.</div>'}`;
     }
@@ -2265,6 +2601,7 @@
       renderActiveFiltersBar();
       renderCalendar();
 
+      // Roster
       let sortedRoster = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
       if (filters.brand !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.brands && r.brands.includes(filters.brand)) || r.brand === filters.brand);
       if (filters.alignment !== 'ALL') sortedRoster = sortedRoster.filter(r => r.alignment === filters.alignment);
@@ -2274,19 +2611,19 @@
 
       const rosterCards = await Promise.all(sortedRoster.map(async r => {
         const team = store.teams.find(t => t.id === r.teamId);
-        const teamTag = team ? `<span class="tag tag-team">ð¥ ${team.name}</span>` : '';
+        const teamTag = team ? `<span class="tag tag-team">👥 ${team.name}</span>` : '';
         const rBrands = r.brands || (r.brand ? [r.brand] : ['RAW']);
         const mainShow = store.shows.find(s => s.name.toLowerCase() === (rBrands[0] || '').toLowerCase());
         let bgStyle = '', borderColor = mainShow ? mainShow.color : 'var(--border)';
         if (mainShow) { const bg = await getImageFromDB('show_bg_' + mainShow.id); if (bg) bgStyle = `background-image:url('${bg}');`; }
         const wrestlerTitles = store.titles.filter(t => t.champions && t.champions.includes(r.id));
         const isChamp = wrestlerTitles.length > 0;
-        const champTag = isChamp ? `<span class="tag tag-champ">ð CAMPEÃN</span>` : '';
+        const champTag = isChamp ? `<span class="tag tag-champ">🏆 CAMPEÓN</span>` : '';
         const borderStyle = isChamp ? `border-image:linear-gradient(to right, ${borderColor}, var(--gold-end)) 1;` : `border-image:linear-gradient(to right, ${borderColor}, #000) 1;`;
         const titleImgs = (await Promise.all(wrestlerTitles.map(async t => { const img = await getImageFromDB('title_' + t.id); return img ? `<img src="${img}" class="title-badge-img" title="${t.name}">` : ''; }))).join('');
         const brandTags = rBrands.map(b => { const s = store.shows.find(x => x.name.toLowerCase() === b.toLowerCase()); return `<span class="tag" style="background:${s ? s.color : 'var(--border)'}; color:#fff;">${b}</span>`; }).join(' ');
         const imgData = await getImageFromDB('wrestler_' + r.id);
-        const imageHTML = imgData ? `<img src="${imgData}" class="wrestler-avatar" alt="${r.name}" onerror="handleImgError(this)">` : `<div class="wrestler-avatar-placeholder">ð¤</div>`;
+        const imageHTML = imgData ? `<img src="${imgData}" class="wrestler-avatar" alt="${r.name}" onerror="handleImgError(this)">` : `<div class="wrestler-avatar-placeholder">👤</div>`;
         return `<div class="card" style="${borderStyle}" onclick="openWrestlerModal(${r.id})">
           <div class="card-left"><div class="avatar-wrapper" style="${bgStyle}">${imageHTML}</div>
           <div class="card-info"><span class="card-title">${r.name}</span>
@@ -2295,43 +2632,47 @@
       }));
       document.getElementById('list-roster').innerHTML = rosterCards.length ? rosterCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay Superstars con estos filtros.</p>`;
 
-      const dayMap = {1:'Lunes',2:'Martes',3:'MiÃ©rcoles',4:'Jueves',5:'Viernes',6:'SÃ¡bado',7:'Domingo'};
+      // Shows
+      const dayMap = {1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes',6:'Sábado',7:'Domingo'};
       const showsCards = await Promise.all(store.shows.map(async s => {
         const logo = await getImageFromDB('show_logo_' + s.id);
         const bg = await getImageFromDB('show_bg_' + s.id);
-        const logoHTML = logo ? `<img src="${logo}" class="show-logo-img">` : `<div style="font-size:1.5rem;">ðº</div>`;
+        const logoHTML = logo ? `<img src="${logo}" class="show-logo-img">` : `<div style="font-size:1.5rem;">📺</div>`;
         return `<div class="card" style="${bg ? `background-image:url('${bg}');` : ''} border-left:6px solid ${s.color}; padding:12px;" onclick="openShowModal('${s.id}')">
           <div class="card-left">${logoHTML}<div class="card-info"><span class="card-title" style="font-size:1.1rem;">${s.name}</span>
-          <span class="card-sub">DÃ­a: <b>${dayMap[s.day]||'Lunes'}</b> | Parrillas: <b>${s.parrillas||6}</b></span></div></div></div>`;
+          <span class="card-sub">Día: <b>${dayMap[s.day]||'Lunes'}</b> | Parrillas: <b>${s.parrillas||6}</b></span></div></div></div>`;
       }));
       document.getElementById('list-shows').innerHTML = showsCards.join('');
 
+      // Teams
       const sortedFull = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
-      document.getElementById('team-members-select').innerHTML = sortedFull.length ? sortedFull.map(r => `<label class="checkbox-item"><input type="checkbox" value="${r.id}"><span>${r.name} (${(r.brands||[r.brand||'RAW']).join('/')})</span></label>`).join('') : `<span style="font-size:0.8rem; color:var(--text-dim);">AÃ±ade luchadores primero.</span>`;
+      document.getElementById('team-members-select').innerHTML = sortedFull.length ? sortedFull.map(r => `<label class="checkbox-item"><input type="checkbox" value="${r.id}"><span>${r.name} (${(r.brands||[r.brand||'RAW']).join('/')})</span></label>`).join('') : `<span style="font-size:0.8rem; color:var(--text-dim);">Añade luchadores primero.</span>`;
       document.getElementById('list-teams').innerHTML = store.teams.map(t => {
         const members = store.roster.filter(r => t.members && t.members.includes(r.id)).map(r => r.name).join(' & ');
-        return `<div class="card" style="cursor:default; padding:12px;"><div class="card-info"><span class="card-title">ð¥ ${t.name}</span><span class="card-sub">Miembros: ${members || 'Sin miembros'}</span></div><button class="btn-del" onclick="deleteItem('teams', ${t.id}, event)">â</button></div>`;
+        return `<div class="card" style="cursor:default; padding:12px;"><div class="card-info"><span class="card-title">👥 ${t.name}</span><span class="card-sub">Miembros: ${members || 'Sin miembros'}</span></div><button class="btn-del" onclick="deleteItem('teams', ${t.id}, event)">✕</button></div>`;
       }).join('');
 
+      // Titles
       const currentDays = getTotalUniverseDays();
       const titleCards = await Promise.all(store.titles.map(async t => {
         const titleImg = await getImageFromDB('title_' + t.id);
-        const titleImgHTML = titleImg ? `<img src="${titleImg}" class="title-card-belt-img">` : `<div class="title-card-belt-img" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;">ð</div>`;
+        const titleImgHTML = titleImg ? `<img src="${titleImg}" class="title-card-belt-img">` : `<div class="title-card-belt-img" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🏆</div>`;
         const champs = (t.champions || []).map(cId => store.roster.find(r => r.id === cId)).filter(Boolean);
         const champsNames = champs.length ? champs.map(c => c.name).join(' & ') : 'Vacante';
         const avatars = await Promise.all(champs.map(async c => {
           const img = await getImageFromDB('wrestler_' + c.id);
-          return img ? `<img src="${img}" class="title-card-champ-img">` : `<div class="title-card-champ-img" style="display:flex;align-items:center;justify-content:center;background:#333;">ð¤</div>`;
+          return img ? `<img src="${img}" class="title-card-champ-img">` : `<div class="title-card-champ-img" style="display:flex;align-items:center;justify-content:center;background:#333;">👤</div>`;
         }));
         const days = Math.max(0, currentDays - (t.reignStartDay || 0));
         const badge = t.isInaugural ? `<span class="title-inaugural-badge">INAUGURAL</span>` : '';
-        const vacantBadge = (!champs.length) ? `<span class="title-inaugural-badge" style="background:#666;color:#fff;">VACANTE</span>` : '';
         return `<div class="title-card" onclick="openTitleModal(${t.id})"><div class="title-card-left">${titleImgHTML}<div class="title-card-champs-avatars">${avatars.join('')}</div>
-          <div class="card-info"><span class="card-title">${t.name}</span><span class="card-sub">ð ${champsNames}</span>${badge}${vacantBadge}</div></div>
-          <div class="title-card-days-counter"><span class="title-card-days-num">${days}</span><span class="title-card-days-label">DÃAS</span></div></div>`;
+          <div class="card-info"><span class="card-title">${t.name}</span><span class="card-sub">🏆 ${champsNames}</span>${badge}</div></div>
+          <div class="title-card-days-counter"><span class="title-card-days-num">${days}</span><span class="title-card-days-label">DÍAS</span></div></div>`;
       }));
       document.getElementById('list-titles').innerHTML = titleCards.length ? titleCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay campeonatos.</p>`;
 
       if (document.getElementById('tab-matches').classList.contains('active')) renderTodayCard();
     }
   </script>
+</body>
+</html>
