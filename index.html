@@ -1490,7 +1490,7 @@
       const locked = store.todayCard.locked;
       let html = '';
       store.todayCard.slots.forEach((slot, idx) => {
-        const isEditing = locked && editingSlotIndex === idx;
+        const isEditing = locked && Number(editingSlotIndex) === Number(idx);
         const canEditUI = !locked || isEditing;
         html += `<div class="card-slot ${locked && !isEditing ? 'locked' : ''} ${isEditing ? 'editing' : ''}"><div class="card-slot-header"><span class="card-slot-title"><span class="slot-num">${idx + 1}</span>Parrilla</span><div class="card-slot-header-actions">`;
         if (!locked) html += `<button class="btn-reset-slot" onclick="resetSlot(${idx})">↺ Reset</button>`;
