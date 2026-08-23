@@ -1536,25 +1536,47 @@
       btnFin.style.display = locked ? 'none' : 'block';
       btnNext.style.display = locked ? 'block' : 'none';
     }
+    
     function setSlotType(idx, type) {
-      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      idx = Number(idx);
+      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.type = type;
-      if (type === 'promo') { slot.matchType = null; slot.subType = null; slot.participants = []; slot.winner = 'Promo'; slot.specialReferee = null; }
+      if (type === 'promo') {
+        slot.matchType = null;
+        slot.subType = null;
+        slot.participants = [];
+        slot.winner = 'Promo';
+        slot.specialReferee = null;
+      }
       if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveData();
-      renderTodayCard();
+      saveSlotData();
     }
+    
     function resetSlot(idx) {
-      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      idx = Number(idx);
+      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
       const oldMatchId = store.todayCard.slots[idx].matchId;
-      store.todayCard.slots[idx] = { id: Date.now(), type: null, matchType: null, subType: null, stages: [null, null, null], participants: [], specialReferee: null, winner: '', matchId: oldMatchId, titleId: null, isTitleMatch: false };
+      store.todayCard.slots[idx] = {
+        id: Date.now(),
+        type: null,
+        matchType: null,
+        subType: null,
+        stages: [null, null, null],
+        participants: [],
+        specialReferee: null,
+        winner: '',
+        matchId: oldMatchId,
+        titleId: null,
+        isTitleMatch: false
+      };
       if (store.todayCard.locked) syncSlotToMatch(store.todayCard.slots[idx]);
-      saveData();
-      renderTodayCard();
+      saveSlotData();
     }
+
     function updateSlotMatchType(idx, val) {
-      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      idx = Number(idx);
+      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.matchType = val || null;
       slot.subType = null;
@@ -1565,69 +1587,76 @@
       slot.titleId = null;
       slot.isTitleMatch = false;
       if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveData();
-      renderTodayCard();
+      saveSlotData();
     }
+
     function updateSlotSubType(idx, val) {
-      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      idx = Number(idx);
+      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.subType = val || null;
       slot.participants = [];
       slot.winner = '';
       if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveData();
-      renderTodayCard();
+      saveSlotData();
     }
+
     function updateSlotStage(idx, stageIdx, val) {
-      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      idx = Number(idx);
+      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
       const slot = store.todayCard.slots[idx];
       if (!slot.stages) slot.stages = [null, null, null];
       slot.stages[stageIdx] = val || null;
       if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveData();
-      renderTodayCard();
+      saveSlotData();
     }
+
     function updateSlotParticipant(idx, pIdx, val) {
-      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      idx = Number(idx);
+      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.participants[pIdx] = val ? parseInt(val) : null;
       if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveData();
-      renderTodayCard();
+      saveSlotData();
     }
+
     function updateSlotReferee(idx, val) {
-      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      idx = Number(idx);
+      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.specialReferee = val ? parseInt(val) : null;
       if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveData();
-      renderTodayCard();
+      saveSlotData();
     }
+
     function updateSlotWinner(idx, val) {
-      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      idx = Number(idx);
+      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.winner = val || '';
       if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveData();
-      renderTodayCard();
+      saveSlotData();
     }
+
     function toggleTitleMatch(idx, checked) {
-      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      idx = Number(idx);
+      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.isTitleMatch = checked;
       if (!checked) slot.titleId = null;
       if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveData();
-      renderTodayCard();
+      saveSlotData();
     }
+
     function updateSlotTitle(idx, val) {
-      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      idx = Number(idx);
+      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.titleId = val ? parseInt(val) : null;
       if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveData();
-      renderTodayCard();
+      saveSlotData();
     }
+    
     function finalizeTodayCard() {
       const event = getCurrentEvent();
       if (!event) return;
