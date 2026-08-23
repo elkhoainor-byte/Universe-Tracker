@@ -173,17 +173,58 @@
     .calendar-title-text { font-weight: bold; font-size: 1.1rem; color: var(--accent); }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 15px; }
     .calendar-day-header { text-align: center; font-size: 0.65rem; font-weight: bold; color: var(--text-dim); padding: 5px 0; background: #1a1a1a; border-radius: 4px; border: 1px solid var(--border); }
-    .calendar-cell { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; height: 95px; padding: 4px; display: flex; flex-direction: column; justify-content: flex-start; gap: 3px; font-size: 0.65rem; position: relative; overflow: hidden; }
+    
+    /* Celdas del calendario con degradado y logos */
+    .calendar-cell { 
+      background: var(--card-bg); 
+      border: 1px solid var(--border); 
+      border-radius: 6px; 
+      height: 110px; 
+      padding: 4px; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: flex-start; 
+      gap: 2px; 
+      font-size: 0.65rem; 
+      position: relative; 
+      overflow: hidden; 
+    }
     .calendar-cell.has-event { border-color: var(--accent); }
-    .cell-day-num { font-size: 0.65rem; font-weight: bold; color: var(--text-dim); margin-bottom: 2px; text-align: right; width: 100%; display: block; }
-    .cell-events-wrapper { display: flex; flex-direction: column; gap: 3px; width: 100%; overflow-y: auto; flex: 1; }
-    .cell-event-badge { padding: 3px 2px; border-radius: 4px; font-weight: bold; font-size: 0.58rem; text-align: center; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.5); flex-shrink: 0; }
+    .cell-day-num { font-size: 0.65rem; font-weight: bold; color: var(--text-dim); margin-bottom: 2px; text-align: right; width: 100%; display: block; position: relative; z-index: 2; }
+    .cell-events-wrapper { display: flex; flex-direction: column; gap: 3px; width: 100%; overflow-y: auto; flex: 1; position: relative; z-index: 2; }
+    .cell-event-badge { 
+      padding: 3px 2px; 
+      border-radius: 4px; 
+      font-weight: bold; 
+      font-size: 0.55rem; 
+      text-align: center; 
+      color: #fff; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      cursor: pointer; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+    .cell-show-logo {
+      height: 16px;
+      width: auto;
+      max-width: 40px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+    }
 
     .edit-tab-selector { display: flex; gap: 5px; margin-bottom: 15px; }
     .edit-tab-btn { flex: 1; padding: 8px; background: #2a2a2a; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
     .edit-tab-btn.active { background: var(--accent); border-color: var(--accent); }
 
-    /* ===== CARTELERA DE HOY – estilos mejorados ===== */
+    /* ===== CARTELERA DE HOY ===== */
     .card-slot {
       background: linear-gradient(145deg, #1c1c1c 0%, #161616 100%);
       border: 1px solid #3a3a3a;
@@ -201,13 +242,8 @@
       border-radius: 0 4px 4px 0;
       background: var(--accent);
     }
-    .card-slot.locked {
-      opacity: 0.92;
-      border-color: #555;
-    }
-    .card-slot.locked::before {
-      background: #555;
-    }
+    .card-slot.locked { opacity: 0.92; border-color: #555; }
+    .card-slot.locked::before { background: #555; }
     .card-slot-header {
       display: flex;
       justify-content: space-between;
@@ -233,11 +269,7 @@
       vertical-align: middle;
     }
 
-    .type-choice-btns {
-      display: flex;
-      gap: 10px;
-      margin-top: 6px;
-    }
+    .type-choice-btns { display: flex; gap: 10px; margin-top: 6px; }
     .type-btn {
       flex: 1;
       padding: 12px;
@@ -291,7 +323,6 @@
       font-size: 0.82rem;
     }
 
-    /* NUEVO: layout de bandos izquierda / derecha */
     .participants-sides {
       display: flex;
       gap: 8px;
@@ -459,7 +490,7 @@
       letter-spacing: 0.3px;
     }
 
-    /* ===== CARTELERA PASADA (resultados) ===== */
+    /* ===== CARTELERA PASADA ===== */
     .past-match-card {
       background: linear-gradient(160deg, #1a1a1a 0%, #121212 100%);
       border: 1px solid #444;
@@ -756,6 +787,8 @@
         <input type="number" id="cal-ple-day" min="1" max="28" value="1" required onchange="onPLEDaySelectChange()">
         <label style="font-size:0.75rem; color:var(--text-dim);">NOMBRE DEL PLE / EVENTO ESPECIAL</label>
         <input type="text" id="cal-ple-name" placeholder="Ej. Backlash, Royal Rumble..." autocapitalize="words" required>
+        <label style="font-size:0.75rem; color:var(--text-dim);">NÚMERO DE PARRILLAS:</label>
+        <input type="number" id="cal-ple-parrillas" min="1" max="20" value="7">
         <label style="font-size:0.75rem; color:var(--text-dim);">COLOR REPRESENTATIVO DEL EVENTO:</label>
         <input type="color" id="cal-ple-color" value="#ffd700" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
         <label style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">MARCAS QUE PARTICIPAN EN ESTE PLE:</label>
@@ -928,143 +961,66 @@
 
     const MATCH_TYPES = {
       "Normal": {
-        "1 contra 1": 2,
-        "Triple Threat": 3,
-        "Fatal 4-Way": 4,
-        "5-Way": 5,
-        "6-Way": 6,
-        "8-Way": 8
+        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4,
+        "5-Way": 5, "6-Way": 6, "8-Way": 8
       },
       "Por equipos": {
-        "2 contra 2": 4,
-        "2 contra 2 mixto": 4,
-        "3 contra 3": 6,
-        "4 contra 4": 8,
-        "1 contra 2 Handicap": 3,
-        "1 contra 2 Handicap Tornado por parejas": 3,
-        "1 contra 3 Handicap": 4,
-        "2 contra 3 Handicap": 5,
-        "2 contra 2 Tornado por parejas": 4,
-        "3 contra 3 Tornado por parejas": 6,
-        "Triple Threat Tornado por parejas": 6,
-        "4-Way Tornado por parejas": 8
+        "2 contra 2": 4, "2 contra 2 mixto": 4, "3 contra 3": 6, "4 contra 4": 8,
+        "1 contra 2 Handicap": 3, "1 contra 2 Handicap Tornado por parejas": 3,
+        "1 contra 3 Handicap": 4, "2 contra 3 Handicap": 5,
+        "2 contra 2 Tornado por parejas": 4, "3 contra 3 Tornado por parejas": 6,
+        "Triple Threat Tornado por parejas": 6, "4-Way Tornado por parejas": 8
       },
-      "Extreme Rules": {
-        "1 contra 1": 2,
-        "Triple Threat": 3,
-        "Fatal 4-Way": 4,
-        "5-Way": 5,
-        "2 contra 2": 4
-      },
+      "Extreme Rules": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "2 contra 2": 4 },
       "Inferno": { "1 contra 1": 2 },
       "3 Stages of Hell": { "special": true },
       "I Quit": { "1 contra 1": 2 },
       "Contenedor": { "1 contra 1": 2 },
       "Peleas": {
-        "1 contra 1": 2,
-        "Triple Threat": 3,
-        "Fatal 4-Way": 4,
-        "2 contra 2": 4,
-        "1 contra 2 Handicap": 3,
-        "6-Way": 6,
-        "8-Way": 8
+        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "2 contra 2": 4,
+        "1 contra 2 Handicap": 3, "6-Way": 6, "8-Way": 8
       },
-      "Royal Rumble": {
-        "10 participantes": 10,
-        "20 participantes": 20,
-        "30 participantes": 30
-      },
+      "Royal Rumble": { "10 participantes": 10, "20 participantes": 20, "30 participantes": 30 },
       "Árbitro especial invitado": {
-        "Normal 1 contra 1": 2,
-        "Normal Triple Threat": 3,
-        "Normal Fatal 4-Way": 4,
-        "Normal 5-Way": 5,
-        "Normal 6-Way": 6,
-        "Por equipos 2 contra 2": 4,
-        "Por equipos 3 contra 3": 6,
-        "Por equipos 1 contra 2 Handicap": 3,
-        "Por equipos 1 contra 2 Handicap Tornado por parejas": 3,
-        "Por equipos 1 contra 3 Handicap": 4,
-        "Por equipos 2 contra 3 Handicap": 5,
-        "Por equipos 2 contra 2 Tornado por parejas": 4,
-        "Por equipos 3 contra 3 Tornado por parejas": 6,
+        "Normal 1 contra 1": 2, "Normal Triple Threat": 3, "Normal Fatal 4-Way": 4,
+        "Normal 5-Way": 5, "Normal 6-Way": 6,
+        "Por equipos 2 contra 2": 4, "Por equipos 3 contra 3": 6,
+        "Por equipos 1 contra 2 Handicap": 3, "Por equipos 1 contra 2 Handicap Tornado por parejas": 3,
+        "Por equipos 1 contra 3 Handicap": 4, "Por equipos 2 contra 3 Handicap": 5,
+        "Por equipos 2 contra 2 Tornado por parejas": 4, "Por equipos 3 contra 3 Tornado por parejas": 6,
         "Por equipos Triple Threat Tornado por parejas": 6,
-        "Extreme Rules 1 contra 1": 2,
-        "Extreme Rules Triple Threat": 3,
-        "Extreme Rules Fatal 4-Way": 4,
-        "Extreme Rules 5-Way": 5,
-        "Extreme Rules 2 contra 2": 4,
-        "Hell in a Cell 1 contra 1": 2,
-        "Hell in a Cell Triple Threat": 3,
-        "Hell in a Cell Fatal 4-Way": 4,
-        "Hell in a Cell 6-Way": 6,
-        "Hell in a Cell 2 contra 2": 4,
-        "Iron Man 1 contra 1": 2,
-        "Falls Count Anywhere 1 contra 1": 2,
-        "Falls Count Anywhere Triple Threat": 3,
-        "Falls Count Anywhere Fatal 4-Way": 4,
-        "Sumisión 1 contra 1": 2,
-        "No Holds Barred 1 contra 1": 2
+        "Extreme Rules 1 contra 1": 2, "Extreme Rules Triple Threat": 3, "Extreme Rules Fatal 4-Way": 4,
+        "Extreme Rules 5-Way": 5, "Extreme Rules 2 contra 2": 4,
+        "Hell in a Cell 1 contra 1": 2, "Hell in a Cell Triple Threat": 3, "Hell in a Cell Fatal 4-Way": 4,
+        "Hell in a Cell 6-Way": 6, "Hell in a Cell 2 contra 2": 4,
+        "Iron Man 1 contra 1": 2, "Falls Count Anywhere 1 contra 1": 2,
+        "Falls Count Anywhere Triple Threat": 3, "Falls Count Anywhere Fatal 4-Way": 4,
+        "Sumisión 1 contra 1": 2, "No Holds Barred 1 contra 1": 2
       },
       "Underground": { "1 contra 1": 2 },
       "Reglas de Bloodline": { "4 vs 4 (Principal + 3 aliados por bando)": 8 },
       "Hell in a Cell": {
-        "1 contra 1": 2,
-        "Triple Threat": 3,
-        "Fatal 4-Way": 4,
-        "5-Way": 5,
-        "6-Way": 6,
-        "2 contra 2": 4,
-        "3 contra 3": 6,
-        "Triple Threat Tornado por parejas": 6
+        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6,
+        "2 contra 2": 4, "3 contra 3": 6, "Triple Threat Tornado por parejas": 6
       },
-      "Steel Cage": {
-        "1 contra 1": 2,
-        "Triple Threat": 3,
-        "Fatal 4-Way": 4,
-        "2 contra 2": 4
-      },
+      "Steel Cage": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "2 contra 2": 4 },
       "Elimination Chamber": { "6 participantes": 6 },
       "Tables": {
-        "1 contra 1": 2,
-        "Triple Threat": 3,
-        "Fatal 4-Way": 4,
-        "5-Way": 5,
-        "2 contra 2": 4,
-        "3 contra 3": 6,
-        "6-Way": 6,
-        "Triple Threat Tornado por parejas": 6
+        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5,
+        "2 contra 2": 4, "3 contra 3": 6, "6-Way": 6, "Triple Threat Tornado por parejas": 6
       },
       "Ladder": {
-        "1 contra 1": 2,
-        "Triple Threat": 3,
-        "Fatal 4-Way": 4,
-        "5-Way": 5,
-        "6-Way": 6,
-        "8-Way": 8,
-        "2 contra 2": 4,
-        "3 contra 3": 6,
-        "4 contra 4": 8,
-        "Triple Threat Tornado por parejas": 6,
-        "4-Way Tornado por parejas": 8
+        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6, "8-Way": 8,
+        "2 contra 2": 4, "3 contra 3": 6, "4 contra 4": 8,
+        "Triple Threat Tornado por parejas": 6, "4-Way Tornado por parejas": 8
       },
       "TLC": {
-        "1 contra 1": 2,
-        "Triple Threat": 3,
-        "Fatal 4-Way": 4,
-        "5-Way": 5,
-        "2 contra 2": 4,
-        "3 contra 3": 6,
-        "Triple Threat Tornado por parejas": 6
+        "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5,
+        "2 contra 2": 4, "3 contra 3": 6, "Triple Threat Tornado por parejas": 6
       },
       "Gauntlet": {
-        "4 participantes": 4,
-        "5 participantes": 5,
-        "6 participantes": 6,
-        "8 participantes": 8,
-        "10 participantes": 10,
-        "20 participantes": 20,
-        "30 participantes": 30
+        "4 participantes": 4, "5 participantes": 5, "6 participantes": 6, "8 participantes": 8,
+        "10 participantes": 10, "20 participantes": 20, "30 participantes": 30
       },
       "Turmoil Gauntlet": { "Turmoil Gauntlet": 2 },
       "Eliminator Gauntlet": { "Eliminator Gauntlet": 2 },
@@ -1081,12 +1037,50 @@
 
     const MATCH_TYPE_LIST = Object.keys(MATCH_TYPES);
 
+    // ========== DEFAULT PLEs (plantillas anuales) ==========
+    const DEFAULT_PLE_TEMPLATES = [
+      // Mayo (4)
+      { month: 4, day: 13, name: "Backlash", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
+      { month: 4, day: 27, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
+      { month: 4, day: 28, name: "NXT Battleground", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+      // Junio (5)
+      { month: 5, day: 6,  name: "Money in the Bank", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
+      { month: 5, day: 27, name: "Night of Champions", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
+      // Julio (6)
+      { month: 6, day: 13, name: "NXT Great American Bash", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+      { month: 6, day: 13, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
+      { month: 6, day: 14, name: "Evolution", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#9c27b0" },
+      // Agosto (7)
+      { month: 7, day: 6,  name: "SummerSlam", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ff9800" },
+      { month: 7, day: 7,  name: "SummerSlam", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ff9800" },
+      { month: 7, day: 27, name: "Clash in Paris", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#2196f3" },
+      // Septiembre (8)
+      { month: 8, day: 20, name: "Wrestlepalooza", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
+      { month: 8, day: 28, name: "NXT No Mercy", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+      // Octubre (9)
+      { month: 9, day: 13, name: "Crown Jewel", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
+      { month: 9, day: 28, name: "NXT Halloween Havoc", brands: ["NXT"], parrillas: 7, color: "#ff5722" },
+      // Noviembre (10)
+      { month: 10, day: 27, name: "Survivor Series", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#b71c1c" },
+      // Diciembre (11)
+      { month: 11, day: 7,  name: "NXT Deadline", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+      // Enero (0)
+      { month: 0, day: 20, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
+      { month: 0, day: 27, name: "Royal Rumble", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
+      // Febrero (1)
+      { month: 1, day: 13, name: "NXT Vengeance Day", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+      { month: 1, day: 27, name: "Elimination Chamber", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#607d8b" },
+      // Marzo (2)
+      { month: 2, day: 20, name: "NXT STAND & DELIVER", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+      { month: 2, day: 20, name: "WRESTLEMANIA", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
+      { month: 2, day: 21, name: "WRESTLEMANIA", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" }
+    ];
+
     function formatMatchSummary(names, matchType, subType) {
       if (!names || names.length === 0) return '?';
       const clean = names.map(n => n || '?');
       const sub = (subType || '').toLowerCase();
       const type = (matchType || '').toLowerCase();
-
       if (sub.includes('2 contra 2') || sub.includes('2 vs 2')) {
         if (clean.length >= 4) return `${clean[0]} & ${clean[1]} vs ${clean[2]} & ${clean[3]}`;
       }
@@ -1116,7 +1110,6 @@
       const sub = (subType || '').toLowerCase();
       const type = (matchType || '').toLowerCase();
       let left = [], right = [];
-
       const isTeamSplit =
         sub.includes('2 contra 2') || sub.includes('2 vs 2') ||
         sub.includes('3 contra 3') || sub.includes('3 vs 3') ||
@@ -1125,44 +1118,26 @@
         sub.includes('1 contra 3') || sub.includes('1 vs 3') ||
         sub.includes('2 contra 3') || sub.includes('2 vs 3') ||
         type === 'reglas de bloodline' || type === 'wargames';
-
       if (isTeamSplit) {
-        if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) {
-          left = ids.slice(0, 1);
-          right = ids.slice(1, 3);
-        } else if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) {
-          left = ids.slice(0, 1);
-          right = ids.slice(1, 4);
-        } else if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) {
-          left = ids.slice(0, 2);
-          right = ids.slice(2, 5);
-        } else if (sub.includes('3 contra 3') || sub.includes('3 vs 3') || type === 'wargames') {
-          left = ids.slice(0, 3);
-          right = ids.slice(3, 6);
-        } else if (sub.includes('4 contra 4') || sub.includes('4 vs 4') || type === 'reglas de bloodline') {
-          left = ids.slice(0, 4);
-          right = ids.slice(4, 8);
-        } else {
-          left = ids.slice(0, Math.ceil(ids.length / 2));
-          right = ids.slice(Math.ceil(ids.length / 2));
-        }
+        if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) { left = ids.slice(0, 1); right = ids.slice(1, 3); }
+        else if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) { left = ids.slice(0, 1); right = ids.slice(1, 4); }
+        else if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) { left = ids.slice(0, 2); right = ids.slice(2, 5); }
+        else if (sub.includes('3 contra 3') || sub.includes('3 vs 3') || type === 'wargames') { left = ids.slice(0, 3); right = ids.slice(3, 6); }
+        else if (sub.includes('4 contra 4') || sub.includes('4 vs 4') || type === 'reglas de bloodline') { left = ids.slice(0, 4); right = ids.slice(4, 8); }
+        else { left = ids.slice(0, Math.ceil(ids.length / 2)); right = ids.slice(Math.ceil(ids.length / 2)); }
       } else if (ids.length === 2) {
-        left = [ids[0]];
-        right = [ids[1]];
+        left = [ids[0]]; right = [ids[1]];
       } else if (ids.length % 2 === 1 && winnerName) {
         const winnerW = store.roster.find(r => r.name === winnerName);
         const winnerId = winnerW ? winnerW.id : null;
         if (winnerId && ids.includes(winnerId)) {
-          left = [winnerId];
-          right = ids.filter(id => id !== winnerId);
+          left = [winnerId]; right = ids.filter(id => id !== winnerId);
         } else {
-          left = [ids[0]];
-          right = ids.slice(1);
+          left = [ids[0]]; right = ids.slice(1);
         }
       } else {
         const mid = Math.ceil(ids.length / 2);
-        left = ids.slice(0, mid);
-        right = ids.slice(mid);
+        left = ids.slice(0, mid); right = ids.slice(mid);
       }
       return { left, right };
     }
@@ -1177,8 +1152,7 @@
         sub.includes('1 contra 2') || sub.includes('1 vs 2') ||
         sub.includes('1 contra 3') || sub.includes('1 vs 3') ||
         sub.includes('2 contra 3') || sub.includes('2 vs 3') ||
-        type === 'reglas de bloodline' || type === 'wargames' ||
-        type === 'por equipos'
+        type === 'reglas de bloodline' || type === 'wargames' || type === 'por equipos'
       );
     }
 
@@ -1243,12 +1217,12 @@
       { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2, parrillas: 5 },
       { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5, parrillas: 6 }
     ];
-    let defaultPPVs = { "Y1_M4_D21": { name: "Backlash", color: "#ffd700", brands: [] } };
 
     function createEmptyStore() {
       return {
-        roster: [], teams: [], titles: [], matches: [], shows: JSON.parse(JSON.stringify(defaultShows)),
-        calendar: { configured: false, startMonth: 0, currentMonthIndex: 0, currentDay: 1, ppvs: { ...defaultPPVs } },
+        roster: [], teams: [], titles: [], matches: [],
+        shows: JSON.parse(JSON.stringify(defaultShows)),
+        calendar: { configured: false, startMonth: 0, currentMonthIndex: 0, currentDay: 1, ppvs: {} },
         todayCard: { locked: false, slots: [], eventName: null, showNumber: null }
       };
     }
@@ -1258,11 +1232,17 @@
     if (!store.titles) store.titles = [];
     if (!store.matches) store.matches = [];
     if (!store.shows || store.shows.length === 0) store.shows = JSON.parse(JSON.stringify(defaultShows));
-    if (!store.calendar) store.calendar = { configured: false, startMonth: 0, currentMonthIndex: 0, currentDay: 1, ppvs: { ...defaultPPVs } };
-    if (!store.calendar.ppvs) store.calendar.ppvs = { ...defaultPPVs };
+    if (!store.calendar) store.calendar = { configured: false, startMonth: 0, currentMonthIndex: 0, currentDay: 1, ppvs: {} };
+    if (!store.calendar.ppvs) store.calendar.ppvs = {};
     if (store.calendar.currentDay === undefined) store.calendar.currentDay = 1;
     if (!store.todayCard) store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
     store.shows.forEach(s => { if (s.parrillas === undefined) s.parrillas = 6; });
+
+    // Normalizar ppvs antiguos (objeto único → array)
+    Object.keys(store.calendar.ppvs).forEach(k => {
+      const v = store.calendar.ppvs[k];
+      if (v && !Array.isArray(v)) store.calendar.ppvs[k] = [v];
+    });
 
     let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
     let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
@@ -1307,9 +1287,29 @@
       store.calendar.configured = true;
       store.calendar.currentDay = 1;
       document.getElementById('modal-start-month').classList.remove('active');
+      ensureDefaultPPVsForYear(1);
       unlockNav();
       saveData();
       switchTab('roster', document.getElementById('nav-btn-roster'));
+    }
+
+    // ========== DEFAULT PLEs ==========
+    function ensureDefaultPPVsForYear(yearDisplay) {
+      DEFAULT_PLE_TEMPLATES.forEach(tpl => {
+        const key = `Y${yearDisplay}_M${tpl.month}_D${tpl.day}`;
+        if (!store.calendar.ppvs[key]) {
+          store.calendar.ppvs[key] = [];
+        }
+        const exists = store.calendar.ppvs[key].some(e => e.name === tpl.name);
+        if (!exists) {
+          store.calendar.ppvs[key].push({
+            name: tpl.name,
+            color: tpl.color,
+            brands: [...tpl.brands],
+            parrillas: tpl.parrillas
+          });
+        }
+      });
     }
 
     function onFilterChange(select) { const [type, value] = select.value.split(':'); filters[type] = value; render(); }
@@ -1350,20 +1350,16 @@
 
     function getRadioValue(name) { const s = document.querySelector(`input[name="${name}"]:checked`); return s ? s.value : ''; }
     function setRadioValue(name, value) { const r = document.querySelector(`input[name="${name}"][value="${value}"]`); if (r) r.checked = true; }
-
     function getTotalUniverseDays() { return (store.calendar.currentMonthIndex || 0) * 28 + (store.calendar.currentDay || 1) - 1; }
 
     function transferTitle(titleId, newChampionIds) {
       const title = store.titles.find(t => t.id === titleId);
       if (!title) return false;
       if (!newChampionIds) newChampionIds = [];
-
       const sameChamps = title.champions && 
         title.champions.length === newChampionIds.length && 
         title.champions.every((id, i) => id === newChampionIds[i]);
-      
       if (sameChamps) return false;
-
       const daysReigned = Math.max(0, getTotalUniverseDays() - (title.reignStartDay || 0));
       const prevNames = (title.champions || []).length
         ? (title.champions || []).map(cId => {
@@ -1371,24 +1367,25 @@
             return r ? r.name : 'Desconocido';
           }).join(' & ')
         : 'Vacante';
-
       if (!title.history) title.history = [];
       title.history.unshift({ champsNames: prevNames, days: daysReigned });
-
       title.champions = [...newChampionIds];
       title.reignStartDay = getTotalUniverseDays();
       title.isInaugural = false;
       return true;
     }
 
-    // ========== CALENDAR ==========
-    function renderCalendar() {
+    // ========== CALENDAR (con logos + degradado) ==========
+    async function renderCalendar() {
       const startMonth = store.calendar.startMonth || 0;
       const currentMonthIndex = store.calendar.currentMonthIndex || 0;
       const absoluteMonth = startMonth + currentMonthIndex;
       const monthDisplayIndex = absoluteMonth % 12;
       const yearDisplay = Math.floor(absoluteMonth / 12) + 1;
       document.getElementById('calendar-month-year-display').innerText = `Año ${yearDisplay} - ${MONTH_NAMES[monthDisplayIndex]}`;
+
+      // Asegurar PLEs por defecto para este año
+      ensureDefaultPPVsForYear(yearDisplay);
 
       const globalShowCounts = {};
       store.shows.forEach(s => globalShowCounts[s.id] = 0);
@@ -1399,40 +1396,62 @@
         }
       }
 
+      // Precargar logos de shows
+      const logoCache = {};
+      await Promise.all(store.shows.map(async s => {
+        logoCache[s.id] = await getImageFromDB('show_logo_' + s.id);
+      }));
+
       let html = '';
       for (let day = 1; day <= 28; day++) {
         const dayOfWeek = ((day - 1) % 7) + 1;
         const dayShows = store.shows.filter(s => parseInt(s.day) === dayOfWeek);
         let cellEventsHTML = '';
+        let gradientColor = null;
+
+        // Shows semanales
         dayShows.forEach(s => {
           globalShowCounts[s.id]++;
           const num = globalShowCounts[s.id];
           const label = `${s.name} #${num}`;
           const past = store.matches.some(m => m.show === label || (m.eventName === s.name && m.showNumber === num));
+          const logoHTML = logoCache[s.id] ? `<img src="${logoCache[s.id]}" class="cell-show-logo" alt="${s.name}">` : '';
+          if (!gradientColor) gradientColor = s.color;
           if (past) {
-            cellEventsHTML += `<div class="cell-event-badge" style="background:${s.color};" onclick="openPastEvent('${s.name.replace(/'/g, "\\'")}', ${num})">${s.name} #${num}</div>`;
+            cellEventsHTML += `<div class="cell-event-badge" style="background:${s.color};" onclick="openPastEvent('${s.name.replace(/'/g, "\\'")}', ${num})">${logoHTML}${s.name} #${num}</div>`;
           } else {
-            cellEventsHTML += `<div class="cell-event-badge" style="background:${s.color};" onclick="openShowModal('${s.id}')">${s.name} #${num}</div>`;
+            cellEventsHTML += `<div class="cell-event-badge" style="background:${s.color};" onclick="openShowModal('${s.id}')">${logoHTML}${s.name} #${num}</div>`;
           }
         });
+
+        // PLEs (pueden ser varios el mismo día)
         const ppvKey = `Y${yearDisplay}_M${monthDisplayIndex}_D${day}`;
-        const ppv = store.calendar.ppvs[ppvKey];
-        if (ppv) {
+        const ppvs = store.calendar.ppvs[ppvKey] || [];
+        ppvs.forEach(ppv => {
+          if (!gradientColor) gradientColor = ppv.color || '#ffd700';
           const pastPle = store.matches.some(m => m.show === ppv.name || m.eventName === ppv.name);
           if (pastPle) {
             cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openPastEvent('${ppv.name.replace(/'/g, "\\'")}', null)">🏆 ${ppv.name}</div>`;
           } else {
             cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openCalendarEditModal(${day}, 'ple')">🏆 ${ppv.name}</div>`;
           }
-        }
+        });
+
         const isCurrent = day === (store.calendar.currentDay || 1);
-        html += `<div class="calendar-cell ${ppv || isCurrent ? 'has-event' : ''}" style="${isCurrent ? 'outline:2px solid var(--gold-end);' : ''}">
+        const hasEvent = dayShows.length > 0 || ppvs.length > 0;
+        let cellStyle = isCurrent ? 'outline:2px solid var(--gold-end);' : '';
+        if (hasEvent && gradientColor) {
+          cellStyle += ` background: linear-gradient(to bottom, ${gradientColor}55 0%, transparent 100%);`;
+        }
+
+        html += `<div class="calendar-cell ${hasEvent ? 'has-event' : ''}" style="${cellStyle}">
           <span class="cell-day-num">Día ${day}${isCurrent ? ' ●' : ''}</span>
           <div class="cell-events-wrapper">${cellEventsHTML}</div>
         </div>`;
       }
       document.getElementById('calendar-days-container').innerHTML = html;
     }
+
     function prevMonth() {
       if (!store.calendar.currentMonthIndex) store.calendar.currentMonthIndex = 0;
       if (store.calendar.currentMonthIndex > 0) { store.calendar.currentMonthIndex--; store.calendar.currentDay = 1; saveData(); }
@@ -1444,7 +1463,7 @@
       saveData();
     }
 
-    // ========== PAST EVENT RESULTS (CORREGIDO: resalta todo el equipo ganador) ==========
+    // ========== PAST EVENT ==========
     async function openPastEvent(eventName, showNumber) {
       const label = showNumber != null ? `${eventName} #${showNumber}` : eventName;
       const matches = store.matches.filter(m =>
@@ -1453,24 +1472,19 @@
       );
       document.getElementById('past-event-title').innerText = `📺 ${label}`;
       const body = document.getElementById('past-event-body');
-
       if (!matches.length) {
         body.innerHTML = '<p style="color:var(--text-dim); text-align:center;">No hay combates registrados para este evento.</p>';
         document.getElementById('modal-past-event').classList.add('active');
         return;
       }
-
       const cards = await Promise.all(matches.map(async m => {
         if (m.card === '🎤 Promo' || m.winner === 'Promo') {
           return `<div class="past-promo-card">🎤 Segmento de promo</div>`;
         }
-
         const parts = m.participants || [];
         const { left, right } = splitSides(parts, m.matchType, m.subType, m.winner);
         const winnerName = m.winner || '';
         const isTeam = isTeamBasedMatch(m.matchType, m.subType);
-
-        // Determinar el lado ganador completo
         let winningSideIds = [];
         if (winnerName && winnerName !== 'Empate' && winnerName !== 'Pendiente') {
           const winnerW = store.roster.find(r => r.name === winnerName);
@@ -1483,7 +1497,6 @@
             }
           }
         }
-
         async function sideHTML(ids, sideClass) {
           const wraps = await Promise.all(ids.map(async id => {
             const w = store.roster.find(r => r.id == id);
@@ -1501,29 +1514,23 @@
           }));
           return `<div class="past-side ${sideClass}"><div class="past-side-imgs">${wraps.join('')}</div></div>`;
         }
-
         const leftH = await sideHTML(left, 'left');
         const rightH = await sideHTML(right, 'right');
-
         let typeLine = m.matchType || '';
         if (m.subType) typeLine += (typeLine ? ' · ' : '') + m.subType;
         if (m.matchType === '3 Stages of Hell' && m.stages) {
           const st = (m.stages || []).filter(Boolean).join(' → ');
           if (st) typeLine += (typeLine ? ' · ' : '') + st;
         }
-
         let titleGold = '';
         if (m.titleId) {
           const t = store.titles.find(tt => tt.id === m.titleId);
           if (t) titleGold = `<span class="past-match-title-gold">🏆 ${t.name}</span>`;
         }
-
         const namesLine = formatMatchSummary(
           parts.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; }),
-          m.matchType,
-          m.subType
+          m.matchType, m.subType
         );
-
         return `
           <div class="past-match-card">
             <div class="past-match-header">
@@ -1539,7 +1546,6 @@
           </div>
         `;
       }));
-
       body.innerHTML = cards.join('');
       document.getElementById('modal-past-event').classList.add('active');
     }
@@ -1586,16 +1592,19 @@
     function onPLEDaySelectChange() {
       const day = parseInt(document.getElementById('cal-ple-day').value) || 1;
       const ppvKey = getCurrentPPVKey(day);
-      const ppv = store.calendar.ppvs[ppvKey];
+      const ppvs = store.calendar.ppvs[ppvKey] || [];
+      const ppv = ppvs[0] || null;
       const btnDel = document.getElementById('btn-del-cal-ple');
       if (ppv) {
         document.getElementById('cal-ple-name').value = ppv.name;
         document.getElementById('cal-ple-color').value = ppv.color || '#ffd700';
+        document.getElementById('cal-ple-parrillas').value = ppv.parrillas || 7;
         populatePLEBrands(ppv.brands || []);
         btnDel.style.display = 'block';
       } else {
         document.getElementById('cal-ple-name').value = '';
         document.getElementById('cal-ple-color').value = '#ffd700';
+        document.getElementById('cal-ple-parrillas').value = 7;
         populatePLEBrands([]);
         btnDel.style.display = 'none';
       }
@@ -1605,13 +1614,22 @@
       const day = parseInt(document.getElementById('cal-ple-day').value);
       const name = document.getElementById('cal-ple-name').value.trim();
       const color = document.getElementById('cal-ple-color').value;
+      const parrillas = parseInt(document.getElementById('cal-ple-parrillas').value) || 7;
       const brands = Array.from(document.querySelectorAll('#cal-ple-brands-container input:checked')).map(cb => cb.value);
-      store.calendar.ppvs[getCurrentPPVKey(day)] = { name, color, brands };
+      const key = getCurrentPPVKey(day);
+      if (!store.calendar.ppvs[key]) store.calendar.ppvs[key] = [];
+      // Actualizar el primero o añadir nuevo
+      if (store.calendar.ppvs[key].length > 0) {
+        store.calendar.ppvs[key][0] = { name, color, brands, parrillas };
+      } else {
+        store.calendar.ppvs[key].push({ name, color, brands, parrillas });
+      }
       closeCalendarEditModal();
       saveData();
     };
     function deletePLEFromModal() {
-      delete store.calendar.ppvs[getCurrentPPVKey(parseInt(document.getElementById('cal-ple-day').value))];
+      const key = getCurrentPPVKey(parseInt(document.getElementById('cal-ple-day').value));
+      delete store.calendar.ppvs[key];
       closeCalendarEditModal();
       saveData();
     }
@@ -1805,7 +1823,6 @@
       const champ1 = champ1Val ? parseInt(champ1Val) : null;
       const champ2 = (type === 'tag' && champ2Val) ? parseInt(champ2Val) : null;
       const isInaugural = document.getElementById('title-is-inaugural').checked;
-
       let championsArr = [];
       if (type === 'tag') {
         if (champ1 && champ2) championsArr = [champ1, champ2];
@@ -1814,7 +1831,6 @@
       } else {
         championsArr = champ1 ? [champ1] : [];
       }
-
       const fileInput = document.getElementById('title-image-file');
       if (activeTitleId === null) {
         const newId = Date.now();
@@ -1856,18 +1872,17 @@
       const monthDisplayIndex = absoluteMonth % 12;
       const yearDisplay = Math.floor(absoluteMonth / 12) + 1;
       const ppvKey = `Y${yearDisplay}_M${monthDisplayIndex}_D${day}`;
-      const ppv = store.calendar.ppvs[ppvKey];
-
-      if (ppv) {
+      const ppvs = store.calendar.ppvs[ppvKey] || [];
+      if (ppvs.length > 0) {
+        const ppv = ppvs[0]; // Tomamos el primero si hay varios
         return {
           type: 'ple',
           name: ppv.name,
           brands: ppv.brands && ppv.brands.length ? ppv.brands : store.shows.map(s => s.name),
-          parrillas: 8,
+          parrillas: ppv.parrillas || 8,
           showNumber: null
         };
       }
-
       const dayOfWeek = ((day - 1) % 7) + 1;
       const show = store.shows.find(s => parseInt(s.day) === dayOfWeek);
       if (show) {
@@ -1916,16 +1931,10 @@
           showNumber: event.showNumber,
           slots: Array.from({ length: needed }, (_, i) => ({
             id: Date.now() + i,
-            type: null,
-            matchType: null,
-            subType: null,
-            stages: [null, null, null],
-            participants: [],
-            specialReferee: null,
-            winner: '',
-            matchId: null,
-            titleId: null,
-            isTitleMatch: false
+            type: null, matchType: null, subType: null,
+            stages: [null, null, null], participants: [],
+            specialReferee: null, winner: '', matchId: null,
+            titleId: null, isTitleMatch: false
           }))
         };
       }
@@ -1946,7 +1955,6 @@
       const container = document.getElementById('today-slots-container');
       const btnFinalize = document.getElementById('btn-finalize-card');
       const btnNext = document.getElementById('btn-next-show');
-
       if (!event) {
         header.innerText = 'Hoy no hay show programado';
         container.innerHTML = '<p style="color:var(--text-dim); text-align:center; padding:20px 0;">Avanza el calendario o configura un show/PLE para este día.</p>';
@@ -1954,13 +1962,10 @@
         btnNext.style.display = 'none';
         return;
       }
-
       const numberText = event.showNumber ? ` #${event.showNumber}` : '';
       header.innerHTML = `📺 ${event.name}${numberText} ${store.todayCard.locked ? '🔒 (Finalizado)' : ''}`;
-
       const isLocked = store.todayCard.locked;
       const available = getAvailableWrestlers(event.brands);
-
       container.innerHTML = store.todayCard.slots.map((slot, idx) => {
         if (!slot.type) {
           return `
@@ -1977,7 +1982,6 @@
             </div>
           `;
         }
-
         if (slot.type === 'promo') {
           return `
             <div class="card-slot ${isLocked ? 'locked' : ''}">
@@ -1989,7 +1993,6 @@
             </div>
           `;
         }
-
         let html = `
           <div class="card-slot ${isLocked ? 'locked' : ''}">
             <div class="card-slot-header">
@@ -1997,7 +2000,6 @@
               ${!isLocked ? `<button class="btn-reset-slot" onclick="resetSlot(${idx})">✕</button>` : ''}
             </div>
         `;
-
         if (!slot.matchType) {
           html += `
             <select class="slot-select" onchange="setMatchType(${idx}, this.value)" ${isLocked ? 'disabled' : ''}>
@@ -2007,7 +2009,6 @@
           `;
         } else if (slot.matchType === "3 Stages of Hell") {
           html += `<div class="match-type-label">3 Stages of Hell</div>`;
-          
           for (let s = 0; s < 3; s++) {
             html += `
               <div class="stages-box">
@@ -2019,11 +2020,7 @@
               </div>
             `;
           }
-
-          if (!slot.participants || slot.participants.length !== 2) {
-            slot.participants = [null, null];
-          }
-
+          if (!slot.participants || slot.participants.length !== 2) slot.participants = [null, null];
           html += `
             <div class="participants-sides">
               <div class="side-column left">
@@ -2047,13 +2044,8 @@
               </div>
             </div>
           `;
-
           html += renderTitleMatchBox(slot, idx, isLocked);
-
-          const names = slot.participants.map(id => {
-            const w = store.roster.find(r => r.id == id);
-            return w ? w.name : '?';
-          });
+          const names = slot.participants.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; });
           const stagesText = (slot.stages || []).filter(Boolean).join(' → ');
           let summary = formatMatchSummary(names, slot.matchType, slot.subType);
           if (stagesText) summary += '<br>' + stagesText;
@@ -2062,11 +2054,9 @@
             if (t) summary += `<br><span style="color:var(--gold-end);">🏆 ${t.name}</span>`;
           }
           html += `<div class="slot-summary">${summary}</div>`;
-
         } else {
           const subTypes = MATCH_TYPES[slot.matchType] || {};
           const subKeys = Object.keys(subTypes).filter(k => k !== 'special');
-
           if (subKeys.length > 1 && !slot.subType) {
             html += `
               <div class="match-type-label">${slot.matchType}</div>
@@ -2078,25 +2068,14 @@
           } else {
             const finalSub = slot.subType || subKeys[0];
             const numParticipants = (MATCH_TYPES[slot.matchType] && MATCH_TYPES[slot.matchType][finalSub]) || 2;
-
             if (!slot.participants || slot.participants.length !== numParticipants) {
               slot.participants = Array(numParticipants).fill(null);
             }
-
-            html += `
-              <div class="match-type-label">
-                ${slot.matchType}${finalSub ? ' · ' + finalSub : ''}
-              </div>
-            `;
-
+            html += `<div class="match-type-label">${slot.matchType}${finalSub ? ' · ' + finalSub : ''}</div>`;
             const isTeam = isTeamBasedMatch(slot.matchType, finalSub);
-
             if (isTeam) {
-              // ===== LAYOUT BANDOS IZQUIERDA / DERECHA =====
               const sides = getTeamSideCounts(slot.matchType, finalSub, numParticipants);
               html += `<div class="participants-sides">`;
-              
-              // Columna izquierda
               html += `<div class="side-column left"><div class="side-label">Equipo A (${sides.left})</div>`;
               for (let i = 0; i < sides.left; i++) {
                 const p = slot.participants[i];
@@ -2110,11 +2089,7 @@
                   </div>
                 `;
               }
-              html += `</div>`;
-
-              html += `<div class="side-vs">VS</div>`;
-
-              // Columna derecha
+              html += `</div><div class="side-vs">VS</div>`;
               html += `<div class="side-column right"><div class="side-label">Equipo B (${sides.right})</div>`;
               for (let i = 0; i < sides.right; i++) {
                 const pIdx = sides.left + i;
@@ -2131,7 +2106,6 @@
               }
               html += `</div></div>`;
             } else {
-              // Layout normal (grid) para combates individuales / multi-man
               html += `
                 <div class="participants-grid">
                   ${slot.participants.map((p, pIdx) => `
@@ -2146,7 +2120,6 @@
                 </div>
               `;
             }
-
             if (slot.matchType === "Árbitro especial invitado") {
               const missingRef = !slot.specialReferee;
               html += `
@@ -2160,13 +2133,8 @@
                 </div>
               `;
             }
-
             html += renderTitleMatchBox(slot, idx, isLocked);
-
-            const names = slot.participants.map(id => {
-              const w = store.roster.find(r => r.id == id);
-              return w ? w.name : '?';
-            });
+            const names = slot.participants.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; });
             let summary = formatMatchSummary(names, slot.matchType, finalSub);
             if (slot.matchType === "Árbitro especial invitado" && slot.specialReferee) {
               const ref = store.roster.find(r => r.id == slot.specialReferee);
@@ -2179,13 +2147,11 @@
             html += `<div class="slot-summary">${summary}</div>`;
           }
         }
-
         if (isLocked && slot.type === 'combate' && slot.matchType) {
           const participantNames = (slot.participants || []).map(id => {
             const w = store.roster.find(r => r.id == id);
             return w ? { id: w.id, name: w.name } : null;
           }).filter(Boolean);
-
           html += `
             <div class="winner-box">
               <label>🏆 Elegir ganador:</label>
@@ -2197,11 +2163,9 @@
             </div>
           `;
         }
-
         html += `</div>`;
         return html;
       }).join('');
-
       btnFinalize.style.display = isLocked ? 'none' : 'block';
       btnNext.style.display = isLocked ? 'block' : 'none';
     }
@@ -2214,11 +2178,9 @@
         }).join(' & ');
         return `<option value="${t.id}" ${slot.titleId == t.id ? 'selected' : ''}>${t.name}${champs ? ' (' + champs + ')' : ' (Vacante)'}</option>`;
       }).join('');
-
       const champWarning = (slot.isTitleMatch && slot.titleId && !hasChampionInMatch(slot))
         ? `<div class="title-warning">⚠️ Al menos un campeón actual del título debe participar en el combate.</div>`
         : '';
-
       return `
         <div class="title-match-box">
           <label>
@@ -2243,12 +2205,10 @@
       saveData();
       renderTodayCard();
     }
-
     function setTitleForMatch(idx, titleId) {
       if (store.todayCard.locked) return;
       const slot = store.todayCard.slots[idx];
       slot.titleId = titleId ? parseInt(titleId) : null;
-
       if (slot.titleId) {
         const title = store.titles.find(t => t.id === slot.titleId);
         if (title && title.champions && title.champions.length > 0) {
@@ -2268,7 +2228,6 @@
       saveData();
       renderTodayCard();
     }
-
     function setSlotType(idx, type) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx].type = type;
@@ -2284,7 +2243,6 @@
       saveData();
       renderTodayCard();
     }
-
     function setMatchType(idx, matchType) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx].matchType = matchType;
@@ -2295,14 +2253,12 @@
       saveData();
       renderTodayCard();
     }
-
     function setSubType(idx, subType) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx].subType = subType;
       const num = (MATCH_TYPES[store.todayCard.slots[idx].matchType] && MATCH_TYPES[store.todayCard.slots[idx].matchType][subType]) || 2;
       store.todayCard.slots[idx].participants = Array(num).fill(null);
       store.todayCard.slots[idx].specialReferee = null;
-
       if (store.todayCard.slots[idx].isTitleMatch && store.todayCard.slots[idx].titleId) {
         setTitleForMatch(idx, store.todayCard.slots[idx].titleId);
         return;
@@ -2310,7 +2266,6 @@
       saveData();
       renderTodayCard();
     }
-
     function setStage(idx, stageIdx, value) {
       if (store.todayCard.locked) return;
       if (!store.todayCard.slots[idx].stages) store.todayCard.slots[idx].stages = [null, null, null];
@@ -2318,30 +2273,25 @@
       saveData();
       renderTodayCard();
     }
-
     function setParticipant(idx, pIdx, value) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx].participants[pIdx] = value ? parseInt(value) : null;
       saveData();
       renderTodayCard();
     }
-
     function setSpecialReferee(idx, value) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx].specialReferee = value ? parseInt(value) : null;
       saveData();
       renderTodayCard();
     }
-
     function setWinner(idx, winnerName) {
       const slot = store.todayCard.slots[idx];
       slot.winner = winnerName || '';
-
       if (slot.matchId) {
         const match = store.matches.find(m => m.id === slot.matchId);
         if (match) match.winner = winnerName || 'Pendiente';
       }
-
       if (slot.isTitleMatch && slot.titleId && winnerName && winnerName !== 'Empate' && winnerName !== '') {
         const title = store.titles.find(t => t.id === slot.titleId);
         if (title) {
@@ -2369,11 +2319,9 @@
           }
         }
       }
-
       saveData();
       renderTodayCard();
     }
-
     function resetSlot(idx) {
       if (store.todayCard.locked) return;
       store.todayCard.slots[idx] = {
@@ -2386,10 +2334,8 @@
       saveData();
       renderTodayCard();
     }
-
     function finalizeTodayCard() {
       if (store.todayCard.locked) return;
-
       for (const slot of store.todayCard.slots) {
         if (slot.type === 'combate' && slot.matchType === "Árbitro especial invitado" && !slot.specialReferee) {
           alert("⚠️ Debes elegir un Árbitro Especial en todos los combates de tipo «Árbitro especial invitado».");
@@ -2403,10 +2349,8 @@
           }
         }
       }
-
       showConfirmModal("¿Finalizar esta parrilla? Podrás elegir los ganadores después.", () => {
         store.todayCard.locked = true;
-
         store.todayCard.slots.forEach(slot => {
           if (slot.type === 'promo') {
             const matchId = Date.now() + Math.random();
@@ -2423,7 +2367,6 @@
               const w = store.roster.find(r => r.id == id);
               return w ? w.name : '?';
             }).filter(n => n !== '?');
-
             let cardText = '';
             if (slot.matchType === "3 Stages of Hell") {
               const stages = (slot.stages || []).filter(Boolean).join(' → ');
@@ -2436,13 +2379,11 @@
                 if (ref) cardText += ` [Árbitro Especial: ${ref.name}]`;
               }
             }
-
             const titleId = (slot.isTitleMatch && slot.titleId) ? slot.titleId : null;
             if (titleId) {
               const t = store.titles.find(tt => tt.id === titleId);
               if (t) cardText += ` 🏆 ${t.name}`;
             }
-
             const matchId = Date.now() + Math.random();
             store.matches.push({
               id: matchId,
@@ -2458,12 +2399,10 @@
             slot.winner = '';
           }
         });
-
         saveData();
         renderTodayCard();
       });
     }
-
     function goToNextShow() {
       let safety = 0;
       do {
@@ -2475,7 +2414,6 @@
         safety++;
         if (safety > 60) break;
       } while (!getCurrentEvent());
-
       store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
       saveData();
       renderTodayCard();
@@ -2566,13 +2504,11 @@
         }
         return m.card.toLowerCase().includes(name);
       }).slice().reverse();
-
       let wins = 0, losses = 0, draws = 0;
       const historyHTML = matches.map(m => {
         const winnerRaw = (m.winner || '').trim();
         const winner = winnerRaw.toLowerCase();
         let outcomeClass = 'draw', outcomeLabel = 'Pendiente / Empate';
-
         if (!winner || winner === 'pendiente' || winner === '' || winner === 'empate' || winner === 'promo') {
           draws++;
         } else if (isTeamBasedMatch(m.matchType, m.subType) && m.participants && m.participants.length) {
@@ -2582,7 +2518,6 @@
           const isLeftWin = winnerId && left.includes(winnerId);
           const wrestlerOnLeft = left.includes(wrestler.id);
           const wrestlerOnRight = right.includes(wrestler.id);
-
           if (isLeftWin) {
             if (wrestlerOnLeft) { wins++; outcomeClass = 'win'; outcomeLabel = 'Victoria (equipo)'; }
             else if (wrestlerOnRight) { losses++; outcomeClass = 'loss'; outcomeLabel = 'Derrota (equipo)'; }
@@ -2599,15 +2534,12 @@
             losses++; outcomeClass = 'loss'; outcomeLabel = 'Derrota';
           }
         }
-
         return `<div class="match-item ${outcomeClass}"><strong>${m.show}:</strong> ${m.card}<br><span style="color:var(--text-dim); font-size:0.75rem;">Resultado: ${m.winner} (${outcomeLabel})</span></div>`;
       }).join('');
-
       document.getElementById('stat-wins').innerText = wins;
       document.getElementById('stat-losses').innerText = losses;
       document.getElementById('stat-draws').innerText = draws;
       document.getElementById('wrestler-history-list').innerHTML = matches.length ? historyHTML : `<p style="font-size:0.8rem; color:var(--text-dim);">No hay combates registrados.</p>`;
-
       const titleStats = {};
       store.titles.forEach(t => {
         const isCurrent = t.champions && t.champions.includes(wrestler.id);
@@ -2671,7 +2603,7 @@
       document.getElementById('stat-total-matches').innerText = store.matches.length;
       renderFilterSelect();
       renderActiveFiltersBar();
-      renderCalendar();
+      await renderCalendar();
 
       // Roster
       let sortedRoster = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
@@ -2680,7 +2612,6 @@
       if (filters.gender !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.gender || 'Men') === filters.gender);
       if (filters.division !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.division || 'Midcarder') === filters.division);
       if (filters.search) sortedRoster = sortedRoster.filter(r => r.name.toLowerCase().includes(filters.search));
-
       const rosterCards = await Promise.all(sortedRoster.map(async r => {
         const team = store.teams.find(t => t.id === r.teamId);
         const teamTag = team ? `<span class="tag tag-team">👥 ${team.name}</span>` : '';
