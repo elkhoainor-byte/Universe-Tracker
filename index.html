@@ -2056,7 +2056,9 @@
         }
       }
 
-        return `<div class="card" style="${bgStyle}" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
+      const isChamp = heldTitles.length > 0;
+        const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, ${isChamp ? '#ffd700' : '#000000'}) 1;`;
+        return `<div class="card" style="${bgStyle} ${borderStyle}" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
       }));
       document.getElementById('list-roster').innerHTML = rosterCards.length ? rosterCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay luchadores.</p>`;
       const showCards = await Promise.all(store.shows.map(async s => {
@@ -2065,10 +2067,8 @@
         const dayNames = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
         const logoHTML = logo ? `<img src="${logo}" class="show-logo-img">` : '';
         const bgStyle = bg ? `background-image:url('${bg}');` : '';
-        const isChamp = heldTitles.length > 0;
-        const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, ${isChamp ? '#ffd700' : '#000000'}) 1;`;
-        return `<div class="card" style="${bgStyle} ${borderStyle}" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
-
+        return `<div class="card" style="${bgStyle}" onclick="openShowModal('${s.id}')"><div class="card-left" style="padding-left:12px;">${logoHTML}<div class="card-info"><span class="card-title">${s.name}</span><span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span></div></div></div>`;
+      }));
       }));
       document.getElementById('list-shows').innerHTML = showCards.length ? showCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay shows.</p>`;
       document.getElementById('list-teams').innerHTML = store.teams.map(t => {
