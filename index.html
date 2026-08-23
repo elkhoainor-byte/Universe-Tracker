@@ -256,9 +256,12 @@
     <button class="btn-trigger-add" onclick="openTitleModal(null)">➕ Añadir Campeonato</button>
     <div id="list-titles"></div>
   </div>
-
+  
   <div id="tab-matches" class="tab-content">
-    <div id="today-card-header" style="margin-bottom:14px; font-weight:bold; color:var(--gold-end); font-size:1.15rem;"></div>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px;">
+      <div id="today-card-header" style="font-weight:bold; color:var(--gold-end); font-size:1.15rem; flex:1; min-width:0;"></div>
+      <button type="button" id="btn-redo-card" class="btn-reset-slot" style="flex-shrink:0; padding:8px 12px; font-size:0.8rem; white-space:nowrap;" onclick="confirmRedoTodayCard()" title="Rehacer cartelera desde cero">🔄 Rehacer</button>
+    </div>
     <div id="today-slots-container"></div>
     <button id="btn-finalize-card" class="btn-finalize" style="display:none;" onclick="finalizeTodayCard()">🔒 Finalizar Parrilla</button>
     <button id="btn-next-show" class="btn-next-show" style="display:none;" onclick="goToNextShow()">⏭ Siguiente Show</button>
@@ -1741,6 +1744,62 @@
       renderTodayCard();
     }
 
+    function confirmRedoTodayCard() {
+      const event = getCurrentEvent();
+      if (!event) {
+    alert('No hay show programado para hoy.');
+        return;
+      }
+      const label = event.showNumber != null ? `${event.name} #${event.showNumber}` : event.name;
+      showConfirmModal(
+        `⚠️ ¿Rehacer la cartelera de "${label}" desde cero?\nSe borrarán combates/promos de esta cartelera (también del historial si ya estaba finalizada).`,
+        () => redoTodayCard()
+      );
+    }
+
+    function redoTodayCard() {
+      const event = getCurrentEvent();
+      if (!event) return;
+      const label = event.showNumber != null ? `${event.name} #${event.showNumber}` : event.name;
+
+      // Quitar del historial los combates/promos de este evento (si ya se finalizó)
+      const matchIdsToRemove = new Set(
+        (store.todayCard.slots || [])
+          .map(s => s.matchId)
+          .filter(Boolean)
+      );
+      store.matches = store.matches.filter(m => {
+        if (matchIdsToRemove.has(m.id)) return false;
+        if (m.show === label) return false;
+        if (m.eventName === event.name && (event.showNumber == null || m.showNumber === event.showNumber)) return false;
+        return true;
+      });
+
+      // Cartelera nueva vacía (misma cantidad de parrillas)
+      const needed = event.parrillas || 6;
+      store.todayCard = {
+        locked: false,
+        eventName: event.name,
+        showNumber: event.showNumber,
+        slots: Array.from({ length: needed }, (_, i) => ({
+          id: Date.now() + i,
+          type: null,
+          matchType: null,
+          subType: null,
+          stages: [null, null, null],
+          participants: [],
+          specialReferee: null,
+          winner: '',
+          matchId: null,
+          titleId: null,
+          isTitleMatch: false
+        }))
+      };
+      editingSlotIndex = null;
+      saveData();
+      renderTodayCard();
+    }
+  
     function setWrestlerModalMode(mode) {
       wrestlerModalMode = mode;
       const viewPanel = document.getElementById('wrestler-view-panel');
