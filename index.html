@@ -1415,6 +1415,50 @@
       saveData();
       renderTodayCard();
     }
+        function saveSlotData() {
+      localStorage.setItem('universe_data', JSON.stringify(store));
+      renderTodayCard();
+    }
+
+    function getMatchForSlot(slot) {
+      if (!slot || !slot.matchId) return null;
+      return store.matches.find(m => m.id === slot.matchId) || null;
+    }
+
+    function getSlotFilledParticipants(slot) {
+      let filled = (slot.participants || []).filter(Boolean);
+      if (filled.length < 2) {
+        const m = getMatchForSlot(slot);
+        if (m && m.participants && m.participants.length) {
+          filled = m.participants.filter(Boolean);
+          if (!(slot.participants || []).filter(Boolean).length) {
+            slot.participants = [...m.participants];
+          }
+        }
+      }
+      return filled;
+    }
+
+    function hydrateSlotFromMatch(slot) {
+      const m = getMatchForSlot(slot);
+      if (!m) return;
+      if (!slot.type) {
+        slot.type = (m.winner === 'Promo' || m.card === '🎤 Promo') ? 'promo' : 'match';
+      }
+      if (!slot.matchType && m.matchType) slot.matchType = m.matchType;
+      if (!slot.subType && m.subType) slot.subType = m.subType;
+      if ((!slot.participants || !slot.participants.filter(Boolean).length) && m.participants) {
+        slot.participants = [...m.participants];
+      }
+      if (m.stages) slot.stages = [...m.stages];
+      if (slot.specialReferee == null && m.specialReferee != null) slot.specialReferee = m.specialReferee;
+      if (m.titleId) {
+        slot.isTitleMatch = true;
+        slot.titleId = m.titleId;
+      }
+      if (!slot.winner && m.winner) slot.winner = m.winner;
+    }
+  
     function renderTodayCard() {
       ensureTodaySlots();
       const event = getCurrentEvent();
