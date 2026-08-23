@@ -1342,20 +1342,27 @@
     }
     function getWinnerBox(slot, slotIdx) {
       if (slot.type !== 'match' || !slot.matchType) return '';
-      const filled = (slot.participants || []).filter(Boolean);
-      if (filled.length < 2) return '';
+        const filled = getSlotFilledParticipants(slot);
+      if (filled.length < 2) {
+        return `<div class="winner-box"><label>🏆 Resultado / Ganador</label>
+          <div style="font-size:0.8rem;color:#ff9800;">Selecciona al menos 2 luchadores en el combate para poder elegir ganador.</div></div>`;
+      }
       let winnerOpts = [];
       if (isTeamBasedMatch(slot.matchType, slot.subType)) {
-        const { left, right } = splitSides(slot.participants, slot.matchType, slot.subType, null);
-        const leftNames = left.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; }).filter(n => n !== '?');
-        const rightNames = right.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; }).filter(n => n !== '?');
-        if (leftNames.length) winnerOpts.push({ value: leftNames[0], label: `Bando A: ${leftNames.join(' & ')}` });
-        if (rightNames.length) winnerOpts.push({ value: rightNames[0], label: `Bando B: ${rightNames.join(' & ')}` });
+        const { left, right } = splitSides(slot.participants && slot.participants.filter(Boolean).length ? slot.participants : filled, slot.matchType, slot.subType, null);
+        const leftNames = left.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : null; }).filter(Boolean);
+        const rightNames = right.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : null; }).filter(Boolean);
+        if (leftNames.length) winnerOpts.push({ value: leftNames[0], label: 'Bando A: ' + leftNames.join(' & ') });
+        if (rightNames.length) winnerOpts.push({ value: rightNames[0], label: 'Bando B: ' + rightNames.join(' & ') });
       } else {
-        winnerOpts = filled.map(id => { const w = store.roster.find(r => r.id == id); return w ? { value: w.name, label: w.name } : null; }).filter(Boolean);
+        winnerOpts = filled.map(id => {
+          const w = store.roster.find(r => r.id == id);
+          return w ? { value: w.name, label: w.name } : null;
+        }).filter(Boolean);
       }
       winnerOpts.push({ value: 'Empate', label: 'Empate' });
-      return `<div class="winner-box"><label>🏆 Resultado / Ganador</label>${buildSelect(winnerOpts, slot.winner, `updateSlotWinner(${slotIdx},this.value)`, '-- Pendiente --')}</div>`;
+      const current = (slot.winner && slot.winner !== 'Pendiente') ? slot.winner : '';
+      return `<div class="winner-box"><label>🏆 Resultado / Ganador</label>${buildSelect(winnerOpts, current, `updateSlotWinner(${slotIdx},this.value)`, '-- Pendiente --')}</div>`;
     }
     function getTitleMatchBox(slot, slotIdx) {
       if (slot.type !== 'match' || !slot.matchType) return '';
