@@ -1401,10 +1401,14 @@
       }
     }
     function startEditSlot(idx) {
-      editingSlotIndex = idx;
+      editingSlotIndex = Number(idx);
+      const slot = store.todayCard.slots[editingSlotIndex];
+      if (slot) hydrateSlotFromMatch(slot);
       renderTodayCard();
     }
+
     function doneEditSlot(idx) {
+      idx = Number(idx);
       const slot = store.todayCard.slots[idx];
       if (slot && isRefereeInMatch(slot)) {
         alert('El árbitro especial no puede ser también participante. Corrígelo antes de cerrar la edición.');
@@ -1412,10 +1416,10 @@
       }
       syncSlotToMatch(slot);
       editingSlotIndex = null;
-      saveData();
+      localStorage.setItem('universe_data', JSON.stringify(store));
       renderTodayCard();
     }
-        function saveSlotData() {
+    function saveSlotData() {
       localStorage.setItem('universe_data', JSON.stringify(store));
       renderTodayCard();
     }
