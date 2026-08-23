@@ -2047,13 +2047,20 @@
         const avatar = img ? `<img src="${img}" class="wrestler-avatar" onerror="handleImgError(this)">` : `<div class="wrestler-avatar-placeholder">👤</div>`;
         // FIX: restaurar imagen de fondo del show en la celda del roster
         let bgStyle = '';
+        let brandColor = '#555555';
         if (brands.length > 0) {
           const showObj = store.shows.find(s => s.name === brands[0]);
-          if (showObj && showBgCache[showObj.id]) {
-            bgStyle = `background-image:url('${showBgCache[showObj.id]}');`;
+          if (showObj) {
+            brandColor = showObj.color || '#555555';
+            if (showBgCache[showObj.id]) {
+              bgStyle = `background-image:url('${showBgCache[showObj.id]}');`;
+            }
           }
         }
-        return `<div class="card" style="${bgStyle}" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
+        // Borde degradado: color de marca → negro (o dorado si es campeón)
+        const endColor = heldTitles.length > 0 ? '#ffd700' : '#000000';
+        const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, ${endColor}) 1;`;
+        return `<div class="card" style="${bgStyle}${borderStyle}" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
       }));
       document.getElementById('list-roster').innerHTML = rosterCards.length ? rosterCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay luchadores.</p>`;
       const showCards = await Promise.all(store.shows.map(async s => {
