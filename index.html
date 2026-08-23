@@ -52,7 +52,8 @@
     .filter-badge .close-icon { font-weight: bold; margin-left: 2px; font-size: 0.8rem; }
     .card { background-color: var(--card-bg); padding: 0; padding-right: 12px; border-radius: 8px; margin-bottom: 10px; border: 2px solid transparent; display: flex; justify-content: space-between; align-items: center; cursor: pointer; overflow: hidden; border-image-slice: 1; position: relative; }
     .card > * { position: relative; z-index: 2; }
-    #list-roster .card { height: 110px; min-height: 110px; max-height: 110px; }
+    #list-roster .card { height: 110px; min-height: 110px; max-height: 110px; background-size: cover; background-position: center; background-repeat: no-repeat; }
+    #list-roster .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 1; }
     #list-shows .card { height: 90px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
     #list-shows .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); z-index: 1; }
     .card-left { display: flex; align-items: center; gap: 12px; flex: 1; height: 100%; overflow: hidden; }
@@ -514,8 +515,8 @@
     <button onclick="switchTab('titles', this)">Títulos</button>
     <button onclick="switchTab('matches', this)">Cartelera de hoy</button>
   </nav>
-​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​<script>
-    const STAGES_OF_HELL_OPTIONS = [
+<script>
+      const STAGES_OF_HELL_OPTIONS = [
       "Normal", "Extreme Rules", "Inferno", "I Quit", "Contenedor",
       "Hell in a Cell", "Steel Cage", "Tables", "Ladder", "TLC",
       "Sumisión", "Ambulancia", "Ataúd", "Falls Count Anywhere",
@@ -716,7 +717,12 @@
     let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
     let wrestlerModalMode = 'view';
     let calendarViewMonthIndex = null;
+    // IMPORTANTE: usar null (no 0) como "sin edición". Number(null)===0 provocaba el bug del primer combate.
     let editingSlotIndex = null;
+
+    function isSlotBeingEdited(idx) {
+      return editingSlotIndex !== null && editingSlotIndex !== undefined && Number(editingSlotIndex) === Number(idx);
+    }
 
     function handleImgError(img) {
       img.onerror = null;
@@ -1342,7 +1348,7 @@
     }
     function getWinnerBox(slot, slotIdx) {
       if (slot.type !== 'match' || !slot.matchType) return '';
-        const filled = getSlotFilledParticipants(slot);
+      const filled = getSlotFilledParticipants(slot);
       if (filled.length < 2) {
         return `<div class="winner-box"><label>🏆 Resultado / Ganador</label>
           <div style="font-size:0.8rem;color:#ff9800;">Selecciona al menos 2 luchadores en el combate para poder elegir ganador.</div></div>`;
@@ -1381,7 +1387,7 @@
       return '';
     }
     function syncSlotToMatch(slot) {
-      if (!slot.matchId) return;
+      if (!slot || !slot.matchId) return;
       const match = store.matches.find(m => m.id === slot.matchId);
       if (!match) return;
       if (slot.type === 'promo') {
@@ -1421,7 +1427,7 @@
         alert('El árbitro especial no puede ser también participante. Corrígelo antes de cerrar la edición.');
         return;
       }
-      syncSlotToMatch(slot);
+      if (slot) syncSlotToMatch(slot);
       editingSlotIndex = null;
       localStorage.setItem('universe_data', JSON.stringify(store));
       renderTodayCard();
@@ -1490,7 +1496,8 @@
       const locked = store.todayCard.locked;
       let html = '';
       store.todayCard.slots.forEach((slot, idx) => {
-        const isEditing = locked && Number(editingSlotIndex) === Number(idx);
+        // FIX: no usar Number(null)===0 — isSlotBeingEdited evita el bug del primer combate
+        const isEditing = locked && isSlotBeingEdited(idx);
         const canEditUI = !locked || isEditing;
         html += `<div class="card-slot ${locked && !isEditing ? 'locked' : ''} ${isEditing ? 'editing' : ''}"><div class="card-slot-header"><span class="card-slot-title"><span class="slot-num">${idx + 1}</span>Parrilla</span><div class="card-slot-header-actions">`;
         if (!locked) html += `<button class="btn-reset-slot" onclick="resetSlot(${idx})">↺ Reset</button>`;
@@ -1539,7 +1546,7 @@
     
     function setSlotType(idx, type) {
       idx = Number(idx);
-      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const slot = store.todayCard.slots[idx];
       slot.type = type;
       if (type === 'promo') {
@@ -1555,7 +1562,7 @@
     
     function resetSlot(idx) {
       idx = Number(idx);
-      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const oldMatchId = store.todayCard.slots[idx].matchId;
       store.todayCard.slots[idx] = {
         id: Date.now(),
@@ -1576,7 +1583,7 @@
 
     function updateSlotMatchType(idx, val) {
       idx = Number(idx);
-      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const slot = store.todayCard.slots[idx];
       slot.matchType = val || null;
       slot.subType = null;
@@ -1592,7 +1599,7 @@
 
     function updateSlotSubType(idx, val) {
       idx = Number(idx);
-      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const slot = store.todayCard.slots[idx];
       slot.subType = val || null;
       slot.participants = [];
@@ -1603,7 +1610,7 @@
 
     function updateSlotStage(idx, stageIdx, val) {
       idx = Number(idx);
-      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const slot = store.todayCard.slots[idx];
       if (!slot.stages) slot.stages = [null, null, null];
       slot.stages[stageIdx] = val || null;
@@ -1613,7 +1620,7 @@
 
     function updateSlotParticipant(idx, pIdx, val) {
       idx = Number(idx);
-      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const slot = store.todayCard.slots[idx];
       slot.participants[pIdx] = val ? parseInt(val) : null;
       if (store.todayCard.locked) syncSlotToMatch(slot);
@@ -1622,7 +1629,7 @@
 
     function updateSlotReferee(idx, val) {
       idx = Number(idx);
-      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const slot = store.todayCard.slots[idx];
       slot.specialReferee = val ? parseInt(val) : null;
       if (store.todayCard.locked) syncSlotToMatch(slot);
@@ -1631,7 +1638,7 @@
 
     function updateSlotWinner(idx, val) {
       idx = Number(idx);
-      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const slot = store.todayCard.slots[idx];
       slot.winner = val || '';
       if (store.todayCard.locked) syncSlotToMatch(slot);
@@ -1640,7 +1647,7 @@
 
     function toggleTitleMatch(idx, checked) {
       idx = Number(idx);
-      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const slot = store.todayCard.slots[idx];
       slot.isTitleMatch = checked;
       if (!checked) slot.titleId = null;
@@ -1650,7 +1657,7 @@
 
     function updateSlotTitle(idx, val) {
       idx = Number(idx);
-      if (store.todayCard.locked && Number(editingSlotIndex) !== idx) return;
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const slot = store.todayCard.slots[idx];
       slot.titleId = val ? parseInt(val) : null;
       if (store.todayCard.locked) syncSlotToMatch(slot);
@@ -2013,6 +2020,11 @@
         return true;
       });
       filtered = filtered.sort((a, b) => cleanName(a.name).localeCompare(cleanName(b.name)));
+      // Cache de fondos de show para el roster
+      const showBgCache = {};
+      await Promise.all(store.shows.map(async s => {
+        showBgCache[s.id] = await getImageFromDB('show_bg_' + s.id);
+      }));
       const rosterCards = await Promise.all(filtered.map(async r => {
         const img = await getImageFromDB('wrestler_' + r.id);
         const brands = r.brands || (r.brand ? [r.brand] : []);
@@ -2033,7 +2045,15 @@
           else titleBadges += `<span class="tag tag-champ">🏆</span>`;
         }
         const avatar = img ? `<img src="${img}" class="wrestler-avatar" onerror="handleImgError(this)">` : `<div class="wrestler-avatar-placeholder">👤</div>`;
-        return `<div class="card" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
+        // FIX: restaurar imagen de fondo del show en la celda del roster
+        let bgStyle = '';
+        if (brands.length > 0) {
+          const showObj = store.shows.find(s => s.name === brands[0]);
+          if (showObj && showBgCache[showObj.id]) {
+            bgStyle = `background-image:url('${showBgCache[showObj.id]}');`;
+          }
+        }
+        return `<div class="card" style="${bgStyle}" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
       }));
       document.getElementById('list-roster').innerHTML = rosterCards.length ? rosterCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay luchadores.</p>`;
       const showCards = await Promise.all(store.shows.map(async s => {
