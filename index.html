@@ -417,6 +417,142 @@
       font-weight: bold;
       letter-spacing: 0.3px;
     }
+
+    /* ===== CARTELERA PASADA (resultados) ===== */
+    .past-match-card {
+      background: linear-gradient(160deg, #1a1a1a 0%, #121212 100%);
+      border: 1px solid #444;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.55);
+    }
+    .past-match-header {
+      text-align: center;
+      padding: 12px 10px 8px;
+      background: linear-gradient(90deg, #1f1f1f, #2a1a1a, #1f1f1f);
+      border-bottom: 1px solid #333;
+    }
+    .past-match-type {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #e0e0e0;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+    .past-match-title-gold {
+      display: block;
+      margin-top: 6px;
+      font-size: 0.88rem;
+      font-weight: 900;
+      color: var(--gold-end);
+      text-shadow: 0 0 10px rgba(255,215,0,0.45);
+      letter-spacing: 0.4px;
+    }
+    .past-match-body {
+      display: flex;
+      align-items: stretch;
+      min-height: 140px;
+    }
+    .past-side {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 6px;
+      position: relative;
+    }
+    .past-side.left { background: linear-gradient(90deg, rgba(46,125,50,0.12), transparent); }
+    .past-side.right { background: linear-gradient(270deg, rgba(198,40,40,0.12), transparent); }
+    .past-side-imgs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      max-width: 100%;
+    }
+    .past-wrestler-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      width: 72px;
+    }
+    .past-wrestler-img {
+      width: 68px;
+      height: 90px;
+      object-fit: cover;
+      object-position: top center;
+      border-radius: 6px;
+      border: 2px solid #444;
+      background: #222;
+    }
+    .past-wrestler-img.winner-border {
+      border-color: #4caf50;
+      box-shadow: 0 0 10px rgba(76,175,80,0.55);
+    }
+    .past-winner-label {
+      font-size: 0.58rem;
+      font-weight: 900;
+      color: #4caf50;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(20,40,20,0.9);
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #4caf50;
+    }
+    .past-wrestler-name {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-align: center;
+      color: #eee;
+      line-height: 1.15;
+      max-width: 72px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .past-vs {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 4px;
+      min-width: 36px;
+      background: #0d0d0d;
+      border-left: 1px solid #333;
+      border-right: 1px solid #333;
+    }
+    .past-vs-text {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--accent);
+      text-shadow: 0 0 8px rgba(229,9,20,0.5);
+    }
+    .past-match-names {
+      text-align: center;
+      padding: 10px 12px 14px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.3px;
+      border-top: 1px solid #333;
+      background: #161616;
+    }
+    .past-promo-card {
+      background: #1a1a1a;
+      border: 1px solid #444;
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      margin-bottom: 16px;
+      color: var(--text-dim);
+      font-size: 0.95rem;
+    }
+    .modal-box.wide { max-width: 560px; }
   </style>
 </head>
 <body>
@@ -492,16 +628,23 @@
     <div id="list-titles"></div>
   </div>
 
-  <!-- TAB CARTELERA DE HOY -->
+  <!-- TAB CARTELERA DE HOY (sin historial al final) -->
   <div id="tab-matches" class="tab-content">
     <div id="today-card-header" style="margin-bottom:14px; font-weight:bold; color:var(--gold-end); font-size:1.15rem;"></div>
     <div id="today-slots-container"></div>
     <button id="btn-finalize-card" class="btn-finalize" style="display:none;" onclick="finalizeTodayCard()">🔒 Finalizar Parrilla</button>
     <button id="btn-next-show" class="btn-next-show" style="display:none;" onclick="goToNextShow()">⏭ Siguiente Show</button>
-    
-    <hr style="border-color:var(--border); margin:24px 0;">
-    <h3 style="font-size:0.9rem; color:var(--text-dim); margin-bottom:8px;">Historial de combates</h3>
-    <div id="list-matches"></div>
+  </div>
+
+  <!-- MODAL RESULTADOS DE EVENTO PASADO -->
+  <div id="modal-past-event" class="modal-overlay">
+    <div class="modal-box wide">
+      <div class="modal-header">
+        <span class="modal-title" id="past-event-title">Cartelera</span>
+        <button class="modal-close" onclick="closePastEventModal()">✕</button>
+      </div>
+      <div id="past-event-body"></div>
+    </div>
   </div>
 
   <!-- MODAL TÍTULOS -->
@@ -927,6 +1070,66 @@
       return clean.join(' vs ');
     }
 
+    /** Divide participantes en lado izquierdo / derecho según tipo de combate.
+        Si número impar: ganador a la izquierda, resto a la derecha. */
+    function splitSides(participants, matchType, subType, winnerName) {
+      const ids = (participants || []).filter(Boolean);
+      const sub = (subType || '').toLowerCase();
+      const type = (matchType || '').toLowerCase();
+      let left = [], right = [];
+
+      const isTeamSplit =
+        sub.includes('2 contra 2') || sub.includes('2 vs 2') ||
+        sub.includes('3 contra 3') || sub.includes('3 vs 3') ||
+        sub.includes('4 contra 4') || sub.includes('4 vs 4') ||
+        sub.includes('1 contra 2') || sub.includes('1 vs 2') ||
+        sub.includes('1 contra 3') || sub.includes('1 vs 3') ||
+        sub.includes('2 contra 3') || sub.includes('2 vs 3') ||
+        type === 'reglas de bloodline' || type === 'wargames';
+
+      if (isTeamSplit) {
+        if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) {
+          left = ids.slice(0, 1);
+          right = ids.slice(1, 3);
+        } else if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) {
+          left = ids.slice(0, 1);
+          right = ids.slice(1, 4);
+        } else if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) {
+          left = ids.slice(0, 2);
+          right = ids.slice(2, 5);
+        } else if (sub.includes('3 contra 3') || sub.includes('3 vs 3') || type === 'wargames') {
+          left = ids.slice(0, 3);
+          right = ids.slice(3, 6);
+        } else if (sub.includes('4 contra 4') || sub.includes('4 vs 4') || type === 'reglas de bloodline') {
+          left = ids.slice(0, 4);
+          right = ids.slice(4, 8);
+        } else {
+          // 2 vs 2 genérico
+          left = ids.slice(0, Math.ceil(ids.length / 2));
+          right = ids.slice(Math.ceil(ids.length / 2));
+        }
+      } else if (ids.length === 2) {
+        left = [ids[0]];
+        right = [ids[1]];
+      } else if (ids.length % 2 === 1 && winnerName) {
+        // Impar: ganador a la izquierda
+        const winnerW = store.roster.find(r => r.name === winnerName);
+        const winnerId = winnerW ? winnerW.id : null;
+        if (winnerId && ids.includes(winnerId)) {
+          left = [winnerId];
+          right = ids.filter(id => id !== winnerId);
+        } else {
+          left = [ids[0]];
+          right = ids.slice(1);
+        }
+      } else {
+        const mid = Math.ceil(ids.length / 2);
+        left = ids.slice(0, mid);
+        right = ids.slice(mid);
+      }
+      return { left, right };
+    }
+
     // ========== CORE ==========
     let db;
     const request = indexedDB.open("UniversoTrackerDB", 2);
@@ -1111,6 +1314,23 @@
     }
 
     // ========== CALENDAR ==========
+    function isEventPast(dayInView, showNumber, showName) {
+      const curM = store.calendar.currentMonthIndex || 0;
+      const curD = store.calendar.currentDay || 1;
+      const viewM = store.calendar.currentMonthIndex || 0; // el mes que se está mirando es el currentMonthIndex
+      // Un evento del mes actual es pasado si day < currentDay
+      // Un evento de un mes anterior (al navegar hacia atrás) también es pasado respecto al "hoy" del universo,
+      // pero currentMonthIndex es el mes que se visualiza. Al ir a meses previos, currentDay se resetea a 1,
+      // así que usamos comparación por show label en matches.
+      const label = showNumber != null ? `${showName} #${showNumber}` : showName;
+      const hasMatches = store.matches.some(m => m.show === label || m.eventKey === label);
+      // Si el día del badge es anterior al currentDay del universo en el mismo mes visualizado,
+      // o si ya existen matches para ese show# → considerado disputado.
+      if (hasMatches) return true;
+      if (dayInView < curD && viewM === curM) return true;
+      return false;
+    }
+
     function renderCalendar() {
       const startMonth = store.calendar.startMonth || 0;
       const currentMonthIndex = store.calendar.currentMonthIndex || 0;
@@ -1135,11 +1355,25 @@
         let cellEventsHTML = '';
         dayShows.forEach(s => {
           globalShowCounts[s.id]++;
-          cellEventsHTML += `<div class="cell-event-badge" style="background:${s.color};" onclick="openShowModal('${s.id}')">${s.name} #${globalShowCounts[s.id]}</div>`;
+          const num = globalShowCounts[s.id];
+          const label = `${s.name} #${num}`;
+          const past = store.matches.some(m => m.show === label || (m.eventName === s.name && m.showNumber === num));
+          if (past) {
+            cellEventsHTML += `<div class="cell-event-badge" style="background:${s.color};" onclick="openPastEvent('${s.name.replace(/'/g, "\\'")}', ${num})">${s.name} #${num}</div>`;
+          } else {
+            cellEventsHTML += `<div class="cell-event-badge" style="background:${s.color};" onclick="openShowModal('${s.id}')">${s.name} #${num}</div>`;
+          }
         });
         const ppvKey = `Y${yearDisplay}_M${monthDisplayIndex}_D${day}`;
         const ppv = store.calendar.ppvs[ppvKey];
-        if (ppv) cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openCalendarEditModal(${day}, 'ple')">🏆 ${ppv.name}</div>`;
+        if (ppv) {
+          const pastPle = store.matches.some(m => m.show === ppv.name || m.eventName === ppv.name);
+          if (pastPle) {
+            cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openPastEvent('${ppv.name.replace(/'/g, "\\'")}', null)">🏆 ${ppv.name}</div>`;
+          } else {
+            cellEventsHTML += `<div class="cell-event-badge" style="background:${ppv.color || '#ffd700'}; color:#000;" onclick="openCalendarEditModal(${day}, 'ple')">🏆 ${ppv.name}</div>`;
+          }
+        }
         const isCurrent = day === (store.calendar.currentDay || 1);
         html += `<div class="calendar-cell ${ppv || isCurrent ? 'has-event' : ''}" style="${isCurrent ? 'outline:2px solid var(--gold-end);' : ''}">
           <span class="cell-day-num">Día ${day}${isCurrent ? ' ●' : ''}</span>
@@ -1157,6 +1391,94 @@
       store.calendar.currentMonthIndex++;
       store.calendar.currentDay = 1;
       saveData();
+    }
+
+    // ========== PAST EVENT RESULTS ==========
+    async function openPastEvent(eventName, showNumber) {
+      const label = showNumber != null ? `${eventName} #${showNumber}` : eventName;
+      const matches = store.matches.filter(m =>
+        m.show === label ||
+        (m.eventName === eventName && (showNumber == null || m.showNumber === showNumber))
+      );
+      document.getElementById('past-event-title').innerText = `📺 ${label}`;
+      const body = document.getElementById('past-event-body');
+
+      if (!matches.length) {
+        body.innerHTML = '<p style="color:var(--text-dim); text-align:center;">No hay combates registrados para este evento.</p>';
+        document.getElementById('modal-past-event').classList.add('active');
+        return;
+      }
+
+      const cards = await Promise.all(matches.map(async m => {
+        if (m.card === '🎤 Promo' || m.winner === 'Promo') {
+          return `<div class="past-promo-card">🎤 Segmento de promo</div>`;
+        }
+
+        const parts = m.participants || [];
+        const { left, right } = splitSides(parts, m.matchType, m.subType, m.winner);
+        const winnerName = m.winner || '';
+
+        async function sideHTML(ids, sideClass) {
+          const wraps = await Promise.all(ids.map(async id => {
+            const w = store.roster.find(r => r.id == id);
+            const name = w ? w.name : '?';
+            const img = w ? await getImageFromDB('wrestler_' + w.id) : null;
+            const isWinner = winnerName && name === winnerName;
+            const imgTag = img
+              ? `<img src="${img}" class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" alt="${name}">`
+              : `<div class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;">👤</div>`;
+            return `<div class="past-wrestler-wrap">
+              ${isWinner ? '<span class="past-winner-label">GANADOR</span>' : '<span style="height:16px;"></span>'}
+              ${imgTag}
+              <span class="past-wrestler-name">${name}</span>
+            </div>`;
+          }));
+          return `<div class="past-side ${sideClass}"><div class="past-side-imgs">${wraps.join('')}</div></div>`;
+        }
+
+        const leftH = await sideHTML(left, 'left');
+        const rightH = await sideHTML(right, 'right');
+
+        let typeLine = m.matchType || '';
+        if (m.subType) typeLine += (typeLine ? ' · ' : '') + m.subType;
+        if (m.matchType === '3 Stages of Hell' && m.stages) {
+          const st = (m.stages || []).filter(Boolean).join(' → ');
+          if (st) typeLine += (typeLine ? ' · ' : '') + st;
+        }
+
+        let titleGold = '';
+        if (m.titleId) {
+          const t = store.titles.find(tt => tt.id === m.titleId);
+          if (t) titleGold = `<span class="past-match-title-gold">🏆 ${t.name}</span>`;
+        }
+
+        const namesLine = formatMatchSummary(
+          parts.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; }),
+          m.matchType,
+          m.subType
+        );
+
+        return `
+          <div class="past-match-card">
+            <div class="past-match-header">
+              <div class="past-match-type">${typeLine || 'Combate'}</div>
+              ${titleGold}
+            </div>
+            <div class="past-match-body">
+              ${leftH}
+              <div class="past-vs"><span class="past-vs-text">v</span></div>
+              ${rightH}
+            </div>
+            <div class="past-match-names">${namesLine}</div>
+          </div>
+        `;
+      }));
+
+      body.innerHTML = cards.join('');
+      document.getElementById('modal-past-event').classList.add('active');
+    }
+    function closePastEventModal() {
+      document.getElementById('modal-past-event').classList.remove('active');
     }
 
     // ========== PLE / SHOW MODALS ==========
@@ -1785,21 +2107,16 @@
       const slot = store.todayCard.slots[idx];
       slot.titleId = titleId ? parseInt(titleId) : null;
 
-      // Auto-rellenar campeones en las ÚLTIMAS casillas
       if (slot.titleId) {
         const title = store.titles.find(t => t.id === slot.titleId);
         if (title && title.champions && title.champions.length > 0) {
           const numNeeded = slot.participants ? slot.participants.length : 2;
           const newParts = Array(numNeeded).fill(null);
           const champs = title.champions.slice(0, numNeeded);
-
-          // Colocar campeones al final
           const startIdx = numNeeded - champs.length;
           champs.forEach((cId, i) => {
             newParts[startIdx + i] = cId;
           });
-
-          // Conservar participantes ya elegidos que no sean campeones, en slots libres (del principio)
           const existing = (slot.participants || []).filter(p => p && !title.champions.includes(p));
           let ei = 0;
           for (let i = 0; i < newParts.length; i++) {
@@ -1948,7 +2265,6 @@
     function finalizeTodayCard() {
       if (store.todayCard.locked) return;
 
-      // Validaciones
       for (const slot of store.todayCard.slots) {
         if (slot.type === 'combate' && slot.matchType === "Árbitro especial invitado" && !slot.specialReferee) {
           alert("⚠️ Debes elegir un Árbitro Especial en todos los combates de tipo «Árbitro especial invitado».");
@@ -1976,7 +2292,12 @@
               card: '🎤 Promo',
               winner: 'Promo',
               titleId: null,
-              isDefense: false
+              isDefense: false,
+              eventName: store.todayCard.eventName,
+              showNumber: store.todayCard.showNumber,
+              participants: [],
+              matchType: null,
+              subType: null
             });
             slot.matchId = matchId;
           } else if (slot.type === 'combate' && slot.matchType) {
@@ -2012,7 +2333,15 @@
               card: cardText,
               winner: 'Pendiente',
               titleId: titleId,
-              isDefense: !!titleId
+              isDefense: !!titleId,
+              // datos estructurados para la cartelera pasada
+              eventName: store.todayCard.eventName,
+              showNumber: store.todayCard.showNumber,
+              matchType: slot.matchType,
+              subType: slot.subType || null,
+              stages: slot.stages ? [...slot.stages] : null,
+              participants: (slot.participants || []).filter(Boolean),
+              specialReferee: slot.specialReferee || null
             });
             slot.matchId = matchId;
             slot.winner = '';
@@ -2267,12 +2596,7 @@
       }));
       document.getElementById('list-titles').innerHTML = titleCards.length ? titleCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay campeonatos.</p>`;
 
-      // Historial matches
-      document.getElementById('list-matches').innerHTML = store.matches.map(m => {
-        const title = store.titles.find(t => t.id === m.titleId);
-        const badge = title ? `<span class="tag tag-champ" style="margin-left:5px;">🏆 ${title.name}</span>` : '';
-        return `<div class="card" style="cursor:default; padding:12px;"><div class="card-info"><span class="card-title">${m.card} ${badge}</span><span class="card-sub">📌 ${m.show} | 👑 ${m.winner}</span></div><button class="btn-del" onclick="deleteItem('matches', ${m.id}, event)">✕</button></div>`;
-      }).join('');
+      // Ya no se renderiza historial de combates en Cartelera de hoy
 
       if (document.getElementById('tab-matches').classList.contains('active')) renderTodayCard();
     }
