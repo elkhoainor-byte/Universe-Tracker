@@ -146,8 +146,6 @@
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     .modal-title { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
     .modal-close { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; }
-    .modal-edit-btn { background: none; border: none; color: var(--text-dim); font-size: 1.25rem; cursor: pointer; padding: 4px 8px; }
-    .modal-edit-btn:hover { color: var(--accent); }
     
     .stats-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
     .stat-card { background: #2a2a2a; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
@@ -176,7 +174,6 @@
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 15px; }
     .calendar-day-header { text-align: center; font-size: 0.65rem; font-weight: bold; color: var(--text-dim); padding: 5px 0; background: #1a1a1a; border-radius: 4px; border: 1px solid var(--border); }
     
-    /* Celdas del calendario con degradado y logos */
     .calendar-cell { 
       background: var(--card-bg); 
       border: 1px solid var(--border); 
@@ -226,7 +223,6 @@
     .edit-tab-btn { flex: 1; padding: 8px; background: #2a2a2a; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
     .edit-tab-btn.active { background: var(--accent); border-color: var(--accent); }
 
-    /* ===== CARTELERA DE HOY ===== */
     .card-slot {
       background: linear-gradient(145deg, #1c1c1c 0%, #161616 100%);
       border: 1px solid #3a3a3a;
@@ -492,7 +488,6 @@
       letter-spacing: 0.3px;
     }
 
-    /* ===== CARTELERA PASADA ===== */
     .past-match-card {
       background: linear-gradient(160deg, #1a1a1a 0%, #121212 100%);
       border: 1px solid #444;
@@ -628,21 +623,76 @@
     }
     .modal-box.wide { max-width: 560px; }
 
-    /* ===== FICHA TÉCNICA (VISTA) ===== */
-    .profile-hero-photo-wrap {
-      width: 100%;
-      height: 220px;
+    /* ===== FICHA TÉCNICA LUCHADOR ===== */
+    .modal-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-edit-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 4px 6px;
+      line-height: 1;
+    }
+    .modal-edit-btn:hover { color: var(--accent); }
+
+    .ficha-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+    .ficha-photo {
+      width: 140px;
+      height: 180px;
+      object-fit: cover;
+      object-position: top center;
       border-radius: 10px;
-      overflow: hidden;
-      background: #2a2a2a;
-      border: 1px solid var(--border);
+      border: 2px solid var(--border);
+      background: #222;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    .ficha-photo-placeholder {
+      width: 140px;
+      height: 180px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: #222;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 3rem;
+      color: var(--text-dim);
     }
-    .profile-hero-photo { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
-    .profile-hero-photo-placeholder { font-size: 3.5rem; color: var(--text-dim); }
-    .profile-hero-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; margin-bottom: 4px; }
+    .ficha-name {
+      font-size: 1.35rem;
+      font-weight: 900;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+    .ficha-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      max-width: 100%;
+    }
+    .ficha-section-title {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -883,9 +933,45 @@
           <div id="modal-avatar-container"></div>
           <span class="modal-title" id="modal-wrestler-title">Ficha de Luchador</span>
         </div>
-        <button class="modal-close" onclick="closeWrestlerModal()">✕</button>
+        <div class="modal-header-actions">
+          <button type="button" class="modal-edit-btn" id="btn-edit-wrestler" style="display:none;" onclick="enterWrestlerEditMode()" title="Editar">✏️</button>
+          <button class="modal-close" onclick="closeWrestlerModal()">✕</button>
+        </div>
       </div>
-      <form id="form-edit-wrestler" style="margin-bottom:0;">
+
+      <!-- VISTA FICHA TÉCNICA -->
+      <div id="wrestler-view-panel" style="display:none; flex-direction:column; gap:14px;">
+        <div class="ficha-hero">
+          <div id="ficha-photo-container"></div>
+          <div class="ficha-name" id="ficha-name"></div>
+          <div class="ficha-tags" id="ficha-tags"></div>
+        </div>
+        <div>
+          <span class="ficha-section-title">Récord global</span>
+          <div class="stats-summary">
+            <div class="stat-card"><div class="stat-val" id="stat-wins" style="color:#4caf50;">0</div><div class="stat-lbl">Victorias</div></div>
+            <div class="stat-card"><div class="stat-val" id="stat-losses" style="color:#f44336;">0</div><div class="stat-lbl">Derrotas</div></div>
+            <div class="stat-card"><div class="stat-val" id="stat-draws" style="color:#ffeb3b;">0</div><div class="stat-lbl">Emp/Pend</div></div>
+          </div>
+        </div>
+        <div>
+          <span class="ficha-section-title">🏆 Historial de títulos</span>
+          <div id="wrestler-titles-history" style="max-height:140px; overflow-y:auto; background:#1a1a1a; padding:8px; border-radius:6px; border:1px solid var(--border);"></div>
+        </div>
+        <div class="h2h-section">
+          <span class="h2h-header">⚔️ Comparador Head-to-Head (H2H)</span>
+          <select id="h2h-opponent" onchange="renderH2H()"><option value="">-- Selecciona un rival --</option></select>
+          <div id="h2h-result" style="font-size:0.85rem; color:var(--text-dim); text-align:center;">Selecciona un rival para ver el historial cara a cara.</div>
+        </div>
+        <div>
+          <span class="ficha-section-title">Historial de combates</span>
+          <div id="wrestler-history-list"></div>
+        </div>
+        <button type="button" class="btn-dismiss" onclick="dismissCurrentWrestler()">Despedir luchador</button>
+      </div>
+
+      <!-- FORMULARIO EDICIÓN / ALTA -->
+      <form id="form-edit-wrestler" style="margin-bottom:0; display:none; flex-direction:column; gap:8px;">
         <label style="font-size:0.75rem; color:var(--text-dim);">DATOS GENERALES</label>
         <input type="text" id="edit-name" placeholder="Nombre" autocapitalize="words" required>
         <label style="font-size:0.75rem; color:var(--text-dim);">IMAGEN DE FOTO:</label>
@@ -920,31 +1006,8 @@
         <label style="font-size:0.75rem; color:var(--text-dim);">TAG TEAM / EQUIPO</label>
         <select id="edit-team"><option value="">-- Ninguno --</option></select>
         <button type="submit" id="btn-save-wrestler" class="btn-add" style="background:#2e7d32;">Guardar Cambios</button>
+        <button type="button" class="btn-dismiss" id="btn-cancel-edit-wrestler" style="display:none; margin-top:8px;" onclick="cancelWrestlerEdit()">Cancelar edición</button>
       </form>
-      <div id="modal-extra-stats">
-        <div style="margin-bottom:12px;">
-          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">RÉCORD GLOBAL</label>
-          <div class="stats-summary">
-            <div class="stat-card"><div class="stat-val" id="stat-wins" style="color:#4caf50;">0</div><div class="stat-lbl">Victorias</div></div>
-            <div class="stat-card"><div class="stat-val" id="stat-losses" style="color:#f44336;">0</div><div class="stat-lbl">Derrotas</div></div>
-            <div class="stat-card"><div class="stat-val" id="stat-draws" style="color:#ffeb3b;">0</div><div class="stat-lbl">Emp/Pend</div></div>
-          </div>
-        </div>
-        <div style="margin-bottom:12px;">
-          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">🏆 HISTORIAL DE TÍTULOS</label>
-          <div id="wrestler-titles-history" style="max-height:140px; overflow-y:auto; background:#1a1a1a; padding:8px; border-radius:6px; border:1px solid var(--border);"></div>
-        </div>
-        <div class="h2h-section" style="margin-bottom:12px;">
-          <span class="h2h-header">⚔️ COMPARADOR HEAD-TO-HEAD (H2H)</span>
-          <select id="h2h-opponent" onchange="renderH2H()"><option value="">-- Selecciona un rival --</option></select>
-          <div id="h2h-result" style="font-size:0.85rem; color:var(--text-dim); text-align:center;">Selecciona un rival para ver el historial cara a cara.</div>
-        </div>
-        <div>
-          <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:6px;">HISTORIAL DE COMBATES</label>
-          <div id="wrestler-history-list"></div>
-        </div>
-        <button type="button" class="btn-dismiss" onclick="dismissCurrentWrestler()">Despedir luchador</button>
-      </div>
     </div>
   </div>
 
@@ -968,7 +1031,8 @@
     <button onclick="switchTab('titles', this)">Títulos</button>
     <button onclick="switchTab('matches', this)">Cartelera de hoy</button>
   </nav>
-    <script>
+
+<script>
     // ========== MATCH TYPE DEFINITIONS ==========
     const STAGES_OF_HELL_OPTIONS = [
       "Normal", "Extreme Rules", "Inferno", "I Quit", "Contenedor",
@@ -1055,40 +1119,28 @@
 
     const MATCH_TYPE_LIST = Object.keys(MATCH_TYPES);
 
-    // ========== DEFAULT PLEs (plantillas anuales) ==========
     const DEFAULT_PLE_TEMPLATES = [
-      // Mayo (4)
       { month: 4, day: 13, name: "Backlash", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
       { month: 4, day: 27, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
       { month: 4, day: 28, name: "NXT Battleground", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
-      // Junio (5)
       { month: 5, day: 6,  name: "Money in the Bank", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
       { month: 5, day: 27, name: "Night of Champions", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
-      // Julio (6)
       { month: 6, day: 13, name: "NXT Great American Bash", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
       { month: 6, day: 13, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
       { month: 6, day: 14, name: "Evolution", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#9c27b0" },
-      // Agosto (7)
       { month: 7, day: 6,  name: "SummerSlam", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ff9800" },
       { month: 7, day: 7,  name: "SummerSlam", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ff9800" },
       { month: 7, day: 27, name: "Clash in Paris", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#2196f3" },
-      // Septiembre (8)
       { month: 8, day: 20, name: "Wrestlepalooza", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
       { month: 8, day: 28, name: "NXT No Mercy", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
-      // Octubre (9)
       { month: 9, day: 13, name: "Crown Jewel", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
       { month: 9, day: 28, name: "NXT Halloween Havoc", brands: ["NXT"], parrillas: 7, color: "#ff5722" },
-      // Noviembre (10)
       { month: 10, day: 27, name: "Survivor Series", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#b71c1c" },
-      // Diciembre (11)
       { month: 11, day: 7,  name: "NXT Deadline", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
-      // Enero (0)
       { month: 0, day: 20, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
       { month: 0, day: 27, name: "Royal Rumble", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
-      // Febrero (1)
       { month: 1, day: 13, name: "NXT Vengeance Day", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
       { month: 1, day: 27, name: "Elimination Chamber", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#607d8b" },
-      // Marzo (2)
       { month: 2, day: 20, name: "NXT STAND & DELIVER", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
       { month: 2, day: 20, name: "WRESTLEMANIA", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
       { month: 2, day: 21, name: "WRESTLEMANIA", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" }
@@ -1256,7 +1308,6 @@
     if (!store.todayCard) store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
     store.shows.forEach(s => { if (s.parrillas === undefined) s.parrillas = 6; });
 
-    // Normalizar ppvs antiguos (objeto único → array)
     Object.keys(store.calendar.ppvs).forEach(k => {
       const v = store.calendar.ppvs[k];
       if (v && !Array.isArray(v)) store.calendar.ppvs[k] = [v];
@@ -1264,6 +1315,7 @@
 
     let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
     let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
+    let wrestlerModalMode = 'view';
 
     function handleImgError(img) {
       img.onerror = null;
@@ -1311,20 +1363,14 @@
       switchTab('roster', document.getElementById('nav-btn-roster'));
     }
 
-    // ========== DEFAULT PLEs ==========
     function ensureDefaultPPVsForYear(yearDisplay) {
       DEFAULT_PLE_TEMPLATES.forEach(tpl => {
         const key = `Y${yearDisplay}_M${tpl.month}_D${tpl.day}`;
-        if (!store.calendar.ppvs[key]) {
-          store.calendar.ppvs[key] = [];
-        }
+        if (!store.calendar.ppvs[key]) store.calendar.ppvs[key] = [];
         const exists = store.calendar.ppvs[key].some(e => e.name === tpl.name);
         if (!exists) {
           store.calendar.ppvs[key].push({
-            name: tpl.name,
-            color: tpl.color,
-            brands: [...tpl.brands],
-            parrillas: tpl.parrillas
+            name: tpl.name, color: tpl.color, brands: [...tpl.brands], parrillas: tpl.parrillas
           });
         }
       });
@@ -1393,7 +1439,7 @@
       return true;
     }
 
-    // ========== CALENDAR (con logos + degradado) ==========
+    // ========== CALENDAR ==========
     async function renderCalendar() {
       const startMonth = store.calendar.startMonth || 0;
       const currentMonthIndex = store.calendar.currentMonthIndex || 0;
@@ -1401,8 +1447,6 @@
       const monthDisplayIndex = absoluteMonth % 12;
       const yearDisplay = Math.floor(absoluteMonth / 12) + 1;
       document.getElementById('calendar-month-year-display').innerText = `Año ${yearDisplay} - ${MONTH_NAMES[monthDisplayIndex]}`;
-
-      // Asegurar PLEs por defecto para este año
       ensureDefaultPPVsForYear(yearDisplay);
 
       const globalShowCounts = {};
@@ -1414,7 +1458,6 @@
         }
       }
 
-      // Precargar logos de shows
       const logoCache = {};
       await Promise.all(store.shows.map(async s => {
         logoCache[s.id] = await getImageFromDB('show_logo_' + s.id);
@@ -1427,7 +1470,6 @@
         let cellEventsHTML = '';
         let gradientColor = null;
 
-        // Shows semanales
         dayShows.forEach(s => {
           globalShowCounts[s.id]++;
           const num = globalShowCounts[s.id];
@@ -1442,7 +1484,6 @@
           }
         });
 
-        // PLEs (pueden ser varios el mismo día)
         const ppvKey = `Y${yearDisplay}_M${monthDisplayIndex}_D${day}`;
         const ppvs = store.calendar.ppvs[ppvKey] || [];
         ppvs.forEach(ppv => {
@@ -1636,7 +1677,6 @@
       const brands = Array.from(document.querySelectorAll('#cal-ple-brands-container input:checked')).map(cb => cb.value);
       const key = getCurrentPPVKey(day);
       if (!store.calendar.ppvs[key]) store.calendar.ppvs[key] = [];
-      // Actualizar el primero o añadir nuevo
       if (store.calendar.ppvs[key].length > 0) {
         store.calendar.ppvs[key][0] = { name, color, brands, parrillas };
       } else {
@@ -1892,7 +1932,7 @@
       const ppvKey = `Y${yearDisplay}_M${monthDisplayIndex}_D${day}`;
       const ppvs = store.calendar.ppvs[ppvKey] || [];
       if (ppvs.length > 0) {
-        const ppv = ppvs[0]; // Tomamos el primero si hay varios
+        const ppv = ppvs[0];
         return {
           type: 'ple',
           name: ppv.name,
@@ -2443,44 +2483,138 @@
       const wrestler = store.roster.find(r => r.id === activeWrestlerId);
       if (wrestler) showConfirmModal(`¿Despedir a ${wrestler.name}?`, () => { deleteItem('roster', activeWrestlerId); closeWrestlerModal(); });
     }
+
+    function setWrestlerModalMode(mode) {
+      wrestlerModalMode = mode;
+      const viewPanel = document.getElementById('wrestler-view-panel');
+      const form = document.getElementById('form-edit-wrestler');
+      const btnEdit = document.getElementById('btn-edit-wrestler');
+      const btnCancel = document.getElementById('btn-cancel-edit-wrestler');
+      const avatarHeader = document.getElementById('modal-avatar-container');
+
+      if (mode === 'view') {
+        viewPanel.style.display = 'flex';
+        form.style.display = 'none';
+        btnEdit.style.display = 'block';
+        btnCancel.style.display = 'none';
+        avatarHeader.style.display = 'none';
+      } else if (mode === 'edit') {
+        viewPanel.style.display = 'none';
+        form.style.display = 'flex';
+        btnEdit.style.display = 'none';
+        btnCancel.style.display = 'block';
+        avatarHeader.style.display = 'block';
+      } else {
+        viewPanel.style.display = 'none';
+        form.style.display = 'flex';
+        btnEdit.style.display = 'none';
+        btnCancel.style.display = 'none';
+        avatarHeader.style.display = 'block';
+      }
+    }
+
+    function enterWrestlerEditMode() {
+      if (activeWrestlerId === null) return;
+      setWrestlerModalMode('edit');
+      document.getElementById('modal-wrestler-title').innerText = 'Editar Luchador';
+    }
+
+    function cancelWrestlerEdit() {
+      if (activeWrestlerId === null) {
+        closeWrestlerModal();
+        return;
+      }
+      openWrestlerModal(activeWrestlerId);
+    }
+
     async function openWrestlerModal(id = null) {
       activeWrestlerId = id;
       const avatarContainer = document.getElementById('modal-avatar-container');
-      const extraStats = document.getElementById('modal-extra-stats');
       const btnSave = document.getElementById('btn-save-wrestler');
       document.getElementById('edit-image-file').value = '';
-      document.getElementById('edit-brands-container').innerHTML = store.shows.map(s => `<label class="option-checkbox-item"><input type="checkbox" value="${s.name}"> ${s.name}</label>`).join('');
+      document.getElementById('edit-brands-container').innerHTML = store.shows.map(s =>
+        `<label class="option-checkbox-item"><input type="checkbox" value="${s.name}"> ${s.name}</label>`
+      ).join('');
+
       if (id === null) {
+        setWrestlerModalMode('add');
         document.getElementById('modal-wrestler-title').innerText = 'Añadir Luchador';
         document.getElementById('edit-name').value = '';
         avatarContainer.innerHTML = `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; border-radius:50%; font-size:1rem;">👤</div>`;
         document.querySelectorAll('#edit-brands-container input').forEach((cb, idx) => cb.checked = idx === 0);
-        setRadioValue('edit-alignment', 'Face'); setRadioValue('edit-gender', 'Men'); setRadioValue('edit-division', 'Midcarder');
-        document.getElementById('edit-team').innerHTML = `<option value="">-- Ninguno --</option>` + store.teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-        btnSave.innerText = 'Añadir a Roster'; btnSave.style.background = 'var(--accent)';
-        extraStats.style.display = 'none';
+        setRadioValue('edit-alignment', 'Face');
+        setRadioValue('edit-gender', 'Men');
+        setRadioValue('edit-division', 'Midcarder');
+        document.getElementById('edit-team').innerHTML = `<option value="">-- Ninguno --</option>` +
+          store.teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        btnSave.innerText = 'Añadir a Roster';
+        btnSave.style.background = 'var(--accent)';
       } else {
         const wrestler = store.roster.find(r => r.id === id);
         if (!wrestler) return;
-        document.getElementById('modal-wrestler-title').innerText = wrestler.name;
+
+        setWrestlerModalMode('view');
+        document.getElementById('modal-wrestler-title').innerText = 'Ficha Técnica';
         document.getElementById('edit-name').value = wrestler.name;
+
         const base64Img = await getImageFromDB('wrestler_' + wrestler.id);
-        avatarContainer.innerHTML = base64Img ? `<img src="${base64Img}" class="wrestler-avatar" style="width:40px; height:40px; border-radius:50%;">` : `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; border-radius:50%; font-size:1rem;">👤</div>`;
-        const wrestlerBrands = wrestler.brands || (wrestler.brand ? [wrestler.brand] : []);
-        document.querySelectorAll('#edit-brands-container input').forEach(cb => cb.checked = wrestlerBrands.includes(cb.value));
+
+        avatarContainer.innerHTML = base64Img
+          ? `<img src="${base64Img}" class="wrestler-avatar" style="width:40px; height:40px; border-radius:50%;">`
+          : `<div class="wrestler-avatar-placeholder" style="width:40px; height:40px; border-radius:50%; font-size:1rem;">👤</div>`;
+
+        const photoCont = document.getElementById('ficha-photo-container');
+        photoCont.innerHTML = base64Img
+          ? `<img src="${base64Img}" class="ficha-photo" alt="${wrestler.name}">`
+          : `<div class="ficha-photo-placeholder">👤</div>`;
+
+        document.getElementById('ficha-name').innerText = wrestler.name;
+
+        const rBrands = wrestler.brands || (wrestler.brand ? [wrestler.brand] : []);
+        const team = store.teams.find(t => t.id === wrestler.teamId);
+        const isChamp = store.titles.some(t => t.champions && t.champions.includes(wrestler.id));
+        let tagsHTML = '';
+        if (isChamp) tagsHTML += `<span class="tag tag-champ">🏆 CAMPEÓN</span>`;
+        tagsHTML += rBrands.map(b => {
+          const s = store.shows.find(x => x.name.toLowerCase() === b.toLowerCase());
+          return `<span class="tag" style="background:${s ? s.color : 'var(--border)'}; color:#fff;">${b}</span>`;
+        }).join('');
+        tagsHTML += `<span class="tag tag-${(wrestler.alignment || 'face').toLowerCase()}">${wrestler.alignment || 'Face'}</span>`;
+        tagsHTML += `<span class="tag tag-gender">${wrestler.gender || 'Men'}</span>`;
+        tagsHTML += `<span class="tag tag-division">${wrestler.division || 'Midcarder'}</span>`;
+        if (team) tagsHTML += `<span class="tag tag-team">👥 ${team.name}</span>`;
+        document.getElementById('ficha-tags').innerHTML = tagsHTML;
+
+        document.querySelectorAll('#edit-brands-container input').forEach(cb => {
+          cb.checked = rBrands.includes(cb.value);
+        });
         setRadioValue('edit-alignment', wrestler.alignment || 'Face');
         setRadioValue('edit-gender', wrestler.gender || 'Men');
         setRadioValue('edit-division', wrestler.division || 'Midcarder');
-        document.getElementById('edit-team').innerHTML = `<option value="">-- Ninguno --</option>` + store.teams.map(t => `<option value="${t.id}" ${wrestler.teamId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
-        document.getElementById('h2h-opponent').innerHTML = `<option value="">-- Selecciona un rival --</option>` + store.roster.filter(r => r.id !== id).sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name))).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+        document.getElementById('edit-team').innerHTML = `<option value="">-- Ninguno --</option>` +
+          store.teams.map(t => `<option value="${t.id}" ${wrestler.teamId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+
+        document.getElementById('h2h-opponent').innerHTML = `<option value="">-- Selecciona un rival --</option>` +
+          store.roster.filter(r => r.id !== id)
+            .sort((a, b) => cleanName(a.name).localeCompare(cleanName(b.name)))
+            .map(r => `<option value="${r.id}">${r.name}</option>`).join('');
         document.getElementById('h2h-result').innerHTML = 'Selecciona un rival para ver el historial cara a cara.';
-        btnSave.innerText = 'Guardar Cambios'; btnSave.style.background = '#2e7d32';
-        extraStats.style.display = 'block';
+
+        btnSave.innerText = 'Guardar Cambios';
+        btnSave.style.background = '#2e7d32';
+
         updateWrestlerStats(wrestler);
       }
+
       document.getElementById('modal-wrestler').classList.add('active');
     }
-    function closeWrestlerModal() { document.getElementById('modal-wrestler').classList.remove('active'); activeWrestlerId = null; }
+
+    function closeWrestlerModal() {
+      document.getElementById('modal-wrestler').classList.remove('active');
+      activeWrestlerId = null;
+      wrestlerModalMode = 'view';
+    }
+
     document.getElementById('form-edit-wrestler').onsubmit = async (e) => {
       e.preventDefault();
       const newName = document.getElementById('edit-name').value.trim();
@@ -2488,27 +2622,54 @@
       if (checkedBrands.length === 0) { alert("Selecciona al menos una marca."); return; }
       const newTeamId = document.getElementById('edit-team').value ? parseInt(document.getElementById('edit-team').value) : null;
       const fileInput = document.getElementById('edit-image-file');
+
       if (activeWrestlerId === null) {
-        if (store.roster.find(r => r.name.toLowerCase() === newName.toLowerCase()) && !confirm(`Ya existe "${newName}". ¿Añadir de todos modos?`)) return;
+        if (store.roster.find(r => r.name.toLowerCase() === newName.toLowerCase()) &&
+            !confirm(`Ya existe "${newName}". ¿Añadir de todos modos?`)) return;
         const newId = Date.now();
         if (fileInput.files[0]) await saveImageToDB('wrestler_' + newId, await fileToBase64(fileInput.files[0]));
-        store.roster.push({ id: newId, name: newName, brands: checkedBrands, alignment: getRadioValue('edit-alignment') || 'Face', gender: getRadioValue('edit-gender') || 'Men', division: getRadioValue('edit-division') || 'Midcarder', teamId: newTeamId });
-        if (newTeamId) { const t = store.teams.find(t => t.id === newTeamId); if (t && !t.members.includes(newId)) t.members.push(newId); }
+        store.roster.push({
+          id: newId,
+          name: newName,
+          brands: checkedBrands,
+          alignment: getRadioValue('edit-alignment') || 'Face',
+          gender: getRadioValue('edit-gender') || 'Men',
+          division: getRadioValue('edit-division') || 'Midcarder',
+          teamId: newTeamId
+        });
+        if (newTeamId) {
+          const t = store.teams.find(t => t.id === newTeamId);
+          if (t && !t.members.includes(newId)) t.members.push(newId);
+        }
+        saveData();
+        closeWrestlerModal();
       } else {
         const wrestler = store.roster.find(r => r.id === activeWrestlerId);
         if (wrestler) {
-          if (store.roster.find(r => r.id !== activeWrestlerId && r.name.toLowerCase() === newName.toLowerCase()) && !confirm(`Ya existe otro "${newName}". ¿Guardar?`)) return;
+          if (store.roster.find(r => r.id !== activeWrestlerId && r.name.toLowerCase() === newName.toLowerCase()) &&
+              !confirm(`Ya existe otro "${newName}". ¿Guardar?`)) return;
           if (fileInput.files[0]) await saveImageToDB('wrestler_' + wrestler.id, await fileToBase64(fileInput.files[0]));
           const oldTeamId = wrestler.teamId;
-          wrestler.name = newName; wrestler.brands = checkedBrands; wrestler.alignment = getRadioValue('edit-alignment'); wrestler.gender = getRadioValue('edit-gender'); wrestler.division = getRadioValue('edit-division'); wrestler.teamId = newTeamId;
+          wrestler.name = newName;
+          wrestler.brands = checkedBrands;
+          wrestler.alignment = getRadioValue('edit-alignment');
+          wrestler.gender = getRadioValue('edit-gender');
+          wrestler.division = getRadioValue('edit-division');
+          wrestler.teamId = newTeamId;
           if (oldTeamId !== newTeamId) {
-            if (oldTeamId) { const ot = store.teams.find(t => t.id === oldTeamId); if (ot) ot.members = ot.members.filter(m => m !== wrestler.id); }
-            if (newTeamId) { const nt = store.teams.find(t => t.id === newTeamId); if (nt && !nt.members.includes(wrestler.id)) nt.members.push(wrestler.id); }
+            if (oldTeamId) {
+              const ot = store.teams.find(t => t.id === oldTeamId);
+              if (ot) ot.members = ot.members.filter(m => m !== wrestler.id);
+            }
+            if (newTeamId) {
+              const nt = store.teams.find(t => t.id === newTeamId);
+              if (nt && !nt.members.includes(wrestler.id)) nt.members.push(wrestler.id);
+            }
           }
         }
+        saveData();
+        openWrestlerModal(activeWrestlerId);
       }
-      saveData();
-      closeWrestlerModal();
     };
 
     function updateWrestlerStats(wrestler) {
@@ -2522,6 +2683,7 @@
         }
         return m.card.toLowerCase().includes(name);
       }).slice().reverse();
+
       let wins = 0, losses = 0, draws = 0;
       const historyHTML = matches.map(m => {
         const winnerRaw = (m.winner || '').trim();
@@ -2554,10 +2716,14 @@
         }
         return `<div class="match-item ${outcomeClass}"><strong>${m.show}:</strong> ${m.card}<br><span style="color:var(--text-dim); font-size:0.75rem;">Resultado: ${m.winner} (${outcomeLabel})</span></div>`;
       }).join('');
+
       document.getElementById('stat-wins').innerText = wins;
       document.getElementById('stat-losses').innerText = losses;
       document.getElementById('stat-draws').innerText = draws;
-      document.getElementById('wrestler-history-list').innerHTML = matches.length ? historyHTML : `<p style="font-size:0.8rem; color:var(--text-dim);">No hay combates registrados.</p>`;
+      document.getElementById('wrestler-history-list').innerHTML = matches.length
+        ? historyHTML
+        : `<p style="font-size:0.8rem; color:var(--text-dim);">No hay combates registrados.</p>`;
+
       const titleStats = {};
       store.titles.forEach(t => {
         const isCurrent = t.champions && t.champions.includes(wrestler.id);
@@ -2572,7 +2738,9 @@
         if (times > 0) titleStats[t.name] = { times, days: totalDays };
       });
       const titlesHTML = Object.keys(titleStats).length
-        ? Object.entries(titleStats).map(([tName, s]) => `<div style="font-size:0.78rem; border-bottom:1px dashed #444; padding:4px 0;">🏆 <b>${tName}</b><br><span style="color:var(--text-dim);">${s.times}x | ${s.days} días totales</span></div>`).join('')
+        ? Object.entries(titleStats).map(([tName, s]) =>
+            `<div style="font-size:0.78rem; border-bottom:1px dashed #444; padding:4px 0;">🏆 <b>${tName}</b><br><span style="color:var(--text-dim);">${s.times}x | ${s.days} días totales</span></div>`
+          ).join('')
         : '<span style="font-size:0.75rem; color:var(--text-dim);">Sin títulos en su historial.</span>';
       document.getElementById('wrestler-titles-history').innerHTML = titlesHTML;
     }
@@ -2580,9 +2748,14 @@
     function renderH2H() {
       const wrestler = store.roster.find(r => r.id === activeWrestlerId);
       const opponent = store.roster.find(r => r.id === parseInt(document.getElementById('h2h-opponent').value));
-      if (!wrestler || !opponent) { document.getElementById('h2h-result').innerHTML = 'Selecciona un rival.'; return; }
+      if (!wrestler || !opponent) {
+        document.getElementById('h2h-result').innerHTML = 'Selecciona un rival.';
+        return;
+      }
       const wName = wrestler.name.toLowerCase(), oName = opponent.name.toLowerCase();
-      const shared = store.matches.filter(m => m.card.toLowerCase().includes(wName) && m.card.toLowerCase().includes(oName));
+      const shared = store.matches.filter(m =>
+        m.card.toLowerCase().includes(wName) && m.card.toLowerCase().includes(oName)
+      );
       let wWins = 0, oWins = 0, draws = 0;
       const list = shared.map(m => {
         const winner = m.winner.toLowerCase();
@@ -2592,7 +2765,10 @@
         else draws++;
         return `<div style="font-size:0.75rem; border-bottom:1px dashed #444; padding:3px 0;">📌 ${m.show}: ${m.card} (<b>${res}</b>)</div>`;
       }).join('');
-      document.getElementById('h2h-result').innerHTML = `<div style="font-weight:bold; font-size:1rem; margin-bottom:5px;">${wrestler.name} <span style="color:var(--accent);">${wWins} - ${oWins}</span> ${opponent.name}</div><div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">Empates/Pendientes: ${draws}</div>${shared.length ? list : '<div style="font-size:0.75rem;">Sin combates entre ellos.</div>'}`;
+      document.getElementById('h2h-result').innerHTML =
+        `<div style="font-weight:bold; font-size:1rem; margin-bottom:5px;">${wrestler.name} <span style="color:var(--accent);">${wWins} - ${oWins}</span> ${opponent.name}</div>` +
+        `<div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">Empates/Pendientes: ${draws}</div>` +
+        (shared.length ? list : '<div style="font-size:0.75rem;">Sin combates entre ellos.</div>');
     }
 
     // ========== UTILS ==========
@@ -2623,7 +2799,6 @@
       renderActiveFiltersBar();
       await renderCalendar();
 
-      // Roster
       let sortedRoster = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
       if (filters.brand !== 'ALL') sortedRoster = sortedRoster.filter(r => (r.brands && r.brands.includes(filters.brand)) || r.brand === filters.brand);
       if (filters.alignment !== 'ALL') sortedRoster = sortedRoster.filter(r => r.alignment === filters.alignment);
@@ -2653,7 +2828,6 @@
       }));
       document.getElementById('list-roster').innerHTML = rosterCards.length ? rosterCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay Superstars con estos filtros.</p>`;
 
-      // Shows
       const dayMap = {1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes',6:'Sábado',7:'Domingo'};
       const showsCards = await Promise.all(store.shows.map(async s => {
         const logo = await getImageFromDB('show_logo_' + s.id);
@@ -2665,7 +2839,6 @@
       }));
       document.getElementById('list-shows').innerHTML = showsCards.join('');
 
-      // Teams
       const sortedFull = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
       document.getElementById('team-members-select').innerHTML = sortedFull.length ? sortedFull.map(r => `<label class="checkbox-item"><input type="checkbox" value="${r.id}"><span>${r.name} (${(r.brands||[r.brand||'RAW']).join('/')})</span></label>`).join('') : `<span style="font-size:0.8rem; color:var(--text-dim);">Añade luchadores primero.</span>`;
       document.getElementById('list-teams').innerHTML = store.teams.map(t => {
@@ -2673,7 +2846,6 @@
         return `<div class="card" style="cursor:default; padding:12px;"><div class="card-info"><span class="card-title">👥 ${t.name}</span><span class="card-sub">Miembros: ${members || 'Sin miembros'}</span></div><button class="btn-del" onclick="deleteItem('teams', ${t.id}, event)">✕</button></div>`;
       }).join('');
 
-      // Titles
       const currentDays = getTotalUniverseDays();
       const titleCards = await Promise.all(store.titles.map(async t => {
         const titleImg = await getImageFromDB('title_' + t.id);
@@ -2694,6 +2866,6 @@
 
       if (document.getElementById('tab-matches').classList.contains('active')) renderTodayCard();
     }
-  </script>
+</script>
 </body>
 </html>
