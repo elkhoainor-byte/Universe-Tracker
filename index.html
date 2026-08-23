@@ -122,9 +122,15 @@
     .card-slot { background: linear-gradient(145deg, #1c1c1c 0%, #161616 100%); border: 1px solid #3a3a3a; border-radius: 12px; padding: 16px; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); position: relative; }
     .card-slot::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; border-radius: 0 4px 4px 0; background: var(--accent); }
     .card-slot.locked { opacity: 0.92; border-color: #555; } .card-slot.locked::before { background: #555; }
+    .card-slot.editing { opacity: 1; border-color: var(--accent); outline: 1px solid var(--accent); }
+    .card-slot.editing::before { background: var(--accent); }
     .card-slot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2a2a2a; }
     .card-slot-title { font-weight: bold; font-size: 0.95rem; color: var(--accent); letter-spacing: 0.3px; }
     .card-slot-title .slot-num { display: inline-block; background: var(--accent); color: #fff; font-size: 0.7rem; padding: 2px 7px; border-radius: 10px; margin-right: 6px; vertical-align: middle; }
+    .card-slot-header-actions { display: flex; align-items: center; gap: 6px; }
+    .btn-edit-slot { background: none; border: 1px solid var(--border); color: var(--text-dim); padding: 4px 10px; border-radius: 4px; font-size: 0.95rem; cursor: pointer; line-height: 1; }
+    .btn-edit-slot:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-done-edit-slot { background: #2e7d32; border: none; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
     .type-choice-btns { display: flex; gap: 10px; margin-top: 6px; }
     .type-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; }
     .type-btn.combate { background: var(--accent); color: #fff; } .type-btn.promo { background: #455a64; color: #fff; }
@@ -185,7 +191,7 @@
   </style>
 </head>
 <body>
-  <header>🎮 MODO UNIVERSO</header>
+    <header>🎮 MODO UNIVERSO</header>
 
   <div id="tab-home" class="tab-content active">
     <div class="hero-welcome">
@@ -256,7 +262,8 @@
     <button id="btn-finalize-card" class="btn-finalize" style="display:none;" onclick="finalizeTodayCard()">🔒 Finalizar Parrilla</button>
     <button id="btn-next-show" class="btn-next-show" style="display:none;" onclick="goToNextShow()">⏭ Siguiente Show</button>
   </div>
-    <!-- MODAL RESULTADOS DE EVENTO PASADO -->
+
+  <!-- MODAL RESULTADOS DE EVENTO PASADO -->
   <div id="modal-past-event" class="modal-overlay">
     <div class="modal-box wide">
       <div class="modal-header">
@@ -507,8 +514,7 @@
     <button onclick="switchTab('titles', this)">Títulos</button>
     <button onclick="switchTab('matches', this)">Cartelera de hoy</button>
   </nav>
-
-<script>
+​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​<script>
     const STAGES_OF_HELL_OPTIONS = [
       "Normal", "Extreme Rules", "Inferno", "I Quit", "Contenedor",
       "Hell in a Cell", "Steel Cage", "Tables", "Ladder", "TLC",
@@ -583,7 +589,7 @@
       { month: 2, day: 20, name: "WRESTLEMANIA", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
       { month: 2, day: 21, name: "WRESTLEMANIA", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" }
     ];
-      function formatMatchSummary(names, matchType, subType) {
+    function formatMatchSummary(names, matchType, subType) {
       if (!names || names.length === 0) return '?';
       const clean = names.map(n => n || '?');
       const sub = (subType || '').toLowerCase();
@@ -710,6 +716,7 @@
     let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
     let wrestlerModalMode = 'view';
     let calendarViewMonthIndex = null;
+    let editingSlotIndex = null;
 
     function handleImgError(img) {
       img.onerror = null;
@@ -732,6 +739,7 @@
         await clearIndexedDB();
         store = createEmptyStore();
         calendarViewMonthIndex = 0;
+        editingSlotIndex = null;
         saveData();
         unlockNav();
         document.getElementById('modal-start-month').classList.add('active');
@@ -743,7 +751,10 @@
       const target = document.getElementById('tab-' + tabId);
       if (target) target.classList.add('active');
       if (btn) btn.classList.add('active');
-      if (tabId === 'calendar' && !store.calendar.configured) document.getElementById('modal-start-month').classList.add('active');
+      if (tabId === 'calendar') {
+        if (!store.calendar.configured) document.getElementById('modal-start-month').classList.add('active');
+        else renderCalendar();
+      }
       if (tabId === 'matches') renderTodayCard();
     }
     function confirmStartMonth() {
@@ -820,7 +831,6 @@
       return true;
     }
 
-    // ========== CALENDAR (vista separada de la fecha real) ==========
     function getCalendarViewMonthIndex() {
       if (calendarViewMonthIndex === null || calendarViewMonthIndex === undefined) {
         calendarViewMonthIndex = store.calendar.currentMonthIndex || 0;
@@ -1249,6 +1259,7 @@
             participants: [], specialReferee: null, winner: '', matchId: null, titleId: null, isTitleMatch: false
           }))
         };
+        editingSlotIndex = null;
       }
     }
     function hasChampionInMatch(slot) {
@@ -1257,7 +1268,7 @@
       if (!title || !title.champions || title.champions.length === 0) return true;
       return title.champions.some(cId => (slot.participants || []).filter(Boolean).includes(cId));
     }
-      function isRefereeInMatch(slot) {
+    function isRefereeInMatch(slot) {
       if (!slot.specialReferee || !slot.participants) return false;
       return (slot.participants || []).filter(Boolean).includes(slot.specialReferee);
     }
@@ -1362,6 +1373,48 @@
       if (isRefereeInMatch(slot)) return `<div class="ref-warning">⚠️ El árbitro especial no puede participar también como luchador en este combate.</div>`;
       return '';
     }
+    function syncSlotToMatch(slot) {
+      if (!slot.matchId) return;
+      const match = store.matches.find(m => m.id === slot.matchId);
+      if (!match) return;
+      if (slot.type === 'promo') {
+        match.card = '🎤 Promo';
+        match.winner = 'Promo';
+        match.participants = [];
+        match.matchType = null;
+        match.subType = null;
+        match.stages = null;
+        match.specialReferee = null;
+        match.titleId = null;
+        match.isDefense = false;
+        return;
+      }
+      if (slot.type === 'match' && slot.matchType) {
+        match.card = getSummaryText(slot);
+        match.winner = slot.winner || 'Pendiente';
+        match.participants = (slot.participants || []).filter(Boolean);
+        match.matchType = slot.matchType;
+        match.subType = slot.subType;
+        match.stages = slot.stages ? [...slot.stages] : null;
+        match.specialReferee = slot.specialReferee;
+        match.titleId = slot.isTitleMatch ? slot.titleId : null;
+      }
+    }
+    function startEditSlot(idx) {
+      editingSlotIndex = idx;
+      renderTodayCard();
+    }
+    function doneEditSlot(idx) {
+      const slot = store.todayCard.slots[idx];
+      if (slot && isRefereeInMatch(slot)) {
+        alert('El árbitro especial no puede ser también participante. Corrígelo antes de cerrar la edición.');
+        return;
+      }
+      syncSlotToMatch(slot);
+      editingSlotIndex = null;
+      saveData();
+      renderTodayCard();
+    }
     function renderTodayCard() {
       ensureTodaySlots();
       const event = getCurrentEvent();
@@ -1382,17 +1435,22 @@
       const locked = store.todayCard.locked;
       let html = '';
       store.todayCard.slots.forEach((slot, idx) => {
-        html += `<div class="card-slot ${locked ? 'locked' : ''}"><div class="card-slot-header"><span class="card-slot-title"><span class="slot-num">${idx + 1}</span>Parrilla</span>`;
+        const isEditing = locked && editingSlotIndex === idx;
+        const canEditUI = !locked || isEditing;
+        html += `<div class="card-slot ${locked && !isEditing ? 'locked' : ''} ${isEditing ? 'editing' : ''}"><div class="card-slot-header"><span class="card-slot-title"><span class="slot-num">${idx + 1}</span>Parrilla</span><div class="card-slot-header-actions">`;
         if (!locked) html += `<button class="btn-reset-slot" onclick="resetSlot(${idx})">↺ Reset</button>`;
-        html += `</div>`;
+        if (locked && !isEditing) html += `<button class="btn-edit-slot" onclick="startEditSlot(${idx})" title="Editar combate">✏️</button>`;
+        if (isEditing) html += `<button class="btn-done-edit-slot" onclick="doneEditSlot(${idx})">✓ Listo</button>`;
+        html += `</div></div>`;
         if (!slot.type) {
-          if (!locked) html += `<div class="type-choice-btns"><button class="type-btn combate" onclick="setSlotType(${idx},'match')">⚔️ Combate</button><button class="type-btn promo" onclick="setSlotType(${idx},'promo')">🎤 Promo</button></div>`;
+          if (canEditUI) html += `<div class="type-choice-btns"><button class="type-btn combate" onclick="setSlotType(${idx},'match')">⚔️ Combate</button><button class="type-btn promo" onclick="setSlotType(${idx},'promo')">🎤 Promo</button></div>`;
           else html += `<div style="color:var(--text-dim); font-size:0.85rem;">(Vacío)</div>`;
         } else if (slot.type === 'promo') {
           html += `<div class="slot-summary">🎤 Segmento de promo</div>`;
+          if (canEditUI) html += `<button class="btn-reset-slot" style="margin-top:8px;" onclick="resetSlot(${idx})">↺ Cambiar / Reset</button>`;
         } else {
           if (slot.matchType) html += `<div class="match-type-label">${slot.matchType}${slot.subType ? ' · ' + slot.subType : ''}</div>`;
-          if (!locked) {
+          if (canEditUI) {
             if (!slot.matchType) {
               const typeOpts = MATCH_TYPE_LIST.map(t => ({ value: t, label: t }));
               html += `<label style="font-size:0.72rem; color:var(--text-dim);">TIPO DE COMBATE</label>${buildSelect(typeOpts, '', `updateSlotMatchType(${idx},this.value)`, '-- Elegir tipo --')}`;
@@ -1403,7 +1461,7 @@
                 html += `<label style="font-size:0.72rem; color:var(--text-dim);">FORMATO</label>${buildSelect(subOpts, slot.subType, `updateSlotSubType(${idx},this.value)`, '-- Elegir formato --')}`;
               }
               if (slot.matchType === '3 Stages of Hell') html += getStagesBoxes(slot, idx);
-              if (slot.matchType === 'Árbitro especial invitado' || slot.specialReferee !== undefined) {
+              if (slot.matchType === 'Árbitro especial invitado') {
                 const refOpts = available.map(w => ({ value: w.id, label: w.name }));
                 html += `<label style="font-size:0.72rem; color:var(--text-dim);">ÁRBITRO ESPECIAL</label>${buildSelect(refOpts, slot.specialReferee, `updateSlotReferee(${idx},this.value)`, '-- Sin árbitro especial --')}`;
               }
@@ -1415,7 +1473,7 @@
           }
           const summary = getSummaryText(slot);
           if (summary) html += `<div class="slot-summary">${summary}</div>`;
-          if (locked && slot.winner) html += `<div class="winner-box"><label>🏆 Resultado</label><div style="font-weight:bold; color:#4caf50;">${slot.winner}</div></div>`;
+          if (locked && !isEditing && slot.winner) html += `<div class="winner-box"><label>🏆 Resultado</label><div style="font-weight:bold; color:#4caf50;">${slot.winner}</div></div>`;
         }
         html += `</div>`;
       });
@@ -1424,20 +1482,24 @@
       btnNext.style.display = locked ? 'block' : 'none';
     }
     function setSlotType(idx, type) {
-      if (store.todayCard.locked) return;
+      if (store.todayCard.locked && editingSlotIndex !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.type = type;
-      if (type === 'promo') { slot.matchType = null; slot.subType = null; slot.participants = []; slot.winner = 'Promo'; }
+      if (type === 'promo') { slot.matchType = null; slot.subType = null; slot.participants = []; slot.winner = 'Promo'; slot.specialReferee = null; }
+      if (store.todayCard.locked) syncSlotToMatch(slot);
       saveData();
       renderTodayCard();
     }
     function resetSlot(idx) {
-      if (store.todayCard.locked) return;
-      store.todayCard.slots[idx] = { id: Date.now(), type: null, matchType: null, subType: null, stages: [null, null, null], participants: [], specialReferee: null, winner: '', matchId: null, titleId: null, isTitleMatch: false };
+      if (store.todayCard.locked && editingSlotIndex !== idx) return;
+      const oldMatchId = store.todayCard.slots[idx].matchId;
+      store.todayCard.slots[idx] = { id: Date.now(), type: null, matchType: null, subType: null, stages: [null, null, null], participants: [], specialReferee: null, winner: '', matchId: oldMatchId, titleId: null, isTitleMatch: false };
+      if (store.todayCard.locked) syncSlotToMatch(store.todayCard.slots[idx]);
       saveData();
       renderTodayCard();
     }
     function updateSlotMatchType(idx, val) {
+      if (store.todayCard.locked && editingSlotIndex !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.matchType = val || null;
       slot.subType = null;
@@ -1447,52 +1509,67 @@
       slot.winner = '';
       slot.titleId = null;
       slot.isTitleMatch = false;
+      if (store.todayCard.locked) syncSlotToMatch(slot);
       saveData();
       renderTodayCard();
     }
     function updateSlotSubType(idx, val) {
+      if (store.todayCard.locked && editingSlotIndex !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.subType = val || null;
       slot.participants = [];
       slot.winner = '';
+      if (store.todayCard.locked) syncSlotToMatch(slot);
       saveData();
       renderTodayCard();
     }
     function updateSlotStage(idx, stageIdx, val) {
+      if (store.todayCard.locked && editingSlotIndex !== idx) return;
       const slot = store.todayCard.slots[idx];
       if (!slot.stages) slot.stages = [null, null, null];
       slot.stages[stageIdx] = val || null;
+      if (store.todayCard.locked) syncSlotToMatch(slot);
       saveData();
       renderTodayCard();
     }
     function updateSlotParticipant(idx, pIdx, val) {
+      if (store.todayCard.locked && editingSlotIndex !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.participants[pIdx] = val ? parseInt(val) : null;
+      if (store.todayCard.locked) syncSlotToMatch(slot);
       saveData();
       renderTodayCard();
     }
     function updateSlotReferee(idx, val) {
+      if (store.todayCard.locked && editingSlotIndex !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.specialReferee = val ? parseInt(val) : null;
+      if (store.todayCard.locked) syncSlotToMatch(slot);
       saveData();
       renderTodayCard();
     }
     function updateSlotWinner(idx, val) {
+      if (store.todayCard.locked && editingSlotIndex !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.winner = val || '';
+      if (store.todayCard.locked) syncSlotToMatch(slot);
       saveData();
       renderTodayCard();
     }
     function toggleTitleMatch(idx, checked) {
+      if (store.todayCard.locked && editingSlotIndex !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.isTitleMatch = checked;
       if (!checked) slot.titleId = null;
+      if (store.todayCard.locked) syncSlotToMatch(slot);
       saveData();
       renderTodayCard();
     }
     function updateSlotTitle(idx, val) {
+      if (store.todayCard.locked && editingSlotIndex !== idx) return;
       const slot = store.todayCard.slots[idx];
       slot.titleId = val ? parseInt(val) : null;
+      if (store.todayCard.locked) syncSlotToMatch(slot);
       saveData();
       renderTodayCard();
     }
@@ -1506,11 +1583,12 @@
       }
       store.todayCard.slots.forEach(slot => {
         if (slot.type === 'promo') {
-          store.matches.push({ id: Date.now() + Math.random(), show: label, eventName: event.name, showNumber: event.showNumber, card: '🎤 Promo', winner: 'Promo', participants: [], matchType: null, subType: null });
+          const matchId = Date.now() + Math.random();
+          store.matches.push({ id: matchId, show: label, eventName: event.name, showNumber: event.showNumber, card: '🎤 Promo', winner: 'Promo', participants: [], matchType: null, subType: null });
+          slot.matchId = matchId;
           return;
         }
         if (slot.type === 'match' && slot.matchType) {
-          const names = (slot.participants || []).filter(Boolean).map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; });
           const cardText = getSummaryText(slot);
           const matchId = Date.now() + Math.random();
           const match = {
@@ -1550,10 +1628,12 @@
         }
       });
       store.todayCard.locked = true;
+      editingSlotIndex = null;
       saveData();
       renderTodayCard();
     }
     function goToNextShow() {
+      editingSlotIndex = null;
       let safety = 0;
       do {
         store.calendar.currentDay++;
