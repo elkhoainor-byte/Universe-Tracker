@@ -2793,8 +2793,10 @@
         ranked = rosterPool.map(r => {
           const rec = getWrestlerRecord(r, matchesPool);
           const pct = rec.total > 0 ? (rec.wins / rec.total) : 0;
-          return { isTeam: false, wrestler: r, ...rec, pct };
+          const elo = getWrestlerElo(r);
+          return { isTeam: false, wrestler: r, ...rec, pct, elo };
         }).sort((a, b) => {
+          if (b.elo !== a.elo) return b.elo - a.elo;
           if (b.wins !== a.wins) return b.wins - a.wins;
           if (b.pct !== a.pct) return b.pct - a.pct;
           return a.losses - b.losses;
