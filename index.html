@@ -2021,6 +2021,11 @@
         (store.todayCard.slots || [])
           .map(s => s.matchId)
           .filter(Boolean)
+           store.matches.forEach(m => {
+             if (matchIdsToRemove.has(m.id)) reverseEloFromMatch(m);
+             else if (m.show === label) reverseEloFromMatch(m);
+             else if (m.eventName === event.name && (event.showNumber == null || m.showNumber === event.showNumber)) reverseEloFromMatch(m);
+      });
       );
       store.matches = store.matches.filter(m => {
         if (matchIdsToRemove.has(m.id)) return false;
