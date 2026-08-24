@@ -1155,10 +1155,32 @@
 
       match.eloApplied = true;
     }
-  
+    function recalculateAllElos() {
+      (store.roster || []).forEach(r => {
+        r.elo = DEFAULT_ELO;
+      });
+
+      (store.matches || []).forEach(m => {
+        m.eloApplied = false;
+      });
+
+      const ordered = (store.matches || []).slice().sort((a, b) => {
+        const da = (typeof a.universeDay === 'number') ? a.universeDay : 0;
+        const db = (typeof b.universeDay === 'number') ? b.universeDay : 0;
+        if (da !== db) return da - db;
+        return String(a.id).localeCompare(String(b.id));
+      });
+
+      ordered.forEach(m => {
+        applyEloForMatch(m);
+      });
+    }
     (store.roster || []).forEach(r => {
       if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
     });
+
+    recalculateAllElos();
+    localStorage.setItem('universe_data', JSON.stringify(store));
     
     function saveData() { localStorage.setItem('universe_data', JSON.stringify(store)); render(); }
     function unlockNav() {
@@ -2222,7 +2244,6 @@
       if (!event) return;
       const label = event.showNumber != null ? `${event.name} #${event.showNumber}` : event.name;
 
-      // Quitar del historial los combates/promos de este evento (si ya se finalizó)
       const matchIdsToRemove = new Set(
         (store.todayCard.slots || [])
           .map(s => s.matchId)
@@ -2235,7 +2256,6 @@
         return true;
       });
 
-      // Cartelera nueva vacía (misma cantidad de parrillas)
       const needed = event.parrillas || 6;
       store.todayCard = {
         locked: false,
@@ -2256,6 +2276,7 @@
         }))
       };
       editingSlotIndex = null;
+      recalculateAllElos();
       saveData();
       renderTodayCard();
     }
