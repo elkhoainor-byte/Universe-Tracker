@@ -347,6 +347,62 @@
     <button id="btn-next-show" class="btn-next-show" style="display:none;" onclick="goToNextShow()">⏭ Siguiente Show</button>
   </div>
 
+  <div id="modal-wrestler" class="modal-overlay">
+    <div class="modal-box wide">
+      <div class="modal-header">
+        <span class="modal-title" id="wrestler-modal-title">Luchador</span>
+        <div class="modal-header-actions">
+          <button type="button" class="modal-edit-btn" id="btn-wrestler-edit" onclick="toggleWrestlerEdit()" title="Editar">✏️</button>
+          <button type="button" class="modal-close" onclick="closeWrestlerModal()">&times;</button>
+        </div>
+      </div>
+
+      <div id="wrestler-view-mode" style="display:none;">
+        <div class="ficha-hero">
+          <div id="w-view-photo"></div>
+          <div class="ficha-name" id="w-view-name"></div>
+          <div class="ficha-tags" id="w-view-tags"></div>
+        </div>
+        <div class="stats-summary" id="w-view-stats"></div>
+        <button type="button" class="btn-delete-show" onclick="confirmDeleteWrestler()">Eliminar luchador</button>
+      </div>
+
+      <form id="form-wrestler" onsubmit="saveWrestler(event)" style="display:none; background:transparent; border:none; padding:0;">
+        <input type="text" id="w-name" placeholder="Nombre del luchador" autocapitalize="words" required>
+        <label style="font-size:0.75rem;color:var(--text-dim);">Foto</label>
+        <input type="file" id="w-photo" accept="image/*">
+        <div class="option-selector-wrapper">
+          <span class="option-selector-label">MARCAS</span>
+          <div class="option-checkboxes" id="w-brands-checkboxes"></div>
+        </div>
+        <div class="option-selector-wrapper">
+          <span class="option-selector-label">ALINEACIÓN</span>
+          <div class="option-checkboxes">
+            <label class="option-checkbox-item"><input type="radio" name="w-alignment" value="Face"> Face</label>
+            <label class="option-checkbox-item"><input type="radio" name="w-alignment" value="Heel"> Heel</label>
+          </div>
+        </div>
+        <div class="option-selector-wrapper">
+          <span class="option-selector-label">GÉNERO</span>
+          <div class="option-checkboxes">
+            <label class="option-checkbox-item"><input type="radio" name="w-gender" value="Men"> Men</label>
+            <label class="option-checkbox-item"><input type="radio" name="w-gender" value="Women"> Women</label>
+          </div>
+        </div>
+        <div class="option-selector-wrapper">
+          <span class="option-selector-label">DIVISIÓN</span>
+          <div class="option-checkboxes">
+            <label class="option-checkbox-item"><input type="radio" name="w-division" value="Main Eventer"> Main Eventer</label>
+            <label class="option-checkbox-item"><input type="radio" name="w-division" value="Midcarder"> Midcarder</label>
+            <label class="option-checkbox-item"><input type="radio" name="w-division" value="Tag Team"> Tag Team</label>
+            <label class="option-checkbox-item"><input type="radio" name="w-division" value="Inactivo"> Inactivo</label>
+          </div>
+        </div>
+        <button type="submit" class="btn-add" id="btn-save-wrestler">Guardar</button>
+      </form>
+    </div>
+  </div>
+  
   <nav id="main-nav">
     <button id="nav-btn-home" class="active" onclick="switchTab('home', this)">Inicio</button>
     <button onclick="switchTab('calendar', this)">Calendario</button>
@@ -1225,30 +1281,163 @@
     function closeConfirmModal() { document.getElementById('modal-confirm').classList.remove('active'); confirmAction = null; }
     function acceptConfirm() { const fn = confirmAction; closeConfirmModal(); if (fn) fn(); }
 
-    function openWrestlerModal(id) {
+    function populateWrestlerBrandChecks(selected) {
+      const box = document.getElementById('w-brands-checkboxes');
+      if (!box) return;
+      const sel = selected || [];
+      box.innerHTML = store.shows.map(s =>
+        `<label class="option-checkbox-item"><input type="checkbox" value="${s.name}" ${sel.includes(s.name) ? 'checked' : ''}> ${s.name}</label>`
+      ).join('') || '<span style="color:var(--text-dim);font-size:0.8rem;">No hay shows. Crea uno en la pestaña Shows.</span>';
+    }
+
+    async function openWrestlerModal(id) {
       activeWrestlerId = id;
       const modal = document.getElementById('modal-wrestler');
-      if (!modal) { alert('Modal de luchador no encontrado en el HTML'); return; }
-      const isNew = id === null;
+      if (!modal) {
+        alert('Modal de luchador no encontrado. Añade el HTML del modal #modal-wrestler.');
+        return;
+      }
+      const isNew = (id === null || id === undefined);
       wrestlerModalMode = isNew ? 'edit' : 'view';
-      // Si tu modal ya tiene campos name/alignment/etc., rellénalos aquí como en tu código anterior.
-      // Mínimo: al guardar, incluir elo: ELO_BASE en luchadores nuevos.
+      document.getElementById('wrestler-modal-title').textContent = isNew ? 'Nuevo luchador' : 'Ficha';
+      document.getElementById('btn-wrestler-edit').style.display = isNew ? 'none' : 'inline-block';
+      document.getElementById('w-photo').value = '';
+
+      if (isNew) {
+        document.getElementById('w-name').value = '';
+        populateWrestlerBrandChecks([]);
+        document.querySelectorAll('input[name="w-alignment"]').forEach(r => r.checked = false);
+        document.querySelectorAll('input[name="w-gender"]').forEach(r => r.checked = false);
+        document.querySelectorAll('input[name="w-division"]').forEach(r => r.checked = false);
+        document.getElementById('wrestler-view-mode').style.display = 'none';
+        document.getElementById('form-wrestler').style.display = 'flex';
+      } else {
+        const w = store.roster.find(r => r.id == id);
+        if (!w) { closeWrestlerModal(); return; }
+        ensureWrestlerElo(w);
+        document.getElementById('w-name').value = w.name || '';
+        populateWrestlerBrandChecks(w.brands || []);
+        setRadioValue('w-alignment', w.alignment || '');
+        setRadioValue('w-gender', w.gender || '');
+        setRadioValue('w-division', w.division || '');
+        await showWrestlerView(w);
+        document.getElementById('wrestler-view-mode').style.display = 'block';
+        document.getElementById('form-wrestler').style.display = 'none';
+      }
       modal.classList.add('active');
-      if (!isNew) {
-        const w = store.roster.find(r => r.id === id);
-        if (w) {
-          const nameEl = document.getElementById('w-name'); if (nameEl) nameEl.value = w.name || '';
-          // resto de campos según tu modal existente
-        }
+    }
+
+    async function showWrestlerView(w) {
+      const photoBox = document.getElementById('w-view-photo');
+      const img = await getImageFromDB('wrestler_' + w.id);
+      photoBox.innerHTML = img
+        ? `<img src="${img}" class="ficha-photo" onerror="this.outerHTML='<div class=ficha-photo-placeholder>👤</div>'">`
+        : `<div class="ficha-photo-placeholder">👤</div>`;
+      document.getElementById('w-view-name').textContent = w.name;
+      let tags = '';
+      (w.brands || []).forEach(b => {
+        const sh = store.shows.find(s => s.name === b);
+        tags += `<span class="tag" style="background:${sh ? sh.color : '#555'}">${b}</span>`;
+      });
+      if (w.alignment) tags += `<span class="tag tag-${w.alignment.toLowerCase()}">${w.alignment}</span>`;
+      if (w.gender) tags += `<span class="tag tag-gender">${w.gender}</span>`;
+      if (w.division) tags += `<span class="tag tag-division">${w.division}</span>`;
+      document.getElementById('w-view-tags').innerHTML = tags;
+
+      let wins = 0, losses = 0;
+      store.matches.forEach(m => {
+        if (!m.participants || !m.participants.includes(w.id)) return;
+        if (m.winner === 'Promo' || m.winner === 'Pendiente') return;
+        if (m.winner === w.name) wins++;
+        else if (m.winner) losses++;
+      });
+      document.getElementById('w-view-stats').innerHTML = `
+        <div class="stat-card"><div class="stat-val">${wins}</div><div class="stat-lbl">Victorias</div></div>
+        <div class="stat-card"><div class="stat-val">${losses}</div><div class="stat-lbl">Derrotas</div></div>
+        <div class="stat-card"><div class="stat-val">${Math.round(w.elo || ELO_BASE)}</div><div class="stat-lbl">ELO</div></div>`;
+    }
+
+    function toggleWrestlerEdit() {
+      if (wrestlerModalMode === 'view') {
+        wrestlerModalMode = 'edit';
+        document.getElementById('wrestler-view-mode').style.display = 'none';
+        document.getElementById('form-wrestler').style.display = 'flex';
+        document.getElementById('wrestler-modal-title').textContent = 'Editar luchador';
+      } else {
+        wrestlerModalMode = 'view';
+        const w = store.roster.find(r => r.id == activeWrestlerId);
+        if (w) showWrestlerView(w);
+        document.getElementById('wrestler-view-mode').style.display = 'block';
+        document.getElementById('form-wrestler').style.display = 'none';
+        document.getElementById('wrestler-modal-title').textContent = 'Ficha';
       }
     }
-    function closeWrestlerModal() { document.getElementById('modal-wrestler')?.classList.remove('active'); activeWrestlerId = null; }
 
-    // IMPORTANTE: si ya tenías saveWrestler / openShowModal / openTitleModal / etc. funcionando,
-    // CONSERVA esas funciones de tu archivo original y solo asegúrate de esto al crear luchador:
-    //   elo: ELO_BASE
-    //
-    // Para no pisar tu lógica de formularios, aquí van solo los puntos críticos nuevos + render.
+    function closeWrestlerModal() {
+      document.getElementById('modal-wrestler')?.classList.remove('active');
+      activeWrestlerId = null;
+      wrestlerModalMode = 'view';
+    }
+
+    async function saveWrestler(e) {
+      e.preventDefault();
+      const name = document.getElementById('w-name').value.trim();
+      if (!name) return;
+      const brands = [...document.querySelectorAll('#w-brands-checkboxes input:checked')].map(c => c.value);
+      const alignment = getRadioValue('w-alignment');
+      const gender = getRadioValue('w-gender');
+      const division = getRadioValue('w-division');
+      const file = document.getElementById('w-photo').files[0];
+
+      if (activeWrestlerId === null || activeWrestlerId === undefined) {
+        const id = Date.now();
+        const wrestler = { id, name, brands, alignment, gender, division, elo: ELO_BASE };
+        store.roster.push(wrestler);
+        if (file) {
+          const b64 = await fileToBase64(file);
+          await saveImageToDB('wrestler_' + id, b64);
+        }
+        activeWrestlerId = id;
+      } else {
+        const w = store.roster.find(r => r.id == activeWrestlerId);
+        if (!w) return;
+        w.name = name;
+        w.brands = brands;
+        w.alignment = alignment;
+        w.gender = gender;
+        w.division = division;
+        if (w.elo === undefined || w.elo === null) w.elo = ELO_BASE;
+        if (file) {
+          const b64 = await fileToBase64(file);
+          await saveImageToDB('wrestler_' + w.id, b64);
+        }
+      }
+      saveData();
+      closeWrestlerModal();
+    }
+
+    function confirmDeleteWrestler() {
+      if (activeWrestlerId == null) return;
+      showConfirmModal('¿Eliminar este luchador del roster?', () => {
+        const id = activeWrestlerId;
+        store.roster = store.roster.filter(r => r.id != id);
+        store.teams.forEach(t => { t.members = (t.members || []).filter(m => m != id); });
+        store.titles.forEach(t => { t.champions = (t.champions || []).filter(c => c != id); });
+        deleteImageFromDB('wrestler_' + id);
+        closeWrestlerModal();
+        saveData();
+      });
+    }
+
+    <div id="modal-confirm" class="confirm-modal-overlay">
+    <div class="confirm-box">
+      <div class="confirm-text" id="confirm-text">¿Confirmar?</div>
+      <div class="confirm-actions">
+        <button type="button" class="btn-confirm-cancel" onclick="closeConfirmModal()">Cancelar</button>
+        <button type="button" class="btn-confirm-accept" onclick="acceptConfirm()">Aceptar</button>
+      </div>
+    </div>
+  </div>
 
     async function render() {
       document.getElementById('stat-total-roster').textContent = store.roster.length;
