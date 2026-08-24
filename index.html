@@ -2774,6 +2774,7 @@
           const avgDraws = draws / n;
           const avgTotal = total / n;
           const pct = avgTotal > 0 ? avgWins / avgTotal : 0;
+          const avgElo = useMembers.reduce((sum, m) => sum + getWrestlerElo(m), 0) / n;
           return {
             isTeam: true,
             team,
@@ -2782,9 +2783,11 @@
             losses: Math.round(avgLosses * 10) / 10,
             draws: Math.round(avgDraws * 10) / 10,
             total: Math.round(avgTotal * 10) / 10,
-            pct
+            pct,
+            elo: Math.round(avgElo)
           };
         }).filter(Boolean).sort((a, b) => {
+          if (b.elo !== a.elo) return b.elo - a.elo;
           if (b.wins !== a.wins) return b.wins - a.wins;
           if (b.pct !== a.pct) return b.pct - a.pct;
           return a.losses - b.losses;
