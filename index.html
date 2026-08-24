@@ -1047,6 +1047,7 @@
       img.replaceWith(ph);
     }
     function cleanName(str) { return str ? str.replace(/^["'“`«ʼ\s]+/, '') : ''; }
+    
     const DEFAULT_ELO = 1200;
     const ELO_K_FACTOR = 32;
 
@@ -1055,21 +1056,110 @@
       const n = Number(w.elo);
       return Number.isFinite(n) ? Math.round(n) : DEFAULT_ELO;
     }
-    
+
     function eloExpectedScore(eloA, eloB) {
       return 1 / (1 + Math.pow(10, (eloB - eloA) / 400));
     }
 
     function calcEloDelta(myElo, opponentElo, score) {
       const expected = eloExpectedScore(myElo, opponentElo);
-      const raw = ELO_K_FACTOR * (score - expected);
-      // Por la fórmula, |raw| ≤ K; redondeamos a entero
-      return Math.round(raw);
+      return Math.round(ELO_K_FACTOR * (score - expected));
     }
-    
+
+    function setWrestlerElo(wrestlerId, newElo) {
+      const w = store.roster.find(r => r.id === wrestlerId);
+      if (!w) return;
+      w.elo = Math.max(0, Math.round(newElo));
+    }
+
+     function applyEloForMatch(match) {
+      if (!match) return;
+      if (match.winner === 'Promo' || match.card === '🎤 Promo') return;
+      if (!match.winner || match.winner === 'Pendiente') return;
+      if (match.eloApplied) return; // evitar aplicar dos veces el mismo combate
+
+      const parts = (match.participants || []).filter(Boolean);
+      if (parts.length < 2) return;
+
+      const isDraw = match.winner === 'Empate';
+      const isTeam = isTeamBasedMatch(match.matchType, match.subType);
+
+      // Helper: media de ELO de una lista de ids
+      function avgElo(ids) {
+        const elos = ids.map(id => {
+          const w = store.roster.find(r => r.id === id);
+          return getWrestlerElo(w);
+        });
+        if (!elos.length) return DEFAULT_ELO;
+        return elos.reduce((a, b) => a + b, 0) / elos.length;
+      }
+
+      if (isTeam) {
+        const { left, right } = splitSides(parts, match.matchType, match.subType, isDraw ? null : match.winner);
+        if (!left.length || !right.length) return;
+
+        const avgL = avgElo(left);
+        const avgR = avgElo(right);
+
+        let scoreLeft = 0.5;
+        if (!isDraw) {
+          const winnerW = store.roster.find(r => r.name === match.winner);
+          if (!winnerW) return;
+          if (left.includes(winnerW.id)) scoreLeft = 1;
+          else if (right.includes(winnerW.id)) scoreLeft = 0;
+          else return;
+        }
+        const scoreRight = isDraw ? 0.5 : (1 - scoreLeft);
+
+        left.forEach(id => {
+          const w = store.roster.find(r => r.id === id);
+          if (!w) return;
+          const my = getWrestlerElo(w);
+          setWrestlerElo(id, my + calcEloDelta(my, avgR, scoreLeft));
+        });
+        right.forEach(id => {
+          const w = store.roster.find(r => r.id === id);
+          if (!w) return;
+          const my = getWrestlerElo(w);
+          setWrestlerElo(id, my + calcEloDelta(my, avgL, scoreRight));
+        });
+      } 
+      else {
+        if (isDraw) {
+          parts.forEach(id => {
+            const others = parts.filter(x => x !== id);
+            const w = store.roster.find(r => r.id === id);
+            if (!w || !others.length) return;
+            const my = getWrestlerElo(w);
+            setWrestlerElo(id, my + calcEloDelta(my, avgElo(others), 0.5));
+          });
+        } 
+        else {
+          const winnerW = store.roster.find(r => r.name === match.winner);
+          if (!winnerW || !parts.includes(winnerW.id)) return;
+          const losers = parts.filter(id => id !== winnerW.id);
+          if (!losers.length) return;
+
+          const winElo = getWrestlerElo(winnerW);
+          const oppAvg = avgElo(losers);
+          setWrestlerElo(winnerW.id, winElo + calcEloDelta(winElo, oppAvg, 1));
+
+          losers.forEach(id => {
+            const w = store.roster.find(r => r.id === id);
+            if (!w) return;
+            const my = getWrestlerElo(w);
+            setWrestlerElo(id, my + calcEloDelta(my, winElo, 0));
+          });
+        }
+      }
+
+      match.eloApplied = true;
+    }
+  
     (store.roster || []).forEach(r => {
       if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
     });
+    
     function saveData() { localStorage.setItem('universe_data', JSON.stringify(store)); render(); }
     function unlockNav() {
       const nav = document.getElementById('main-nav');
@@ -1077,6 +1167,7 @@
       const homeBtn = document.getElementById('nav-btn-home');
       if (homeBtn) homeBtn.style.display = 'none';
     }
+    
     function continueUniverse() { unlockNav(); switchTab('roster', document.getElementById('nav-btn-roster')); }
     function confirmResetUniverse() {
       showConfirmModal("⚠️ ¿Seguro que quieres reiniciar todo el universo de cero?", async () => {
@@ -1089,6 +1180,7 @@
         document.getElementById('modal-start-month').classList.add('active');
       });
     }
+    
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -1102,6 +1194,7 @@
       if (tabId === 'matches') renderTodayCard();
       if (tabId === 'standings') renderStandings();
     }
+    
     function confirmStartMonth() {
       store.calendar.startMonth = parseInt(document.getElementById('select-initial-month').value);
       store.calendar.configured = true;
@@ -1113,6 +1206,7 @@
       saveData();
       switchTab('roster', document.getElementById('nav-btn-roster'));
     }
+    
     function ensureDefaultPPVsForYear(yearDisplay) {
       DEFAULT_PLE_TEMPLATES.forEach(tpl => {
         const key = `Y${yearDisplay}_M${tpl.month}_D${tpl.day}`;
@@ -1122,6 +1216,7 @@
         }
       });
     }
+    
     function onFilterChange(select) { const [type, value] = select.value.split(':'); filters[type] = value; render(); }
     function onSearchInput(value) { filters.search = value.toLowerCase().trim(); render(); }
     function clearFilter(filterType) {
@@ -1129,6 +1224,7 @@
       else filters[filterType] = 'ALL';
       render();
     }
+    
     function renderFilterSelect() {
       const brandOptions = [{ val: 'ALL', text: 'Todas las marcas' }].concat(store.shows.map(s => ({ val: s.name, text: s.name })));
       const filterGroupsConfig = [
@@ -1146,6 +1242,7 @@
         return `<optgroup label="${group.label}">${optionsHTML}</optgroup>`;
       }).join('');
     }
+    
     function renderActiveFiltersBar() {
       const container = document.getElementById('active-filters-container');
       const activeBadges = [];
@@ -1157,6 +1254,7 @@
       if (activeBadges.length === 0) container.innerHTML = `<span class="active-filters-label">Filtrado por:</span> <span style="color:var(--text-dim); font-size:0.75rem;">Ninguno</span>`;
       else container.innerHTML = `<span class="active-filters-label">Filtrado por:</span> ` + activeBadges.map(b => `<span class="filter-badge" onclick="clearFilter('${b.type}')">📌 ${b.label} <span class="close-icon">✕</span></span>`).join('');
     }
+    
     function getRadioValue(name) { const s = document.querySelector(`input[name="${name}"]:checked`); return s ? s.value : ''; }
     function setRadioValue(name, value) { const r = document.querySelector(`input[name="${name}"][value="${value}"]`); if (r) r.checked = true; }
     function getTotalUniverseDays() { return (store.calendar.currentMonthIndex || 0) * 28 + (store.calendar.currentDay || 1) - 1; }
@@ -1767,6 +1865,12 @@
         return;
       }
       if (slot) syncSlotToMatch(slot);
+      if (slot && slot.matchId) {
+        const m = store.matches.find(x => x.id === slot.matchId);
+        if (m) {
+          applyEloForMatch(m);
+        }
+      }
       editingSlotIndex = null;
       localStorage.setItem('universe_data', JSON.stringify(store));
       renderTodayCard();
