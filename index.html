@@ -1828,7 +1828,18 @@
       store.todayCard.slots.forEach(slot => {
         if (slot.type === 'promo') {
           const matchId = Date.now() + Math.random();
-          store.matches.push({ id: matchId, show: label, eventName: event.name, showNumber: event.showNumber, card: '🎤 Promo', winner: 'Promo', participants: [], matchType: null, subType: null });
+          store.matches.push({
+            id: matchId,
+            show: label,
+            eventName: event.name,
+            showNumber: event.showNumber,
+            card: '🎤 Promo',
+            winner: 'Promo',
+            participants: [],
+            matchType: null,
+            subType: null,
+            universeDay: getTotalUniverseDays()
+          });
           slot.matchId = matchId;
           return;
         }
@@ -1836,15 +1847,20 @@
           const cardText = getSummaryText(slot);
           const matchId = Date.now() + Math.random();
           const match = {
-            id: matchId, show: label, eventName: event.name, showNumber: event.showNumber,
-            card: cardText, winner: slot.winner || 'Pendiente',
+            id: matchId,
+            show: label,
+            eventName: event.name,
+            showNumber: event.showNumber,
+            card: cardText,
+            winner: slot.winner || 'Pendiente',
             participants: (slot.participants || []).filter(Boolean),
-            matchType: slot.matchType, subType: slot.subType,
+            matchType: slot.matchType,
+            subType: slot.subType,
             stages: slot.stages ? [...slot.stages] : null,
             specialReferee: slot.specialReferee,
             titleId: slot.isTitleMatch ? slot.titleId : null,
-            isDefense: false
-            universeDay: getTotalUniverseDays(),
+            isDefense: false,
+            universeDay: getTotalUniverseDays()
           };
           if (slot.isTitleMatch && slot.titleId && slot.winner && slot.winner !== 'Empate' && slot.winner !== 'Pendiente') {
             const title = store.titles.find(t => t.id === slot.titleId);
@@ -1869,9 +1885,17 @@
             }
           }
           store.matches.push({
-            id: matchId, show: label, eventName: event.name, showNumber: event.showNumber,
-            card: '🎤 Promo', winner: 'Promo', participants: [], matchType: null, subType: null,
+            id: matchId,
+            show: label,
+            eventName: event.name,
+            showNumber: event.showNumber,
+            card: '🎤 Promo',
+            winner: 'Promo',
+            participants: [],
+            matchType: null,
+            subType: null,
             universeDay: getTotalUniverseDays()
+          });
           });
           slot.matchId = matchId;
         }
