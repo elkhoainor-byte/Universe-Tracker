@@ -206,7 +206,7 @@
     <div class="quick-stats-grid">
       <div class="quick-stat-box"><div class="quick-stat-num" id="stat-total-roster">0</div><div class="quick-stat-label">Superstars</div></div>
       <div class="quick-stat-box"><div class="quick-stat-num" id="stat-total-shows">0</div><div class="quick-stat-label">Shows / Marcas</div></div>
-      <div class="quick-stat-box"><div class="quick-stat-num" id="stat-total-titles">0</div><div class="quick-stat-label">Títulos</div></div>
+      <div class="quick-stat-box"><div class="quick-stat-num" id="stat-total-titles">0</div><div class="quick-stat-label">Campeonatos</div></div>
       <div class="quick-stat-box"><div class="quick-stat-num" id="stat-total-matches">0</div><div class="quick-stat-label">Combates</div></div>
     </div>
   </div>
@@ -267,6 +267,16 @@
     <button id="btn-next-show" class="btn-next-show" style="display:none;" onclick="goToNextShow()">⏭ Siguiente Show</button>
   </div>
 
+  <div id="tab-standings" class="tab-content">
+    <div class="filters-wrapper" style="margin-bottom:15px;">
+      <span class="filter-header">📊 Clasificación por victorias</span>
+      <p style="font-size:0.85rem; color:var(--text-dim); margin-top:6px;">
+        Ranking del roster según el récord de combates registrados (victorias / derrotas / empates).
+      </p>
+    </div>
+    <div id="list-standings"></div>
+  </div>
+  
   <!-- MODAL RESULTADOS DE EVENTO PASADO -->
   <div id="modal-past-event" class="modal-overlay">
     <div class="modal-box wide">
@@ -440,7 +450,7 @@
           <div class="stats-summary">
             <div class="stat-card"><div class="stat-val" id="stat-wins" style="color:#4caf50;">0</div><div class="stat-lbl">Victorias</div></div>
             <div class="stat-card"><div class="stat-val" id="stat-losses" style="color:#f44336;">0</div><div class="stat-lbl">Derrotas</div></div>
-            <div class="stat-card"><div class="stat-val" id="stat-draws" style="color:#ffeb3b;">0</div><div class="stat-lbl">Emp/Pend</div></div>
+            <div class="stat-card"><div class="stat-val" id="stat-draws" style="color:#ffeb3b;">0</div><div class="stat-lbl">Empates</div></div>
           </div>
         </div>
         <div>
@@ -468,7 +478,7 @@
           <div class="option-checkboxes" id="edit-brands-container"></div>
         </div>
         <div class="option-selector-wrapper">
-          <span class="option-selector-label">ALINEACIÓN:</span>
+          <span class="option-selector-label">ALINEAMIENTO:</span>
           <div class="option-checkboxes" id="edit-alignment-container">
             <label class="option-checkbox-item"><input type="radio" name="edit-alignment" value="Face" checked> Face</label>
             <label class="option-checkbox-item"><input type="radio" name="edit-alignment" value="Heel"> Heel</label>
@@ -513,6 +523,7 @@
     <button id="nav-btn-home" class="active" onclick="switchTab('home', this)">Inicio</button>
     <button onclick="switchTab('calendar', this)">Calendario</button>
     <button id="nav-btn-roster" onclick="switchTab('roster', this)">Roster</button>
+    <button onclick="switchTab('standings', this)">Clasificación</button>
     <button onclick="switchTab('shows', this)">Shows</button>
     <button onclick="switchTab('teams', this)">Tag Teams</button>
     <button onclick="switchTab('titles', this)">Títulos</button>
@@ -765,6 +776,7 @@
         else renderCalendar();
       }
       if (tabId === 'matches') renderTodayCard();
+      if (tabId === 'standings') renderStandings();
     }
     function confirmStartMonth() {
       store.calendar.startMonth = parseInt(document.getElementById('select-initial-month').value);
@@ -2061,6 +2073,67 @@
       saveData();
     }
 
+    function getWrestlerRecord(wrestler) {
+      const history = store.matches.filter(m => m.participants && m.participants.includes(wrestler.id) && m.winner !== 'Promo');
+      let wins = 0, losses = 0, draws = 0;
+      history.forEach(m => {
+        if (m.winner === wrestler.name) wins++;
+        else if (m.winner === 'Empate' || m.winner === 'Pendiente' || !m.winner) draws++;
+        else if (m.winner && m.winner !== 'Promo') {
+          if (isTeamBasedMatch(m.matchType, m.subType)) {
+            const { left, right } = splitSides(m.participants, m.matchType, m.subType, m.winner);
+            const winnerW = store.roster.find(r => r.name === m.winner);
+            if (winnerW) {
+              const onWinningSide = (left.includes(winnerW.id) && left.includes(wrestler.id)) ||
+                                   (right.includes(winnerW.id) && right.includes(wrestler.id));
+              if (onWinningSide) wins++;
+              else losses++;
+            } else losses++;
+          } else losses++;
+        }
+      });
+      return { wins, losses, draws, total: wins + losses + draws };
+    }
+
+    function renderStandings() {
+      const container = document.getElementById('list-standings');
+      if (!container) return;
+      if (!store.roster.length) {
+        container.innerHTML = '<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay luchadores en el roster.</p>';
+        return;
+      }
+      const ranked = store.roster.map(r => {
+        const rec = getWrestlerRecord(r);
+        const pct = rec.total > 0 ? (rec.wins / rec.total) : 0;
+        return { wrestler: r, ...rec, pct };
+      }).sort((a, b) => {
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        if (b.pct !== a.pct) return b.pct - a.pct;
+        return a.losses - b.losses;
+      });
+
+      container.innerHTML = ranked.map((row, i) => {
+        const pos = i + 1;
+        const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `#${pos}`;
+        const pctText = row.total > 0 ? `${Math.round(row.pct * 100)}%` : '—';
+        return `
+          <div class="card" style="padding:12px; height:auto; cursor:default;" onclick="openWrestlerModal(${row.wrestler.id})">
+            <div class="card-left" style="padding-left:12px; gap:14px;">
+              <div style="min-width:42px; text-align:center; font-weight:900; font-size:1.1rem; color:var(--accent);">${medal}</div>
+              <div class="card-info" style="height:auto;">
+                <span class="card-title" style="white-space:normal;">${row.wrestler.name}</span>
+                <span class="card-sub">
+                  <span style="color:#4caf50;">${row.wins}V</span> ·
+                  <span style="color:#f44336;">${row.losses}D</span> ·
+                  <span style="color:#ffeb3b;">${row.draws}E</span>
+                  · ${row.total} combates · ${pctText} victorias
+                </span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+  
     async function render() {
       document.getElementById('stat-total-roster').innerText = store.roster.length;
       document.getElementById('stat-total-shows').innerText = store.shows.length;
@@ -2076,6 +2149,7 @@
         if (filters.gender !== 'ALL' && r.gender !== filters.gender) return false;
         if (filters.division !== 'ALL' && r.division !== filters.division) return false;
         if (filters.search && !r.name.toLowerCase().includes(filters.search)) return false;
+        if (document.getElementById('tab-standings')?.classList.contains('active')) renderStandings();
         return true;
       });
       filtered = filtered.sort((a, b) => cleanName(a.name).localeCompare(cleanName(b.name)));
