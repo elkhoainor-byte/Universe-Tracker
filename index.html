@@ -1048,12 +1048,25 @@
     }
     function cleanName(str) { return str ? str.replace(/^["'“`«ʼ\s]+/, '') : ''; }
     const DEFAULT_ELO = 1200;
+    const ELO_K_FACTOR = 32;
+
     function getWrestlerElo(w) {
       if (!w) return DEFAULT_ELO;
       const n = Number(w.elo);
       return Number.isFinite(n) ? Math.round(n) : DEFAULT_ELO;
     }
-    // Migración: luchadores sin elo → 1200
+    
+    function eloExpectedScore(eloA, eloB) {
+      return 1 / (1 + Math.pow(10, (eloB - eloA) / 400));
+    }
+
+    function calcEloDelta(myElo, opponentElo, score) {
+      const expected = eloExpectedScore(myElo, opponentElo);
+      const raw = ELO_K_FACTOR * (score - expected);
+      // Por la fórmula, |raw| ≤ K; redondeamos a entero
+      return Math.round(raw);
+    }
+    
     (store.roster || []).forEach(r => {
       if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
     });
