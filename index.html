@@ -45,6 +45,68 @@
     .search-box input { width: 100%; }
     .filters-wrapper { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
     .filter-header { font-size: 0.8rem; font-weight: bold; color: var(--text-dim); text-transform: uppercase; margin-bottom: 2px; }
+    .filter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .filter-row-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      flex-shrink: 0;
+      min-width: 110px;
+    }
+    .filter-row select {
+      flex: 1;
+      min-width: 0;
+      margin-top: 0 !important;
+    }
+    .filter-row-brands {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .filter-row-brands .filter-row-label {
+      margin-bottom: 4px;
+    }
+    /* Menú desplegable de filtros */
+    .standings-filters-details {
+      background: transparent;
+      border: none;
+    }
+    .standings-filters-details > summary {
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .standings-filters-details > summary::-webkit-details-marker { display: none; }
+    .standings-filters-details > summary::after {
+      content: "▼";
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      transition: transform 0.15s ease;
+    }
+    .standings-filters-details[open] > summary::after {
+      transform: rotate(180deg);
+    }
+    .standings-filters-body {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+    }
     .active-filters-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 0.8rem; padding-top: 4px; border-top: 1px dashed var(--border); margin-top: 4px; }
     .active-filters-label { font-weight: bold; color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; }
     .filter-badge { background: #333; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; border: 1px solid var(--accent); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
@@ -343,66 +405,87 @@
 
   <div id="tab-standings" class="tab-content">
     <div class="filters-wrapper" style="margin-bottom:15px;">
-      <span class="filter-header">📊 Clasificación</span>
-      <p id="standings-period-hint" style="font-size:0.8rem; color:var(--text-dim); margin-top:4px; margin-bottom:10px;"></p>
+      <details class="standings-filters-details" open>
+        <summary>📊 Filtros de clasificación</summary>
+        <div class="standings-filters-body">
+          <p id="standings-period-hint" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:6px;"></p>
 
-      <label class="filter-header" style="margin-top:6px;">⏱ Periodo</label>
-      <select id="standings-period" onchange="onStandingsFilterChange()">
-        <option value="all">Todo el universo</option>
-        <option value="4">Último mes (últimas 4 semanas)</option>
-        <option value="12">Últimos 3 meses (últimas 12 semanas)</option>
-        <option value="24">Últimos 6 meses (últimas 24 semanas)</option>
-        <option value="52">Último año (últimas 52 semanas)</option>
-      </select>
+          <div class="filter-row">
+            <span class="filter-row-label">Periodo</span>
+            <select id="standings-period" onchange="onStandingsFilterChange()">
+              <option value="all">Todo el universo</option>
+              <option value="4">Último mes (4 semanas)</option>
+              <option value="12">Últimos 3 meses (12 semanas)</option>
+              <option value="24">Últimos 6 meses (24 semanas)</option>
+              <option value="52">Último año (52 semanas)</option>
+            </select>
+          </div>
 
-      <label class="filter-header" style="margin-top:10px;">🏷 Atributos</label>
-      <span class="filter-header" style="text-transform:none; font-weight:normal; margin-top:4px;">Marcas (puedes marcar varias; ninguna = todas)</span>
-      <div class="option-checkboxes" id="standings-brands-container"></div>
-      <select id="standings-alignment" onchange="onStandingsFilterChange()" style="margin-top:6px;">
-        <option value="ALL">Alineamiento: Todos</option>
-        <option value="Face">Face</option>
-        <option value="Heel">Heel</option>
-      </select>
-      <select id="standings-gender" onchange="onStandingsFilterChange()" style="margin-top:6px;">
-        <option value="ALL">Género: Todos</option>
-        <option value="Men">Men</option>
-        <option value="Women">Women</option>
-      </select>
-      <select id="standings-division" onchange="onStandingsFilterChange()" style="margin-top:6px;">
-        <option value="ALL">División: Todas</option>
-        <option value="Main Eventer">Main Eventer</option>
-        <option value="Midcarder">Midcarder</option>
-        <option value="Tag Team">Tag Team</option>
-        <option value="Inactivo">Inactivo</option>
-      </select>
+          <div class="filter-row filter-row-brands">
+            <span class="filter-row-label">Marcas</span>
+            <div class="option-checkboxes" id="standings-brands-container"></div>
+            <span style="font-size:0.72rem; color:var(--text-dim); margin-top:2px;">Ninguna marcada = todas</span>
+          </div>
 
-      <label class="filter-header" style="margin-top:10px;">⚙ Opciones</label>
-      <div class="option-checkboxes" style="flex-direction:column; align-items:flex-start;">
-        <label class="option-checkbox-item">
-          <input type="checkbox" id="standings-exclude-champs" onchange="onStandingsFilterChange()">
-          Excluir campeones actuales
-        </label>
-        <label class="option-checkbox-item">
-          <input type="checkbox" id="standings-hide-inactive" onchange="onStandingsFilterChange()" checked>
-          Ocultar inactivos
-        </label>
-        <label class="option-checkbox-item">
-          <input type="checkbox" id="standings-team-mode" onchange="onStandingsFilterChange()">
-          Ranking por Tag Team (media del equipo)
-        </label>
-      </div>
+          <div class="filter-row">
+            <span class="filter-row-label">Alineamiento</span>
+            <select id="standings-alignment" onchange="onStandingsFilterChange()">
+              <option value="ALL">Todos</option>
+              <option value="Face">Face</option>
+              <option value="Heel">Heel</option>
+            </select>
+          </div>
 
-      <label class="filter-header" style="margin-top:10px;">👁 Vista</label>
-      <select id="standings-limit" onchange="onStandingsFilterChange()">
-        <option value="5">Top 5</option>
-        <option value="10" selected>Top 10</option>
-        <option value="25">Top 25</option>
-        <option value="0">Lista completa</option>
-      </select>
+          <div class="filter-row">
+            <span class="filter-row-label">Género</span>
+            <select id="standings-gender" onchange="onStandingsFilterChange()">
+              <option value="ALL">Todos</option>
+              <option value="Men">Men</option>
+              <option value="Women">Women</option>
+            </select>
+          </div>
+
+          <div class="filter-row">
+            <span class="filter-row-label">División</span>
+            <select id="standings-division" onchange="onStandingsFilterChange()">
+              <option value="ALL">Todas</option>
+              <option value="Main Eventer">Main Eventer</option>
+              <option value="Midcarder">Midcarder</option>
+              <option value="Tag Team">Tag Team</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+
+          <div class="filter-row">
+            <span class="filter-row-label">Vista</span>
+            <select id="standings-limit" onchange="onStandingsFilterChange()">
+              <option value="5">Top 5</option>
+              <option value="10" selected>Top 10</option>
+              <option value="25">Top 25</option>
+              <option value="0">Lista completa</option>
+            </select>
+          </div>
+
+          <label class="filter-header" style="margin-top:12px;">Opciones</label>
+          <div class="option-checkboxes" style="flex-direction:column; align-items:flex-start;">
+            <label class="option-checkbox-item">
+              <input type="checkbox" id="standings-exclude-champs" onchange="onStandingsFilterChange()">
+              Excluir campeones actuales
+            </label>
+            <label class="option-checkbox-item">
+              <input type="checkbox" id="standings-hide-inactive" onchange="onStandingsFilterChange()" checked>
+              Ocultar inactivos
+            </label>
+            <label class="option-checkbox-item">
+              <input type="checkbox" id="standings-team-mode" onchange="onStandingsFilterChange()">
+              Ranking por Tag Team (media del equipo)
+            </label>
+          </div>
+        </div>
+      </details>
     </div>
     <div id="list-standings"></div>
-  </div>
-  
+  </div>  
   <!-- MODAL RESULTADOS DE EVENTO PASADO -->
   <div id="modal-past-event" class="modal-overlay">
     <div class="modal-box wide">
@@ -856,7 +939,7 @@
     let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
     let standingsFilters = {
       periodWeeks: 'all',
-      brand: [],
+      brands: [],
       alignment: 'ALL',
       gender: 'ALL',
       division: 'ALL',
