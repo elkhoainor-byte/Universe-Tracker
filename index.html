@@ -2212,8 +2212,21 @@
           }
         }
 
+        const heldTitles = store.titles.filter(t => (t.champions || []).includes(r.id));
+        let titleBadges = '';
+        for (const t of heldTitles) {
+          const tImg = await getImageFromDB('title_' + t.id);
+          if (tImg) {
+            titleBadges += `<img src="${tImg}" class="title-badge-img" alt="${t.name}">`;
+          } else {
+            titleBadges += `<span class="tag tag-champ">🏆</span>`;
+          }
+        }
+
         const podiumClass = pos === 1 ? 'podium-1' : pos === 2 ? 'podium-2' : pos === 3 ? 'podium-3' : '';
-        const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, #000000) 1;`;
+        // Borde dorado si es campeón (igual idea que en Roster)
+        const endColor = heldTitles.length > 0 ? '#ffd700' : '#000000';
+        const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, ${endColor}) 1;`;
         const avatar = img
           ? `<img src="${img}" class="wrestler-avatar" onerror="handleImgError(this)">`
           : `<div class="wrestler-avatar-placeholder">👤</div>`;
@@ -2233,13 +2246,13 @@
                 </span>
               </div>
             </div>
+            ${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}
           </div>`;
       }));
 
       container.innerHTML = cards.join('');
     }
 
-      container.innerHTML = ranked.map((row, i) => {
         const pos = i + 1;
         const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `#${pos}`;
         const pctText = row.total > 0 ? `${Math.round(row.pct * 100)}%` : '—';
