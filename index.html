@@ -2308,9 +2308,7 @@
         store.shows.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
       sel.value = current;
     }
-      return { wins, losses, draws, total: wins + losses + draws };
-    }
-
+      
      async function renderStandings() {
       const container = document.getElementById('list-standings');
       if (!container) return;
