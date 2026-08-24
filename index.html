@@ -2347,6 +2347,7 @@
         const brands = r.brands || (r.brand ? [r.brand] : []);
         if (standingsFilters.brands && standingsFilters.brands.length > 0) {
           if (!brands.some(b => standingsFilters.brands.includes(b))) return false;
+        }
         if (standingsFilters.alignment !== 'ALL' && (r.alignment || 'Face') !== standingsFilters.alignment) return false;
         if (standingsFilters.gender !== 'ALL' && (r.gender || 'Men') !== standingsFilters.gender) return false;
         if (standingsFilters.division !== 'ALL' && (r.division || 'Midcarder') !== standingsFilters.division) return false;
