@@ -2157,7 +2157,6 @@
 
       if (!wrestler) {
         if (titleEl) {
-          titleEl.textContent = 'Ficha de Luchador';
           titleEl.classList.remove('ficha-wrestler-name');
         }
         if (logosEl) logosEl.innerHTML = '';
@@ -2303,6 +2302,8 @@
         document.getElementById('h2h-opponent').innerHTML = `<option value="">-- Selecciona un rival --</option>` + store.roster.filter(r => r.id !== id).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
         await updateWrestlerStats(wrestler);
         setWrestlerModalMode('view');
+        // Misma cabecera/fondo que desde Roster (nombre, logos, degradado)
+        await applyWrestlerFichaChrome(wrestler);
       }
       document.getElementById('modal-wrestler').classList.add('active');
     }
