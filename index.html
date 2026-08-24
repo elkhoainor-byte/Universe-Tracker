@@ -2276,7 +2276,6 @@
         if (filters.gender !== 'ALL' && r.gender !== filters.gender) return false;
         if (filters.division !== 'ALL' && r.division !== filters.division) return false;
         if (filters.search && !r.name.toLowerCase().includes(filters.search)) return false;
-        if (document.getElementById('tab-standings')?.classList.contains('active')) renderStandings();
         return true;
       });
       filtered = filtered.sort((a, b) => cleanName(a.name).localeCompare(cleanName(b.name)));
@@ -2355,6 +2354,7 @@
       document.getElementById('list-titles').innerHTML = titleCards.length ? titleCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay campeonatos.</p>`;
       if (document.getElementById('tab-calendar').classList.contains('active')) await renderCalendar();
       if (document.getElementById('tab-matches').classList.contains('active')) renderTodayCard();
+      if (document.getElementById('tab-standings') && document.getElementById('tab-standings').classList.contains('active')) await renderStandings();
     }
     if (store.calendar && store.calendar.configured) unlockNav();
   </script>
