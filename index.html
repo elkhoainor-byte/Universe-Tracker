@@ -356,9 +356,8 @@
       </select>
 
       <label class="filter-header" style="margin-top:10px;">🏷 Atributos</label>
-      <select id="standings-brand" onchange="onStandingsFilterChange()">
-        <option value="ALL">Marca: Todas</option>
-      </select>
+      <span class="filter-header" style="text-transform:none; font-weight:normal; margin-top:4px;">Marcas (puedes marcar varias; ninguna = todas)</span>
+      <div class="option-checkboxes" id="standings-brands-container"></div>
       <select id="standings-alignment" onchange="onStandingsFilterChange()" style="margin-top:6px;">
         <option value="ALL">Alineamiento: Todos</option>
         <option value="Face">Face</option>
@@ -857,7 +856,7 @@
     let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
     let standingsFilters = {
       periodWeeks: 'all',
-      brand: 'ALL',
+      brand: [],
       alignment: 'ALL',
       gender: 'ALL',
       division: 'ALL',
@@ -2283,17 +2282,20 @@
 
     function onStandingsFilterChange() {
       const periodEl = document.getElementById('standings-period');
-      const brandEl = document.getElementById('standings-brand');
       const alignEl = document.getElementById('standings-alignment');
       const genderEl = document.getElementById('standings-gender');
       const divEl = document.getElementById('standings-division');
       const limitEl = document.getElementById('standings-limit');
       if (periodEl) standingsFilters.periodWeeks = periodEl.value;
-      if (brandEl) standingsFilters.brand = brandEl.value;
       if (alignEl) standingsFilters.alignment = alignEl.value;
       if (genderEl) standingsFilters.gender = genderEl.value;
       if (divEl) standingsFilters.division = divEl.value;
       if (limitEl) standingsFilters.limit = parseInt(limitEl.value, 10);
+
+      // Varias marcas seleccionadas
+      const brandChecks = document.querySelectorAll('#standings-brands-container input[type="checkbox"]:checked');
+      standingsFilters.brands = Array.from(brandChecks).map(cb => cb.value);
+
       standingsFilters.excludeChamps = !!(document.getElementById('standings-exclude-champs') || {}).checked;
       standingsFilters.hideInactive = !!(document.getElementById('standings-hide-inactive') || {}).checked;
       standingsFilters.teamMode = !!(document.getElementById('standings-team-mode') || {}).checked;
@@ -2301,12 +2303,16 @@
     }
 
     function populateStandingsBrandSelect() {
-      const sel = document.getElementById('standings-brand');
-      if (!sel) return;
-      const current = standingsFilters.brand || 'ALL';
-      sel.innerHTML = `<option value="ALL">Marca: Todas</option>` +
-        store.shows.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
-      sel.value = current;
+      const container = document.getElementById('standings-brands-container');
+      if (!container) return;
+      const selected = standingsFilters.brands || [];
+      container.innerHTML = store.shows.map(s => {
+        const checked = selected.includes(s.name) ? 'checked' : '';
+        return `<label class="option-checkbox-item">
+          <input type="checkbox" value="${s.name}" ${checked} onchange="onStandingsFilterChange()">
+          ${s.name}
+        </label>`;
+      }).join('') || '<span style="color:var(--text-dim); font-size:0.8rem;">No hay shows registrados.</span>';
     }
       
      async function renderStandings() {
@@ -2339,7 +2345,8 @@
       // Filtros por atributos
       rosterPool = rosterPool.filter(r => {
         const brands = r.brands || (r.brand ? [r.brand] : []);
-        if (standingsFilters.brand !== 'ALL' && !brands.includes(standingsFilters.brand)) return false;
+        if (standingsFilters.brands && standingsFilters.brands.length > 0) {
+          if (!brands.some(b => standingsFilters.brands.includes(b))) return false;
         if (standingsFilters.alignment !== 'ALL' && (r.alignment || 'Face') !== standingsFilters.alignment) return false;
         if (standingsFilters.gender !== 'ALL' && (r.gender || 'Men') !== standingsFilters.gender) return false;
         if (standingsFilters.division !== 'ALL' && (r.division || 'Midcarder') !== standingsFilters.division) return false;
@@ -2368,7 +2375,8 @@
           const inPool = team.members
             .map(id => rosterPool.find(r => r.id === id))
             .filter(Boolean);
-          if (standingsFilters.brand !== 'ALL' || standingsFilters.alignment !== 'ALL' ||
+          if ((standingsFilters.brands && standingsFilters.brands.length > 0) ||
+              standingsFilters.alignment !== 'ALL' ||
               standingsFilters.gender !== 'ALL' || standingsFilters.division !== 'ALL' ||
               standingsFilters.hideInactive || standingsFilters.excludeChamps) {
             if (!inPool.length) return null;
