@@ -2174,19 +2174,11 @@
               }
             }
           }
-          store.matches.push({
-            id: matchId,
-            show: label,
-            eventName: event.name,
-            showNumber: event.showNumber,
-            card: '🎤 Promo',
-            winner: 'Promo',
-            participants: [],
-            matchType: null,
-            subType: null,
-            universeDay: getTotalUniverseDays()
-          });
+          store.matches.push(match);
           slot.matchId = matchId;
+          if (match.winner && match.winner !== 'Pendiente' && match.winner !== 'Promo') {
+            applyEloForMatch(match);
+          }
         }
       });
       store.todayCard.locked = true;
