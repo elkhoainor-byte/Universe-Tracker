@@ -107,6 +107,27 @@
       padding-top: 8px;
       border-top: 1px dashed var(--border);
     }
+    .standings-mode-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 12px 0;
+    }
+    .standings-mode-btn {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #2a2a2a;
+      color: var(--text-dim);
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .standings-mode-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
     .active-filters-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 0.8rem; padding-top: 4px; border-top: 1px dashed var(--border); margin-top: 4px; }
     .active-filters-label { font-weight: bold; color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; }
     .filter-badge { background: #333; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; border: 1px solid var(--accent); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
@@ -405,10 +426,9 @@
 
   <div id="tab-standings" class="tab-content">
     <div class="filters-wrapper" style="margin-bottom:15px;">
-      <details class="standings-filters-details" open>
-        <summary>📊 Filtros de clasificación</summary>
+      <details class="standings-filters-details">
+        <summary>⚙️ Ajustes de filtros</summary>
         <div class="standings-filters-body">
-          <p id="standings-period-hint" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:6px;"></p>
 
           <div class="filter-row">
             <span class="filter-row-label">Periodo</span>
@@ -424,7 +444,6 @@
           <div class="filter-row filter-row-brands">
             <span class="filter-row-label">Marcas</span>
             <div class="option-checkboxes" id="standings-brands-container"></div>
-            <span style="font-size:0.72rem; color:var(--text-dim); margin-top:2px;">Ninguna marcada = todas</span>
           </div>
 
           <div class="filter-row">
@@ -460,9 +479,9 @@
             <span class="filter-row-label">Vista</span>
             <select id="standings-limit" onchange="onStandingsFilterChange()">
               <option value="5">Top 5</option>
-              <option value="10" selected>Top 10</option>
+              <option value="10">Top 10</option>
               <option value="25">Top 25</option>
-              <option value="0">Lista completa</option>
+              <option value="0" selected>Lista completa</option>
             </select>
           </div>
 
@@ -476,16 +495,18 @@
               <input type="checkbox" id="standings-hide-inactive" onchange="onStandingsFilterChange()" checked>
               Ocultar inactivos
             </label>
-            <label class="option-checkbox-item">
-              <input type="checkbox" id="standings-team-mode" onchange="onStandingsFilterChange()">
-              Ranking por Tag Team (media del equipo)
-            </label>
           </div>
         </div>
       </details>
     </div>
+
+    <div class="standings-mode-tabs">
+      <button type="button" id="standings-tab-superstars" class="standings-mode-btn active" onclick="setStandingsMode('superstars')">⭐ Superstars</button>
+      <button type="button" id="standings-tab-teams" class="standings-mode-btn" onclick="setStandingsMode('teams')">🤝 Equipos</button>
+    </div>
+
     <div id="list-standings"></div>
-  </div>  
+  </div>
   <!-- MODAL RESULTADOS DE EVENTO PASADO -->
   <div id="modal-past-event" class="modal-overlay">
     <div class="modal-box wide">
@@ -945,10 +966,9 @@
       division: 'ALL',
       excludeChamps: false,
       hideInactive: true,
-      teamMode: false,
-      limit: 10
-    };
-    let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
+      mode: 'superstars', // 'superstars' | 'teams'
+      limit: 0
+    };    let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
     let wrestlerModalMode = 'view';
     let calendarViewMonthIndex = null;
     // IMPORTANTE: usar null (no 0) como "sin edición". Number(null)===0 provocaba el bug del primer combate.
@@ -2375,16 +2395,22 @@
       if (divEl) standingsFilters.division = divEl.value;
       if (limitEl) standingsFilters.limit = parseInt(limitEl.value, 10);
 
-      // Varias marcas seleccionadas
       const brandChecks = document.querySelectorAll('#standings-brands-container input[type="checkbox"]:checked');
       standingsFilters.brands = Array.from(brandChecks).map(cb => cb.value);
 
       standingsFilters.excludeChamps = !!(document.getElementById('standings-exclude-champs') || {}).checked;
       standingsFilters.hideInactive = !!(document.getElementById('standings-hide-inactive') || {}).checked;
-      standingsFilters.teamMode = !!(document.getElementById('standings-team-mode') || {}).checked;
       renderStandings();
     }
 
+    function setStandingsMode(mode) {
+      standingsFilters.mode = mode === 'teams' ? 'teams' : 'superstars';
+      const btnS = document.getElementById('standings-tab-superstars');
+      const btnT = document.getElementById('standings-tab-teams');
+      if (btnS) btnS.classList.toggle('active', standingsFilters.mode === 'superstars');
+      if (btnT) btnT.classList.toggle('active', standingsFilters.mode === 'teams');
+      renderStandings();
+    }
     function populateStandingsBrandSelect() {
       const container = document.getElementById('standings-brands-container');
       if (!container) return;
@@ -2404,29 +2430,19 @@
 
       populateStandingsBrandSelect();
 
+      // Botones de pestaña
+      const btnS = document.getElementById('standings-tab-superstars');
+      const btnT = document.getElementById('standings-tab-teams');
+      if (btnS) btnS.classList.toggle('active', standingsFilters.mode !== 'teams');
+      if (btnT) btnT.classList.toggle('active', standingsFilters.mode === 'teams');
+
       const matchesPool = getMatchesInPeriod();
-      const hint = document.getElementById('standings-period-hint');
-      if (hint) {
-        const weeks = standingsFilters.periodWeeks;
-        if (weeks === 'all') {
-          hint.textContent = 'Periodo: todo el universo (todos los combates registrados).';
-        } else {
-          const currentDays = getTotalUniverseDays();
-          const rangeDays = parseInt(weeks, 10) * 7;
-          const dated = matchesPool.filter(m => typeof m.universeDay === 'number').length;
-          hint.textContent = dated
-            ? `Periodo: últimas ${weeks} semanas (~${rangeDays} días de universo). Combates sin fecha = desde el inicio.`
-            : `Periodo: últimas ${weeks} semanas. No hay fechas en combates → se usan todos desde el inicio del universo.`;
-        }
-      }
 
       const championIds = new Set();
       store.titles.forEach(t => (t.champions || []).forEach(id => championIds.add(id)));
 
-      let rosterPool = [...store.roster];
-
-      // Filtros por atributos
-      rosterPool = rosterPool.filter(r => {
+      // Filtros comunes (afectan a Superstars y Equipos)
+      let rosterPool = [...store.roster].filter(r => {
         const brands = r.brands || (r.brand ? [r.brand] : []);
         if (standingsFilters.brands && standingsFilters.brands.length > 0) {
           if (!brands.some(b => standingsFilters.brands.includes(b))) return false;
@@ -2446,25 +2462,27 @@
 
       let ranked = [];
 
-      if (standingsFilters.teamMode) {
-        // Ranking por equipos: media de V/D/E de los miembros
+      if (standingsFilters.mode === 'teams') {
         const teams = store.teams.filter(t => t.members && t.members.length);
         ranked = teams.map(team => {
           const members = team.members
             .map(id => store.roster.find(r => r.id === id))
-            .filter(Boolean)
-            // solo miembros que pasan filtros individuales (salvo teamMode ya aplica sobre roster filtrado)
-            .filter(r => rosterPool.some(x => x.id === r.id) || !rosterPool.length);
-          // Si hay filtros de roster, exigir que al menos 1 miembro esté en el pool filtrado
+            .filter(Boolean);
           const inPool = team.members
             .map(id => rosterPool.find(r => r.id === id))
             .filter(Boolean);
-          if ((standingsFilters.brands && standingsFilters.brands.length > 0) ||
-              standingsFilters.alignment !== 'ALL' ||
-              standingsFilters.gender !== 'ALL' || standingsFilters.division !== 'ALL' ||
-              standingsFilters.hideInactive || standingsFilters.excludeChamps) {
-            if (!inPool.length) return null;
-          }
+
+          // Si hay filtros activos, el equipo necesita al menos 1 miembro que los cumpla
+          const hasAttrFilter =
+            (standingsFilters.brands && standingsFilters.brands.length > 0) ||
+            standingsFilters.alignment !== 'ALL' ||
+            standingsFilters.gender !== 'ALL' ||
+            standingsFilters.division !== 'ALL' ||
+            standingsFilters.hideInactive ||
+            standingsFilters.excludeChamps;
+
+          if (hasAttrFilter && !inPool.length) return null;
+
           const useMembers = inPool.length ? inPool : members;
           if (!useMembers.length) return null;
 
@@ -2490,8 +2508,7 @@
             losses: Math.round(avgLosses * 10) / 10,
             draws: Math.round(avgDraws * 10) / 10,
             total: Math.round(avgTotal * 10) / 10,
-            pct,
-            sumWins: wins
+            pct
           };
         }).filter(Boolean).sort((a, b) => {
           if (b.wins !== a.wins) return b.wins - a.wins;
