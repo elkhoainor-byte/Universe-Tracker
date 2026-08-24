@@ -2183,12 +2183,13 @@
       const isChamp = store.titles.some(t => (t.champions || []).includes(wrestler.id));
       const endColor = isChamp ? '#ffd700' : '#000000';
 
-      if (modalBox) {
+     if (modalBox) {
         modalBox.classList.add('ficha-branded');
-        modalBox.style.backgroundImage =
-          `linear-gradient(to bottom, ${brandColor} 0%, ${endColor} 100%)`;
+        // Degradado muy oscuro: solo un tinte del color de marca arriba
+        modalBox.style.backgroundImage = isChamp
+          ? `linear-gradient(to bottom, ${brandColor}33 0%, #0a0a0a 35%, #1a1500 70%, #2a2200 100%)`
+          : `linear-gradient(to bottom, ${brandColor}28 0%, #0a0a0a 40%, #000000 100%)`;
       }
-
       if (logosEl) {
         if (!brands.length) {
           logosEl.innerHTML = '';
