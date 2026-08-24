@@ -189,6 +189,30 @@
     .ficha-name { font-size: 1.35rem; font-weight: 900; text-align: center; letter-spacing: 0.3px; }
     .ficha-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 100%; }
     .ficha-section-title { font-size: 0.75rem; color: var(--text-dim); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+    /* === CLASIFICACIÓN ELO === */
+    .ranking-controls { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .ranking-row { display: flex; flex-direction: column; gap: 4px; }
+    .ranking-row label { font-size: 0.72rem; color: var(--text-dim); font-weight: bold; text-transform: uppercase; }
+    .ranking-toggles { display: flex; flex-wrap: wrap; gap: 10px; }
+    .ranking-toggles label { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; cursor: pointer; user-select: none; }
+    .ranking-toggles input { accent-color: var(--accent); }
+    .ranking-list { display: flex; flex-direction: column; gap: 8px; }
+    .rank-row { display: flex; align-items: center; gap: 10px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+    .rank-row.top1 { border-color: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.25); }
+    .rank-row.top2 { border-color: #c0c0c0; }
+    .rank-row.top3 { border-color: #cd7f32; }
+    .rank-pos { font-size: 1.1rem; font-weight: 900; min-width: 36px; text-align: center; color: var(--gold-end); }
+    .rank-avatar { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; object-position: top center; background: #222; border: 1px solid var(--border); flex-shrink: 0; }
+    .rank-avatar-ph { width: 48px; height: 48px; border-radius: 8px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; border: 1px solid var(--border); }
+    .rank-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .rank-name { font-weight: 800; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rank-meta { font-size: 0.72rem; color: var(--text-dim); }
+    .rank-stats { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+    .rank-elo { font-size: 1.15rem; font-weight: 900; color: #fff; }
+    .rank-trend-up { font-size: 0.78rem; font-weight: 700; color: #4caf50; }
+    .rank-trend-down { font-size: 0.78rem; font-weight: 700; color: #f44336; }
+    .rank-trend-flat { font-size: 0.78rem; color: var(--text-dim); }
+    .rank-record { font-size: 0.75rem; color: var(--text-dim); }
   </style>
 </head>
 <body>
@@ -255,6 +279,67 @@
   <div id="tab-titles" class="tab-content">
     <button class="btn-trigger-add" onclick="openTitleModal(null)">➕ Añadir Campeonato</button>
     <div id="list-titles"></div>
+  </div>
+  
+  <div id="tab-ranking" class="tab-content">
+    <div class="ranking-controls">
+      <div class="ranking-row">
+        <label>Periodo</label>
+        <select id="rank-period" onchange="renderRanking()">
+          <option value="4">Último mes (4 semanas)</option>
+          <option value="12">Últimos 3 meses (12 semanas)</option>
+          <option value="24">Últimos 6 meses (24 semanas)</option>
+          <option value="52" selected>Último año (52 semanas)</option>
+        </select>
+      </div>
+      <div class="ranking-row">
+        <label>Marca</label>
+        <select id="rank-brand" onchange="renderRanking()"></select>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <div class="ranking-row">
+          <label>Alineación</label>
+          <select id="rank-alignment" onchange="renderRanking()">
+            <option value="ALL">Todas</option>
+            <option value="Face">Face</option>
+            <option value="Heel">Heel</option>
+          </select>
+        </div>
+        <div class="ranking-row">
+          <label>Género</label>
+          <select id="rank-gender" onchange="renderRanking()">
+            <option value="ALL">Todos</option>
+            <option value="Men">Men</option>
+            <option value="Women">Women</option>
+          </select>
+        </div>
+      </div>
+      <div class="ranking-row">
+        <label>División</label>
+        <select id="rank-division" onchange="renderRanking()">
+          <option value="ALL">Todas</option>
+          <option value="Main Eventer">Main Eventer</option>
+          <option value="Midcarder">Midcarder</option>
+          <option value="Tag Team">Tag Team</option>
+          <option value="Inactivo">Inactivo</option>
+        </select>
+      </div>
+      <div class="ranking-toggles">
+        <label><input type="checkbox" id="rank-exclude-champs" onchange="renderRanking()"> Excluir campeones</label>
+        <label><input type="checkbox" id="rank-hide-inactive" checked onchange="renderRanking()"> Ocultar inactivos</label>
+        <label><input type="checkbox" id="rank-tag-mode" onchange="renderRanking()"> Ranking Tag Teams</label>
+      </div>
+      <div class="ranking-row">
+        <label>Vista</label>
+        <select id="rank-limit" onchange="renderRanking()">
+          <option value="5">Top 5</option>
+          <option value="10" selected>Top 10</option>
+          <option value="25">Top 25</option>
+          <option value="0">Lista completa</option>
+        </select>
+      </div>
+    </div>
+    <div id="ranking-list" class="ranking-list"></div>
   </div>
   
   <div id="tab-matches" class="tab-content">
@@ -515,7 +600,8 @@
     <button id="nav-btn-roster" onclick="switchTab('roster', this)">Roster</button>
     <button onclick="switchTab('shows', this)">Shows</button>
     <button onclick="switchTab('teams', this)">Tag Teams</button>
-    <button onclick="switchTab('titles', this)">Títulos</button>
+    <button onclick="switchTab('titles', this)">Campeonatos</button>
+    <button onclick="switchTab('ranking', this)">Clasificación</button>
     <button onclick="switchTab('matches', this)">Cartelera de hoy</button>
   </nav>
 <script>
@@ -646,7 +732,173 @@
       const mid = Math.ceil(total / 2);
       return { left: mid, right: total - mid };
     }
+    
+    const ELO_BASE = 1200;
+    const ELO_K = 32;
 
+    function getUniverseWeekIndex(dayOffset) {
+      const d = dayOffset != null ? dayOffset : getTotalUniverseDays();
+      return Math.floor(Math.max(0, d) / 7) + 1; // Semana 1 = días 0-6
+    }
+
+    function eloExpected(playerElo, opponentElo) {
+      return 1 / (1 + Math.pow(10, (opponentElo - playerElo) / 400));
+    }
+
+    function eloDeltaForWinner(winnerElo, loserElo) {
+      const E = eloExpected(winnerElo, loserElo);
+      return Math.max(1, Math.round(ELO_K * (1 - E)));
+    }
+
+    function ensureWrestlerElo(w) {
+      if (w && (w.elo === undefined || w.elo === null)) w.elo = ELO_BASE;
+      return w ? w.elo : ELO_BASE;
+    }
+
+    function getWinningAndLosingIds(match) {
+      if (!match || !match.winner || match.winner === 'Promo' || match.winner === 'Pendiente' || match.winner === 'Empate') {
+        return { winners: [], losers: [] };
+      }
+      const parts = (match.participants || []).filter(Boolean);
+      if (parts.length < 2) return { winners: [], losers: [] };
+      const winnerW = store.roster.find(r => r.name === match.winner);
+      if (!winnerW) return { winners: [], losers: [] };
+
+      if (isTeamBasedMatch(match.matchType, match.subType)) {
+        const { left, right } = splitSides(parts, match.matchType, match.subType, match.winner);
+        if (left.includes(winnerW.id)) return { winners: left, losers: right };
+        if (right.includes(winnerW.id)) return { winners: right, losers: left };
+        return { winners: [winnerW.id], losers: parts.filter(id => id !== winnerW.id) };
+      }
+      return { winners: [winnerW.id], losers: parts.filter(id => id !== winnerW.id) };
+    }
+
+    /** Aplica ELO al finalizar un combate y guarda deltas estáticos en el match */
+    function applyEloToMatch(match) {
+      if (!match || match.eloApplied) return;
+      if (!match.winner || match.winner === 'Promo' || match.winner === 'Pendiente' || match.winner === 'Empate') {
+        match.eloApplied = true;
+        match.eloChanges = [];
+        return;
+      }
+      const { winners, losers } = getWinningAndLosingIds(match);
+      if (!winners.length || !losers.length) {
+        match.eloApplied = true;
+        match.eloChanges = [];
+        return;
+      }
+
+      const avg = (ids) => {
+        const elos = ids.map(id => {
+          const w = store.roster.find(r => r.id == id);
+          return ensureWrestlerElo(w);
+        });
+        return elos.reduce((a, b) => a + b, 0) / elos.length;
+      };
+
+      const winAvg = avg(winners);
+      const loseAvg = avg(losers);
+      const delta = eloDeltaForWinner(winAvg, loseAvg);
+
+      const day = getTotalUniverseDays();
+      const week = getUniverseWeekIndex(day);
+      match.universeDay = day;
+      match.weekIndex = week;
+      match.eloChanges = [];
+
+      winners.forEach(id => {
+        const w = store.roster.find(r => r.id == id);
+        if (!w) return;
+        const before = ensureWrestlerElo(w);
+        const after = before + delta;
+        w.elo = after;
+        match.eloChanges.push({ wrestlerId: id, delta: delta, eloBefore: before, eloAfter: after });
+      });
+      losers.forEach(id => {
+        const w = store.roster.find(r => r.id == id);
+        if (!w) return;
+        const before = ensureWrestlerElo(w);
+        const after = before - delta;
+        w.elo = after;
+        match.eloChanges.push({ wrestlerId: id, delta: -delta, eloBefore: before, eloAfter: after });
+      });
+      match.eloApplied = true;
+    }
+
+    /** Revierte ELO de un match (p.ej. al rehacer cartelera) */
+    function reverseEloFromMatch(match) {
+      if (!match || !match.eloApplied || !match.eloChanges) return;
+      match.eloChanges.forEach(ch => {
+        const w = store.roster.find(r => r.id == ch.wrestlerId);
+        if (w) {
+          ensureWrestlerElo(w);
+          w.elo = (w.elo || ELO_BASE) - ch.delta;
+        }
+      });
+      match.eloApplied = false;
+      match.eloChanges = [];
+    }
+
+    function getMatchesInPeriod(weeks) {
+      const currentWeek = getUniverseWeekIndex();
+      const minWeek = Math.max(1, currentWeek - weeks + 1);
+      // Si no hay suficientes semanas, se usan todas las disponibles (matches sin week → se asignan)
+      return store.matches
+        .filter(m => m.winner && m.winner !== 'Promo' && m.winner !== 'Pendiente')
+        .map(m => {
+          if (m.weekIndex == null && m.universeDay != null) m.weekIndex = getUniverseWeekIndex(m.universeDay);
+          if (m.weekIndex == null) m.weekIndex = 1;
+          return m;
+        })
+        .filter(m => m.weekIndex >= minWeek && m.weekIndex <= currentWeek)
+        .sort((a, b) => (a.universeDay || 0) - (b.universeDay || 0) || (a.id > b.id ? 1 : -1));
+    }
+
+    /** ELO del periodo: parte de 1200 y solo aplica deltas del rango */
+    function computePeriodStats(weeks) {
+      const matches = getMatchesInPeriod(weeks);
+      const stats = {}; // id -> { elo, wins, losses, lastDelta }
+      store.roster.forEach(r => {
+        stats[r.id] = { elo: ELO_BASE, wins: 0, losses: 0, lastDelta: 0 };
+      });
+
+      matches.forEach(m => {
+        // Preferir deltas guardados (estáticos)
+        if (m.eloChanges && m.eloChanges.length) {
+          const { winners, losers } = getWinningAndLosingIds(m);
+          winners.forEach(id => { if (stats[id]) stats[id].wins++; });
+          losers.forEach(id => { if (stats[id]) stats[id].losses++; });
+          m.eloChanges.forEach(ch => {
+            if (!stats[ch.wrestlerId]) return;
+            stats[ch.wrestlerId].elo += ch.delta;
+            stats[ch.wrestlerId].lastDelta = ch.delta;
+          });
+          return;
+        }
+        // Fallback si el combate es antiguo sin eloChanges
+        const { winners, losers } = getWinningAndLosingIds(m);
+        if (!winners.length || !losers.length) return;
+        const avg = (ids) => {
+          const elos = ids.map(id => (stats[id] ? stats[id].elo : ELO_BASE));
+          return elos.reduce((a, b) => a + b, 0) / elos.length;
+        };
+        const delta = eloDeltaForWinner(avg(winners), avg(losers));
+        winners.forEach(id => {
+          if (!stats[id]) return;
+          stats[id].elo += delta;
+          stats[id].wins++;
+          stats[id].lastDelta = delta;
+        });
+        losers.forEach(id => {
+          if (!stats[id]) return;
+          stats[id].elo -= delta;
+          stats[id].losses++;
+          stats[id].lastDelta = -delta;
+        });
+      });
+      return stats;
+    }
+    
     let db;
     const request = indexedDB.open("UniversoTrackerDB", 2);
     request.onupgradeneeded = (e) => { db = e.target.result; if (!db.objectStoreNames.contains("images")) db.createObjectStore("images"); };
@@ -765,6 +1017,7 @@
         else renderCalendar();
       }
       if (tabId === 'matches') renderTodayCard();
+      if (tabId === 'ranking') renderRanking();
     }
     function confirmStartMonth() {
       store.calendar.startMonth = parseInt(document.getElementById('select-initial-month').value);
@@ -1718,6 +1971,7 @@
             }
           }
           store.matches.push(match);
+          applyEloToMatch(match);
           slot.matchId = matchId;
         }
       });
