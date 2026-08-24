@@ -2252,26 +2252,6 @@
 
       container.innerHTML = cards.join('');
     }
-
-        const pos = i + 1;
-        const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `#${pos}`;
-        const pctText = row.total > 0 ? `${Math.round(row.pct * 100)}%` : '—';
-        return `
-          <div class="card" style="padding:12px; height:auto; cursor:default;" onclick="openWrestlerModal(${row.wrestler.id})">
-            <div class="card-left" style="padding-left:12px; gap:14px;">
-              <div style="min-width:42px; text-align:center; font-weight:900; font-size:1.1rem; color:var(--accent);">${medal}</div>
-              <div class="card-info" style="height:auto;">
-                <span class="card-title" style="white-space:normal;">${row.wrestler.name}</span>
-                <span class="card-sub">
-                  <span style="color:#4caf50;">${row.wins}V</span> ·
-                  <span style="color:#f44336;">${row.losses}D</span> ·
-                  <span style="color:#ffeb3b;">${row.draws}E</span>
-                  · ${row.total} combates · ${pctText} victorias
-                </span>
-              </div>
-            </div>
-          </div>`;
-      }).join('');
   
     async function render() {
       document.getElementById('stat-total-roster').innerText = store.roster.length;
