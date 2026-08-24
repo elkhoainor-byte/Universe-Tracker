@@ -343,10 +343,63 @@
 
   <div id="tab-standings" class="tab-content">
     <div class="filters-wrapper" style="margin-bottom:15px;">
-      <span class="filter-header">📊 Clasificación por victorias</span>
-      <p style="font-size:0.85rem; color:var(--text-dim); margin-top:6px;">
-        Ranking del roster según el récord de combates registrados (victorias / derrotas / empates).
-      </p>
+      <span class="filter-header">📊 Clasificación</span>
+      <p id="standings-period-hint" style="font-size:0.8rem; color:var(--text-dim); margin-top:4px; margin-bottom:10px;"></p>
+
+      <label class="filter-header" style="margin-top:6px;">⏱ Periodo</label>
+      <select id="standings-period" onchange="onStandingsFilterChange()">
+        <option value="all">Todo el universo</option>
+        <option value="4">Último mes (últimas 4 semanas)</option>
+        <option value="12">Últimos 3 meses (últimas 12 semanas)</option>
+        <option value="24">Últimos 6 meses (últimas 24 semanas)</option>
+        <option value="52">Último año (últimas 52 semanas)</option>
+      </select>
+
+      <label class="filter-header" style="margin-top:10px;">🏷 Atributos</label>
+      <select id="standings-brand" onchange="onStandingsFilterChange()">
+        <option value="ALL">Marca: Todas</option>
+      </select>
+      <select id="standings-alignment" onchange="onStandingsFilterChange()" style="margin-top:6px;">
+        <option value="ALL">Alineamiento: Todos</option>
+        <option value="Face">Face</option>
+        <option value="Heel">Heel</option>
+      </select>
+      <select id="standings-gender" onchange="onStandingsFilterChange()" style="margin-top:6px;">
+        <option value="ALL">Género: Todos</option>
+        <option value="Men">Men</option>
+        <option value="Women">Women</option>
+      </select>
+      <select id="standings-division" onchange="onStandingsFilterChange()" style="margin-top:6px;">
+        <option value="ALL">División: Todas</option>
+        <option value="Main Eventer">Main Eventer</option>
+        <option value="Midcarder">Midcarder</option>
+        <option value="Tag Team">Tag Team</option>
+        <option value="Inactivo">Inactivo</option>
+      </select>
+
+      <label class="filter-header" style="margin-top:10px;">⚙ Opciones</label>
+      <div class="option-checkboxes" style="flex-direction:column; align-items:flex-start;">
+        <label class="option-checkbox-item">
+          <input type="checkbox" id="standings-exclude-champs" onchange="onStandingsFilterChange()">
+          Excluir campeones actuales
+        </label>
+        <label class="option-checkbox-item">
+          <input type="checkbox" id="standings-hide-inactive" onchange="onStandingsFilterChange()" checked>
+          Ocultar inactivos
+        </label>
+        <label class="option-checkbox-item">
+          <input type="checkbox" id="standings-team-mode" onchange="onStandingsFilterChange()">
+          Ranking por Tag Team (media del equipo)
+        </label>
+      </div>
+
+      <label class="filter-header" style="margin-top:10px;">👁 Vista</label>
+      <select id="standings-limit" onchange="onStandingsFilterChange()">
+        <option value="5">Top 5</option>
+        <option value="10" selected>Top 10</option>
+        <option value="25">Top 25</option>
+        <option value="0">Lista completa</option>
+      </select>
     </div>
     <div id="list-standings"></div>
   </div>
@@ -802,6 +855,17 @@
     });
 
     let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
+    let standingsFilters = {
+      periodWeeks: 'all',
+      brand: 'ALL',
+      alignment: 'ALL',
+      gender: 'ALL',
+      division: 'ALL',
+      excludeChamps: false,
+      hideInactive: true,
+      teamMode: false,
+      limit: 10
+    };
     let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
     let wrestlerModalMode = 'view';
     let calendarViewMonthIndex = null;
@@ -1780,6 +1844,7 @@
             specialReferee: slot.specialReferee,
             titleId: slot.isTitleMatch ? slot.titleId : null,
             isDefense: false
+            universeDay: getTotalUniverseDays(),
           };
           if (slot.isTitleMatch && slot.titleId && slot.winner && slot.winner !== 'Empate' && slot.winner !== 'Pendiente') {
             const title = store.titles.find(t => t.id === slot.titleId);
@@ -1803,7 +1868,11 @@
               }
             }
           }
-          store.matches.push(match);
+          store.matches.push({
+            id: matchId, show: label, eventName: event.name, showNumber: event.showNumber,
+            card: '🎤 Promo', winner: 'Promo', participants: [], matchType: null, subType: null,
+            universeDay: getTotalUniverseDays()
+          });
           slot.matchId = matchId;
         }
       });
@@ -2147,8 +2216,28 @@
       saveData();
     }
 
-    function getWrestlerRecord(wrestler) {
-      const history = store.matches.filter(m => m.participants && m.participants.includes(wrestler.id) && m.winner !== 'Promo');
+    function getMatchesInPeriod() {
+      const weeks = standingsFilters.periodWeeks;
+      if (weeks === 'all' || weeks === '0') return store.matches.filter(m => m.winner !== 'Promo');
+      const currentDays = getTotalUniverseDays();
+      const rangeDays = parseInt(weeks, 10) * 7;
+      const minDay = Math.max(0, currentDays - rangeDays);
+      const withDay = store.matches.filter(m => m.winner !== 'Promo' && typeof m.universeDay === 'number');
+      // Si no hay suficientes datos fechados, usar TODO desde el inicio
+      if (withDay.length === 0) {
+        return store.matches.filter(m => m.winner !== 'Promo');
+      }
+      const filtered = store.matches.filter(m => {
+        if (m.winner === 'Promo') return false;
+        if (typeof m.universeDay !== 'number') return true; // antiguos = desde el inicio
+        return m.universeDay >= minDay;
+      });
+      return filtered;
+    }
+
+    function getWrestlerRecord(wrestler, matchesPool) {
+      const pool = matchesPool || store.matches;
+      const history = pool.filter(m => m.participants && m.participants.includes(wrestler.id) && m.winner !== 'Promo');
       let wins = 0, losses = 0, draws = 0;
       history.forEach(m => {
         if (m.winner === wrestler.name) wins++;
@@ -2169,13 +2258,243 @@
       return { wins, losses, draws, total: wins + losses + draws };
     }
 
+    function onStandingsFilterChange() {
+      const periodEl = document.getElementById('standings-period');
+      const brandEl = document.getElementById('standings-brand');
+      const alignEl = document.getElementById('standings-alignment');
+      const genderEl = document.getElementById('standings-gender');
+      const divEl = document.getElementById('standings-division');
+      const limitEl = document.getElementById('standings-limit');
+      if (periodEl) standingsFilters.periodWeeks = periodEl.value;
+      if (brandEl) standingsFilters.brand = brandEl.value;
+      if (alignEl) standingsFilters.alignment = alignEl.value;
+      if (genderEl) standingsFilters.gender = genderEl.value;
+      if (divEl) standingsFilters.division = divEl.value;
+      if (limitEl) standingsFilters.limit = parseInt(limitEl.value, 10);
+      standingsFilters.excludeChamps = !!(document.getElementById('standings-exclude-champs') || {}).checked;
+      standingsFilters.hideInactive = !!(document.getElementById('standings-hide-inactive') || {}).checked;
+      standingsFilters.teamMode = !!(document.getElementById('standings-team-mode') || {}).checked;
+      renderStandings();
+    }
+
+    function populateStandingsBrandSelect() {
+      const sel = document.getElementById('standings-brand');
+      if (!sel) return;
+      const current = standingsFilters.brand || 'ALL';
+      sel.innerHTML = `<option value="ALL">Marca: Todas</option>` +
+        store.shows.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+      sel.value = current;
+    }
+      return { wins, losses, draws, total: wins + losses + draws };
+    }
+
      async function renderStandings() {
       const container = document.getElementById('list-standings');
       if (!container) return;
-      if (!store.roster.length) {
-        container.innerHTML = '<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay luchadores en el roster.</p>';
+
+      populateStandingsBrandSelect();
+
+      const matchesPool = getMatchesInPeriod();
+      const hint = document.getElementById('standings-period-hint');
+      if (hint) {
+        const weeks = standingsFilters.periodWeeks;
+        if (weeks === 'all') {
+          hint.textContent = 'Periodo: todo el universo (todos los combates registrados).';
+        } else {
+          const currentDays = getTotalUniverseDays();
+          const rangeDays = parseInt(weeks, 10) * 7;
+          const dated = matchesPool.filter(m => typeof m.universeDay === 'number').length;
+          hint.textContent = dated
+            ? `Periodo: últimas ${weeks} semanas (~${rangeDays} días de universo). Combates sin fecha = desde el inicio.`
+            : `Periodo: últimas ${weeks} semanas. No hay fechas en combates → se usan todos desde el inicio del universo.`;
+        }
+      }
+
+      const championIds = new Set();
+      store.titles.forEach(t => (t.champions || []).forEach(id => championIds.add(id)));
+
+      let rosterPool = [...store.roster];
+
+      // Filtros por atributos
+      rosterPool = rosterPool.filter(r => {
+        const brands = r.brands || (r.brand ? [r.brand] : []);
+        if (standingsFilters.brand !== 'ALL' && !brands.includes(standingsFilters.brand)) return false;
+        if (standingsFilters.alignment !== 'ALL' && (r.alignment || 'Face') !== standingsFilters.alignment) return false;
+        if (standingsFilters.gender !== 'ALL' && (r.gender || 'Men') !== standingsFilters.gender) return false;
+        if (standingsFilters.division !== 'ALL' && (r.division || 'Midcarder') !== standingsFilters.division) return false;
+        if (standingsFilters.hideInactive && (r.division === 'Inactivo')) return false;
+        if (standingsFilters.excludeChamps && championIds.has(r.id)) return false;
+        return true;
+      });
+
+      const showBgCache = {};
+      await Promise.all(store.shows.map(async s => {
+        showBgCache[s.id] = await getImageFromDB('show_bg_' + s.id);
+      }));
+
+      let ranked = [];
+
+      if (standingsFilters.teamMode) {
+        // Ranking por equipos: media de V/D/E de los miembros
+        const teams = store.teams.filter(t => t.members && t.members.length);
+        ranked = teams.map(team => {
+          const members = team.members
+            .map(id => store.roster.find(r => r.id === id))
+            .filter(Boolean)
+            // solo miembros que pasan filtros individuales (salvo teamMode ya aplica sobre roster filtrado)
+            .filter(r => rosterPool.some(x => x.id === r.id) || !rosterPool.length);
+          // Si hay filtros de roster, exigir que al menos 1 miembro esté en el pool filtrado
+          const inPool = team.members
+            .map(id => rosterPool.find(r => r.id === id))
+            .filter(Boolean);
+          if (standingsFilters.brand !== 'ALL' || standingsFilters.alignment !== 'ALL' ||
+              standingsFilters.gender !== 'ALL' || standingsFilters.division !== 'ALL' ||
+              standingsFilters.hideInactive || standingsFilters.excludeChamps) {
+            if (!inPool.length) return null;
+          }
+          const useMembers = inPool.length ? inPool : members;
+          if (!useMembers.length) return null;
+
+          let wins = 0, losses = 0, draws = 0, total = 0;
+          useMembers.forEach(m => {
+            const rec = getWrestlerRecord(m, matchesPool);
+            wins += rec.wins;
+            losses += rec.losses;
+            draws += rec.draws;
+            total += rec.total;
+          });
+          const n = useMembers.length;
+          const avgWins = wins / n;
+          const avgLosses = losses / n;
+          const avgDraws = draws / n;
+          const avgTotal = total / n;
+          const pct = avgTotal > 0 ? avgWins / avgTotal : 0;
+          return {
+            isTeam: true,
+            team,
+            members: useMembers,
+            wins: Math.round(avgWins * 10) / 10,
+            losses: Math.round(avgLosses * 10) / 10,
+            draws: Math.round(avgDraws * 10) / 10,
+            total: Math.round(avgTotal * 10) / 10,
+            pct,
+            sumWins: wins
+          };
+        }).filter(Boolean).sort((a, b) => {
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          if (b.pct !== a.pct) return b.pct - a.pct;
+          return a.losses - b.losses;
+        });
+      } else {
+        ranked = rosterPool.map(r => {
+          const rec = getWrestlerRecord(r, matchesPool);
+          const pct = rec.total > 0 ? (rec.wins / rec.total) : 0;
+          return { isTeam: false, wrestler: r, ...rec, pct };
+        }).sort((a, b) => {
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          if (b.pct !== a.pct) return b.pct - a.pct;
+          return a.losses - b.losses;
+        });
+      }
+
+      const limit = standingsFilters.limit || 0;
+      if (limit > 0) ranked = ranked.slice(0, limit);
+
+      if (!ranked.length) {
+        container.innerHTML = '<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay resultados con estos filtros.</p>';
         return;
       }
+
+      const cards = await Promise.all(ranked.map(async (row, i) => {
+        const pos = i + 1;
+        const podiumClass = pos === 1 ? 'podium-1' : pos === 2 ? 'podium-2' : pos === 3 ? 'podium-3' : '';
+        const pctText = row.total > 0 ? `${Math.round(row.pct * 100)}%` : '—';
+
+        if (row.isTeam) {
+          const names = row.members.map(m => m.name).join(' & ');
+          const first = row.members[0];
+          const brands = first ? (first.brands || (first.brand ? [first.brand] : [])) : [];
+          let bgStyle = '';
+          let brandColor = '#555555';
+          if (brands.length > 0) {
+            const showObj = store.shows.find(s => s.name === brands[0]);
+            if (showObj) {
+              brandColor = showObj.color || '#555555';
+              if (showBgCache[showObj.id]) bgStyle = `background-image:url('${showBgCache[showObj.id]}');`;
+            }
+          }
+          const imgs = await Promise.all(row.members.slice(0, 2).map(async m => {
+            const img = await getImageFromDB('wrestler_' + m.id);
+            return img
+              ? `<img src="${img}" class="wrestler-avatar" style="width:42px;height:100%;object-fit:cover;" onerror="handleImgError(this)">`
+              : `<div class="wrestler-avatar-placeholder">👤</div>`;
+          }));
+          const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, #000000) 1;`;
+          return `
+            <div class="card ${podiumClass}" style="${bgStyle}${borderStyle}">
+              <span class="standing-rank">#${pos}</span>
+              <div class="card-left">
+                <div class="avatar-wrapper" style="display:flex;gap:0;">${imgs.join('')}</div>
+                <div class="card-info">
+                  <span class="card-title">🤝 ${row.team.name}</span>
+                  <span class="card-sub">${names}</span>
+                  <span class="card-sub">
+                    <span style="color:#4caf50;">${row.wins}V</span> ·
+                    <span style="color:#f44336;">${row.losses}D</span> ·
+                    <span style="color:#ffeb3b;">${row.draws}E</span>
+                    · media · ${pctText}
+                  </span>
+                </div>
+              </div>
+            </div>`;
+        }
+
+        const r = row.wrestler;
+        const img = await getImageFromDB('wrestler_' + r.id);
+        const brands = r.brands || (r.brand ? [r.brand] : []);
+        let bgStyle = '';
+        let brandColor = '#555555';
+        if (brands.length > 0) {
+          const showObj = store.shows.find(s => s.name === brands[0]);
+          if (showObj) {
+            brandColor = showObj.color || '#555555';
+            if (showBgCache[showObj.id]) bgStyle = `background-image:url('${showBgCache[showObj.id]}');`;
+          }
+        }
+        const heldTitles = store.titles.filter(t => (t.champions || []).includes(r.id));
+        let titleBadges = '';
+        for (const t of heldTitles) {
+          const tImg = await getImageFromDB('title_' + t.id);
+          if (tImg) titleBadges += `<img src="${tImg}" class="title-badge-img" alt="${t.name}">`;
+          else titleBadges += `<span class="tag tag-champ">🏆</span>`;
+        }
+        const endColor = heldTitles.length > 0 ? '#ffd700' : '#000000';
+        const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, ${endColor}) 1;`;
+        const avatar = img
+          ? `<img src="${img}" class="wrestler-avatar" onerror="handleImgError(this)">`
+          : `<div class="wrestler-avatar-placeholder">👤</div>`;
+
+        return `
+          <div class="card ${podiumClass}" style="${bgStyle}${borderStyle}" onclick="openWrestlerModal(${r.id})">
+            <span class="standing-rank">#${pos}</span>
+            <div class="card-left">
+              <div class="avatar-wrapper">${avatar}</div>
+              <div class="card-info">
+                <span class="card-title">${r.name}</span>
+                <span class="card-sub">
+                  <span style="color:#4caf50;">${row.wins}V</span> ·
+                  <span style="color:#f44336;">${row.losses}D</span> ·
+                  <span style="color:#ffeb3b;">${row.draws}E</span>
+                  · ${row.total} combates · ${pctText}
+                </span>
+              </div>
+            </div>
+            ${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}
+          </div>`;
+      }));
+
+      container.innerHTML = cards.join('');
+    }
 
       const ranked = store.roster.map(r => {
         const rec = getWrestlerRecord(r);
