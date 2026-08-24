@@ -247,6 +247,40 @@
     .modal-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; position: relative; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     .modal-title { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
+    .modal-title.ficha-wrestler-name {
+      color: #ffffff;
+      font-family: 'Arial Black', Impact, 'Arial Narrow', sans-serif;
+      font-weight: 900;
+      font-style: italic;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.85);
+    }
+    .modal-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+    .ficha-header-logos {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .ficha-header-logo {
+      height: 28px;
+      width: auto;
+      max-width: 52px;
+      object-fit: contain;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));
+    }
+    .modal-box.ficha-branded {
+      background: var(--card-bg);
+      background-image: none;
+    }
     .modal-close { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; }
     .stats-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
     .stat-card { background: #2a2a2a; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
@@ -681,10 +715,11 @@
   <div id="modal-wrestler" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <div class="modal-title-wrapper" style="display:flex; align-items:center; gap:10px;">
+        <div class="modal-title-wrapper">
           <div id="modal-avatar-container"></div>
           <span class="modal-title" id="modal-wrestler-title">Ficha de Luchador</span>
-        </div>
+          <div class="ficha-header-logos" id="ficha-header-logos"></div>
+        </div>        
         <div class="modal-header-actions">
           <span id="wrestler-elo-badge" class="wrestler-elo-badge" title="Puntuación ELO">
             ELO <span class="elo-num" id="wrestler-elo-value">1200</span>
@@ -2115,7 +2150,63 @@
       saveData();
       renderTodayCard();
     }
-  
+    async function applyWrestlerFichaChrome(wrestler) {
+      const titleEl = document.getElementById('modal-wrestler-title');
+      const logosEl = document.getElementById('ficha-header-logos');
+      const modalBox = document.querySelector('#modal-wrestler .modal-box');
+
+      if (!wrestler) {
+        if (titleEl) {
+          titleEl.textContent = 'Ficha de Luchador';
+          titleEl.classList.remove('ficha-wrestler-name');
+        }
+        if (logosEl) logosEl.innerHTML = '';
+        if (modalBox) {
+          modalBox.classList.remove('ficha-branded');
+          modalBox.style.backgroundImage = '';
+        }
+        return;
+      }
+
+      if (titleEl) {
+        titleEl.textContent = wrestler.name || '';
+        titleEl.classList.add('ficha-wrestler-name');
+      }
+
+      const brands = wrestler.brands || (wrestler.brand ? [wrestler.brand] : []);
+      let brandColor = '#555555';
+      if (brands.length > 0) {
+        const showObj = store.shows.find(s => s.name === brands[0]);
+        if (showObj && showObj.color) brandColor = showObj.color;
+      }
+
+      const isChamp = store.titles.some(t => (t.champions || []).includes(wrestler.id));
+      const endColor = isChamp ? '#ffd700' : '#000000';
+
+      if (modalBox) {
+        modalBox.classList.add('ficha-branded');
+        modalBox.style.backgroundImage =
+          `linear-gradient(to bottom, ${brandColor} 0%, ${endColor} 100%)`;
+      }
+
+      if (logosEl) {
+        if (!brands.length) {
+          logosEl.innerHTML = '';
+        } else {
+          const parts = await Promise.all(brands.map(async (b) => {
+            const showObj = store.shows.find(s => s.name === b);
+            if (!showObj) return '';
+            const logo = await getImageFromDB('show_logo_' + showObj.id);
+            if (logo) {
+              return `<img src="${logo}" class="ficha-header-logo" alt="${b}" title="${b}">`;
+            }
+            // Sin logo: pastilla con el nombre del show
+            return `<span class="tag" style="background:${showObj.color || '#555'}; color:#fff; font-size:0.65rem;">${b}</span>`;
+          }));
+          logosEl.innerHTML = parts.join('');
+        }
+      }
+    }
     function setWrestlerModalMode(mode) {
       wrestlerModalMode = mode;
       const eloBadge = document.getElementById('wrestler-elo-badge');
@@ -2129,7 +2220,7 @@
         form.style.display = 'none';
         if (editBtn) editBtn.style.display = activeWrestlerId ? 'block' : 'none';
         if (cancelBtn) cancelBtn.style.display = 'none';
-        if (titleEl) titleEl.innerText = 'Ficha Técnica';
+        // El título (nombre + logos) lo pone applyWrestlerFichaChrome / updateWrestlerStats
         if (eloBadge) eloBadge.classList.toggle('visible', !!activeWrestlerId);
       } else if (mode === 'edit') {
         viewPanel.style.display = 'none';
@@ -2137,6 +2228,14 @@
         if (editBtn) editBtn.style.display = 'none';
         if (cancelBtn) cancelBtn.style.display = 'block';
         if (titleEl) titleEl.innerText = 'Editar Luchador';
+        if (titleEl) titleEl.classList.remove('ficha-wrestler-name');
+        const logosElEdit = document.getElementById('ficha-header-logos');
+        if (logosElEdit) logosElEdit.innerHTML = '';
+        const modalBoxEdit = document.querySelector('#modal-wrestler .modal-box');
+        if (modalBoxEdit) {
+          modalBoxEdit.classList.remove('ficha-branded');
+          modalBoxEdit.style.backgroundImage = '';
+        }
         if (eloBadge) eloBadge.classList.remove('visible');
       } else {
         viewPanel.style.display = 'none';
@@ -2144,6 +2243,14 @@
         if (editBtn) editBtn.style.display = 'none';
         if (cancelBtn) cancelBtn.style.display = 'none';
         if (titleEl) titleEl.innerText = 'Añadir Luchador';
+        if (titleEl) titleEl.classList.remove('ficha-wrestler-name');
+        const logosElAdd = document.getElementById('ficha-header-logos');
+        if (logosElAdd) logosElAdd.innerHTML = '';
+        const modalBoxAdd = document.querySelector('#modal-wrestler .modal-box');
+        if (modalBoxAdd) {
+          modalBoxAdd.classList.remove('ficha-branded');
+          modalBoxAdd.style.backgroundImage = '';
+        }
         if (eloBadge) eloBadge.classList.remove('visible');
       }
     }
@@ -2202,6 +2309,7 @@
       document.getElementById('modal-wrestler').classList.remove('active');
       activeWrestlerId = null;
       wrestlerModalMode = 'view';
+      applyWrestlerFichaChrome(null);
     }
     async function updateWrestlerStats(wrestler) {
       const photoContainer = document.getElementById('ficha-photo-container');
@@ -2282,6 +2390,7 @@
         }).join('');
       }
       renderH2H();
+      await applyWrestlerFichaChrome(wrestler);
     }
     function renderH2H() {
       const oppId = parseInt(document.getElementById('h2h-opponent').value);
