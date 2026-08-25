@@ -3040,13 +3040,34 @@
               if (showBgCache[showObj.id]) bgStyle = `background-image:url('${showBgCache[showObj.id]}');`;
             }
           }
+
+          // Títulos por parejas que lleva este equipo
+          const teamMemberIds = new Set(getTeamMemberIds(row.team));
+          const heldTitles = (store.titles || []).filter(t => {
+            if ((t.type || 'individual') !== 'tag') return false;
+            const champs = t.champions || [];
+            if (!champs.length) return false;
+            // Todos los campeones actuales deben ser miembros del equipo
+            return champs.every(id => teamMemberIds.has(id));
+          });
+
+          let titleBadges = '';
+          for (const t of heldTitles) {
+            const tImg = await getImageFromDB('title_' + t.id);
+            if (tImg) titleBadges += `<img src="${tImg}" class="title-badge-img" alt="${t.name}" title="${t.name}">`;
+            else titleBadges += `<span class="tag tag-champ" title="${t.name}">🏆</span>`;
+          }
+
           const imgs = await Promise.all(row.members.slice(0, 2).map(async m => {
             const img = await getImageFromDB('wrestler_' + m.id);
             return img
               ? `<img src="${img}" class="wrestler-avatar" style="width:42px;height:100%;object-fit:cover;" onerror="handleImgError(this)">`
               : `<div class="wrestler-avatar-placeholder">👤</div>`;
           }));
-          const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, #000000) 1;`;
+
+          const endColor = heldTitles.length > 0 ? '#ffd700' : '#000000';
+          const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, ${endColor}) 1;`;
+
           return `
             <div class="card ${podiumClass}" style="${bgStyle}${borderStyle}">
               <span class="standing-rank">#${pos}</span>
@@ -3063,6 +3084,7 @@
                   </span>
                 </div>
               </div>
+              ${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}
             </div>`;
         }
 
