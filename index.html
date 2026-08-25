@@ -500,6 +500,20 @@
     .slot-selects-row .title-match-details { margin-top: 0; }
     .slot-selects-row .title-match-details > summary { padding: 8px 12px; font-size: 0.82rem; justify-content: center; gap: 6px; }
     .slot-selects-row .title-match-details > summary::after { margin-left: 6px; }
+    .participant-with-photo { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .participant-photo { width: 64px; height: 80px; border-radius: 8px; object-fit: cover; object-position: top center; border: 2px solid #444; background: #222; box-shadow: 0 2px 8px rgba(0,0,0,0.45); }
+    .participant-photo.empty { display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: var(--text-dim); border-style: dashed; }
+    .participants-sides { display: flex; gap: 10px; margin-top: 10px; align-items: stretch; }
+    .side-column { flex: 1; display: flex; flex-direction: column; gap: 10px; background: #1f1f1f; border-radius: 10px; padding: 10px 8px; border: 1px solid #3a3a3a; }
+    .side-column.left { border-color: #2e7d32; }
+    .side-column.right { border-color: #c62828; }
+    .side-photos { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 4px; }
+    .side-column .participant-box { text-align: center; }
+    .side-column .participant-box label { margin-bottom: 4px; }
+    .side-column .participant-box select { font-size: 0.8rem; }
+    .participants-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-top: 10px; justify-items: center; }
+    .participants-grid .participant-box { width: 100%; max-width: 140px; text-align: center; }
+    .side-vs { display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--accent); font-size: 1.1rem; min-width: 32px; padding: 0 2px; }
   </style>
 </head>
 <body>
@@ -2058,39 +2072,81 @@
   });
   return h + '</select>';
 }
-    function getParticipantBoxes(slot, slotIdx, available) {
-      const is3Stages = slot.matchType === '3 Stages of Hell';
-      let count = 0;
-      if (is3Stages) count = 2;
-      else if (slot.matchType && slot.subType && MATCH_TYPES[slot.matchType]) {
-        const conf = MATCH_TYPES[slot.matchType][slot.subType];
-        count = (typeof conf === 'number') ? conf : 0;
-      }
-      if (count === 0) return '';
-      while (slot.participants.length < count) slot.participants.push(null);
-      slot.participants = slot.participants.slice(0, count);
-      const opts = available.map(w => ({ value: w.id, label: w.name }));
-      if (isTeamBasedMatch(slot.matchType, slot.subType)) {
-        const sides = getTeamSideCounts(slot.matchType, slot.subType, count);
-        let leftH = '<div class="side-column left"><div class="side-label">Bando A</div>';
-        for (let i = 0; i < sides.left; i++) {
-          leftH += `<div class="participant-box"><label>Luchador ${i + 1}</label>${buildSelect(opts, slot.participants[i], `updateSlotParticipant(${slotIdx},${i},this.value)`, '-- Elegir --')}</div>`;
-        }
-        leftH += '</div>';
-        let rightH = '<div class="side-column right"><div class="side-label">Bando B</div>';
-        for (let i = 0; i < sides.right; i++) {
-          const pi = sides.left + i;
-          rightH += `<div class="participant-box"><label>Luchador ${i + 1}</label>${buildSelect(opts, slot.participants[pi], `updateSlotParticipant(${slotIdx},${pi},this.value)`, '-- Elegir --')}</div>`;
-        }
-        rightH += '</div>';
-        return `<div class="participants-sides">${leftH}<div class="side-vs">VS</div>${rightH}</div>`;
-      }
-      let h = '<div class="participants-grid">';
-      for (let i = 0; i < count; i++) {
-        h += `<div class="participant-box"><label>Luchador ${i + 1}</label>${buildSelect(opts, slot.participants[i], `updateSlotParticipant(${slotIdx},${i},this.value)`, '-- Elegir --')}</div>`;
-      }
-      return h + '</div>';
+    async function getParticipantBoxes(slot, slotIdx, available) {
+  const is3Stages = slot.matchType === '3 Stages of Hell';
+  let count = 0;
+  if (is3Stages) count = 2;
+  else if (slot.matchType && slot.subType && MATCH_TYPES[slot.matchType]) {
+    const conf = MATCH_TYPES[slot.matchType][slot.subType];
+    count = (typeof conf === 'number') ? conf : 0;
+  }
+  if (count === 0) return '';
+
+  while (slot.participants.length < count) slot.participants.push(null);
+  slot.participants = slot.participants.slice(0, count);
+
+  const opts = available.map(w => ({ value: w.id, label: w.name }));
+
+  const imgCache = {};
+  await Promise.all(
+    (slot.participants || []).filter(Boolean).map(async id => {
+      imgCache[id] = await getImageFromDB('wrestler_' + id);
+    })
+  );
+
+  function photoHTML(id) {
+    if (!id) return `<div class="participant-photo empty">👤</div>`;
+    const src = imgCache[id];
+    if (src) return `<img src="${src}" class="participant-photo" alt="" onerror="this.outerHTML='<div class=\\'participant-photo empty\\'>👤</div>'">`;
+    return `<div class="participant-photo empty">👤</div>`;
+  }
+
+  function oneBox(i, label) {
+    return `
+      <div class="participant-box participant-with-photo">
+        ${photoHTML(slot.participants[i])}
+        <label>${label || ('Luchador ' + (i + 1))}</label>
+        ${buildSelect(opts, slot.participants[i], `updateSlotParticipant(${slotIdx},${i},this.value)`, '-- Elegir --')}
+      </div>`;
+  }
+
+  if (isTeamBasedMatch(slot.matchType, slot.subType)) {
+    const sides = getTeamSideCounts(slot.matchType, slot.subType, count);
+    let leftH = `<div class="side-column left"><div class="side-label">Bando A</div><div class="side-photos">`;
+    for (let i = 0; i < sides.left; i++) leftH += photoHTML(slot.participants[i]);
+    leftH += `</div>`;
+    for (let i = 0; i < sides.left; i++) {
+      leftH += `
+        <div class="participant-box">
+          <label>Luchador ${i + 1}</label>
+          ${buildSelect(opts, slot.participants[i], `updateSlotParticipant(${slotIdx},${i},this.value)`, '-- Elegir --')}
+        </div>`;
     }
+    leftH += `</div>`;
+
+    let rightH = `<div class="side-column right"><div class="side-label">Bando B</div><div class="side-photos">`;
+    for (let i = 0; i < sides.right; i++) rightH += photoHTML(slot.participants[sides.left + i]);
+    rightH += `</div>`;
+    for (let i = 0; i < sides.right; i++) {
+      const pi = sides.left + i;
+      rightH += `
+        <div class="participant-box">
+          <label>Luchador ${i + 1}</label>
+          ${buildSelect(opts, slot.participants[pi], `updateSlotParticipant(${slotIdx},${pi},this.value)`, '-- Elegir --')}
+        </div>`;
+    }
+    rightH += `</div>`;
+
+    return `<div class="participants-sides">${leftH}<div class="side-vs">VS</div>${rightH}</div>`;
+  }
+
+  let h = `<div class="participants-grid">`;
+  for (let i = 0; i < count; i++) {
+    h += oneBox(i);
+  }
+  h += `</div>`;
+  return h;
+}
     function getStagesBoxes(slot, slotIdx) {
       if (slot.matchType !== '3 Stages of Hell') return '';
       if (!slot.stages) slot.stages = [null, null, null];
@@ -2321,7 +2377,7 @@
       if (!slot.winner && m.winner) slot.winner = m.winner;
     }
   
-    function renderTodayCard() {
+    async function renderTodayCard() {
       ensureTodaySlots();
       const event = getCurrentEvent();
       const header = document.getElementById('today-card-header');
@@ -2340,7 +2396,9 @@
       const available = getAvailableWrestlers(event.brands);
       const locked = store.todayCard.locked;
       let html = '';
-      store.todayCard.slots.forEach((slot, idx) => {
+      for (let idx = 0; idx < store.todayCard.slots.length; idx++) {
+        const slot = store.todayCard.slots[idx];
+      }
         const isEditing = locked && isSlotBeingEdited(idx);
         const canEditUI = !locked || isEditing;
         html += `<div class="card-slot ${locked && !isEditing ? 'locked' : ''} ${isEditing ? 'editing' : ''}"><div class="card-slot-header"><span class="card-slot-title"><span class="slot-num">${idx + 1}</span>Parrilla</span><div class="card-slot-header-actions">`;
@@ -2389,7 +2447,7 @@
       }
       if (slot.subType || slot.matchType === '3 Stages of Hell') {
         html += `<div class="slot-section-label" style="display:block;text-align:center;">👥 Luchadores</div>`;
-        html += getParticipantBoxes(slot, idx, available);
+        html += await getParticipantBoxes(slot, idx, available);
         html += getRefereeWarning(slot);
         html += getWinnerBox(slot, idx);
       }
