@@ -1063,7 +1063,9 @@
 
     function calcEloDelta(myElo, opponentElo, score) {
       const expected = eloExpectedScore(myElo, opponentElo);
-      return Math.round(ELO_K_FACTOR * (score - expected));
+      let delta = Math.round(ELO_K_FACTOR * (score - expected));
+      if (score === 1 && delta < 1) delta = 1;
+      return delta;
     }
 
     function setWrestlerElo(wrestlerId, newElo) {
