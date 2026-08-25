@@ -2932,7 +2932,7 @@ function roleSelectHTML(selectedRole, memberIndex) {
       let ranked = [];
 
       if (standingsFilters.mode === 'teams') {
-        const teams = store.teams.filter(t => t.members && t.members.length);
+        const teams = store.teams.filter(t => getTeamMemberIds(t).length > 0);
         ranked = teams.map(team => {
           const allIds = getTeamMemberIds(team);
           const tagIds = getTeamTagRepIds(team);
@@ -2990,53 +2990,9 @@ function roleSelectHTML(selectedRole, memberIndex) {
           if (b.pct !== a.pct) return b.pct - a.pct;
           return a.losses - b.losses;
         });
-
-          const hasAttrFilter =
-            (standingsFilters.brands && standingsFilters.brands.length > 0) ||
-            standingsFilters.alignment !== 'ALL' ||
-            standingsFilters.gender !== 'ALL' ||
-            standingsFilters.division !== 'ALL' ||
-            standingsFilters.hideInactive ||
-            standingsFilters.excludeChamps;
-
-          if (hasAttrFilter && !inPool.length) return null;
-
-          const useMembers = inPool.length ? inPool : members;
-          if (!useMembers.length) return null;
-
-          let wins = 0, losses = 0, draws = 0, total = 0;
-          useMembers.forEach(m => {
-            const rec = getWrestlerRecord(m, matchesPool);
-            wins += rec.wins;
-            losses += rec.losses;
-            draws += rec.draws;
-            total += rec.total;
-          });
-          const n = useMembers.length;
-          const avgWins = wins / n;
-          const avgLosses = losses / n;
-          const avgDraws = draws / n;
-          const avgTotal = total / n;
-          const pct = avgTotal > 0 ? avgWins / avgTotal : 0;
-          const avgElo = useMembers.reduce((sum, m) => sum + getWrestlerElo(m), 0) / n;
-          return {
-            isTeam: true,
-            team,
-            members: useMembers,
-            wins: Math.round(avgWins * 10) / 10,
-            losses: Math.round(avgLosses * 10) / 10,
-            draws: Math.round(avgDraws * 10) / 10,
-            total: Math.round(avgTotal * 10) / 10,
-            pct,
-            elo: Math.round(avgElo)
-          };
-        }).filter(Boolean).sort((a, b) => {
-          if (b.elo !== a.elo) return b.elo - a.elo;
-          if (b.wins !== a.wins) return b.wins - a.wins;
-          if (b.pct !== a.pct) return b.pct - a.pct;
-          return a.losses - b.losses;
-        });
-      } else {
+      } 
+      
+      else {
         ranked = rosterPool.map(r => {
           const rec = getWrestlerRecord(r, matchesPool);
           const pct = rec.total > 0 ? (rec.wins / rec.total) : 0;
