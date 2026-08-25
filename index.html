@@ -45,89 +45,21 @@
     .search-box input { width: 100%; }
     .filters-wrapper { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
     .filter-header { font-size: 0.8rem; font-weight: bold; color: var(--text-dim); text-transform: uppercase; margin-bottom: 2px; }
-    .filter-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-top: 8px;
-    }
-    .filter-row-label {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text);
-      flex-shrink: 0;
-      min-width: 110px;
-    }
-    .filter-row select {
-      flex: 1;
-      min-width: 0;
-      margin-top: 0 !important;
-    }
-    .filter-row-brands {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .filter-row-brands .filter-row-label {
-      margin-bottom: 4px;
-    }
+    .filter-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+    .filter-row-label { font-size: 0.85rem; font-weight: 700; color: var(--text); flex-shrink: 0; min-width: 110px; }
+    .filter-row select { flex: 1; min-width: 0; margin-top: 0 !important; }
+    .filter-row-brands { flex-direction: column; align-items: stretch; }
+    .filter-row-brands .filter-row-label { margin-bottom: 4px; }
     /* Menú desplegable de filtros */
-    .standings-filters-details {
-      background: transparent;
-      border: none;
-    }
-    .standings-filters-details > summary {
-      list-style: none;
-      cursor: pointer;
-      user-select: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 4px 0;
-      font-size: 0.95rem;
-      font-weight: 800;
-      color: var(--accent);
-    }
+    .standings-filters-details { background: transparent; border: none; }
+    .standings-filters-details > summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 0.95rem; font-weight: 800; color: var(--accent); }
     .standings-filters-details > summary::-webkit-details-marker { display: none; }
-    .standings-filters-details > summary::after {
-      content: "▼";
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      transition: transform 0.15s ease;
-    }
-    .standings-filters-details[open] > summary::after {
-      transform: rotate(180deg);
-    }
-    .standings-filters-body {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px dashed var(--border);
-    }
-    .standings-mode-tabs {
-      display: flex;
-      gap: 8px;
-      margin: 0 0 12px 0;
-    }
-    .standings-mode-btn {
-      flex: 1;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #2a2a2a;
-      color: var(--text-dim);
-      font-weight: 800;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-    .standings-mode-btn.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
+    .standings-filters-details > summary::after { content: "▼"; font-size: 0.7rem; color: var(--text-dim); transition: transform 0.15s ease; }
+    .standings-filters-details[open] > summary::after { transform: rotate(180deg); }
+    .standings-filters-body { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
+    .standings-mode-tabs { display: flex; gap: 8px; margin: 0 0 12px 0; }
+    .standings-mode-btn { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: #2a2a2a; color: var(--text-dim); font-weight: 800; font-size: 0.85rem; cursor: pointer; }
+    .standings-mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
     .active-filters-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 0.8rem; padding-top: 4px; border-top: 1px dashed var(--border); margin-top: 4px; }
     .active-filters-label { font-weight: bold; color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; }
     .filter-badge { background: #333; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; border: 1px solid var(--accent); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
@@ -139,80 +71,19 @@
     #list-roster .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 1; }
     #list-shows .card { height: 90px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
     #list-shows .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); z-index: 1; }
-     #list-standings .card {
-      height: 110px;
-      min-height: 110px;
-      max-height: 110px;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      position: relative;
-      padding-right: 12px;
-    }
-    #list-standings .card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.55);
-      z-index: 1;
-    }
+    #list-standings .card { height: 110px; min-height: 110px; max-height: 110px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; padding-right: 12px; }
+    #list-standings .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 1; }
     /* Degradados podio (capa encima del fondo del show) */
     #list-standings .card.podium-1::after,
     #list-standings .card.podium-2::after,
-    #list-standings .card.podium-3::after {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 1;
-      pointer-events: none;
-    }
-    #list-standings .card.podium-1::after {
-      background: linear-gradient(135deg, rgba(255,215,0,0.45) 0%, rgba(184,134,11,0.25) 40%, transparent 70%);
-      box-shadow: inset 0 0 0 2px rgba(255,215,0,0.7);
-    }
-    #list-standings .card.podium-2::after {
-      background: linear-gradient(135deg, rgba(192,192,192,0.4) 0%, rgba(136,136,136,0.22) 40%, transparent 70%);
-      box-shadow: inset 0 0 0 2px rgba(192,192,192,0.65);
-    }
-    #list-standings .card.podium-3::after {
-      background: linear-gradient(135deg, rgba(205,127,50,0.42) 0%, rgba(139,90,43,0.22) 40%, transparent 70%);
-      box-shadow: inset 0 0 0 2px rgba(205,127,50,0.65);
-    }
-    .standing-rank {
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      z-index: 3;
-      min-width: 28px;
-      height: 28px;
-      padding: 0 6px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 900;
-      font-size: 0.78rem;
-      color: #fff;
-      background: rgba(0,0,0,0.75);
-      border: 1px solid rgba(255,255,255,0.25);
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-      pointer-events: none;
-    }
-    #list-standings .card.podium-1 .standing-rank {
-      background: linear-gradient(145deg, #ffd700, #b8860b);
-      color: #1a1a1a;
-      border-color: #ffe566;
-    }
-    #list-standings .card.podium-2 .standing-rank {
-      background: linear-gradient(145deg, #e8e8e8, #9e9e9e);
-      color: #1a1a1a;
-      border-color: #f5f5f5;
-    }
-    #list-standings .card.podium-3 .standing-rank {
-      background: linear-gradient(145deg, #cd7f32, #8b5a2b);
-      color: #fff;
-      border-color: #e0a060;
-    }
+    #list-standings .card.podium-3::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; pointer-events: none; }
+    #list-standings .card.podium-1::after { background: linear-gradient(135deg, rgba(255,215,0,0.45) 0%, rgba(184,134,11,0.25) 40%, transparent 70%); box-shadow: inset 0 0 0 2px rgba(255,215,0,0.7); }
+    #list-standings .card.podium-2::after { background: linear-gradient(135deg, rgba(192,192,192,0.4) 0%, rgba(136,136,136,0.22) 40%, transparent 70%); box-shadow: inset 0 0 0 2px rgba(192,192,192,0.65); }
+    #list-standings .card.podium-3::after { background: linear-gradient(135deg, rgba(205,127,50,0.42) 0%, rgba(139,90,43,0.22) 40%, transparent 70%); box-shadow: inset 0 0 0 2px rgba(205,127,50,0.65); }
+    .standing-rank { position: absolute; top: 6px; left: 6px; z-index: 3; min-width: 28px; height: 28px; padding: 0 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.78rem; color: #fff; background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,255,0.25); text-shadow: 0 1px 2px rgba(0,0,0,0.8); pointer-events: none; }
+    #list-standings .card.podium-1 .standing-rank { background: linear-gradient(145deg, #ffd700, #b8860b); color: #1a1a1a; border-color: #ffe566; }
+    #list-standings .card.podium-2 .standing-rank { background: linear-gradient(145deg, #e8e8e8, #9e9e9e); color: #1a1a1a; border-color: #f5f5f5; }
+    #list-standings .card.podium-3 .standing-rank { background: linear-gradient(145deg, #cd7f32, #8b5a2b); color: #fff; border-color: #e0a060; }
     .card-left { display: flex; align-items: center; gap: 12px; flex: 1; height: 100%; overflow: hidden; }
     .avatar-wrapper { width: 85px; height: 100%; flex-shrink: 0; position: relative; background-size: cover; background-position: center; background-repeat: no-repeat; border-right: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
     .wrestler-avatar { width: 100%; height: 100%; object-fit: cover; object-position: top center; background: transparent; display: block; }
@@ -247,40 +118,11 @@
     .modal-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; position: relative; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     .modal-title { font-size: 1.1rem; font-weight: bold; color: var(--accent); }
-    .modal-title.ficha-wrestler-name {
-      color: #ffffff;
-      font-family: 'Arial Black', Impact, 'Arial Narrow', sans-serif;
-      font-weight: 900;
-      font-style: italic;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      text-shadow: 0 2px 6px rgba(0,0,0,0.85);
-    }
-    .modal-title-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-      min-width: 0;
-      flex-wrap: wrap;
-    }
-    .ficha-header-logos {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .ficha-header-logo {
-      height: 28px;
-      width: auto;
-      max-width: 52px;
-      object-fit: contain;
-      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));
-    }
-    .modal-box.ficha-branded {
-      background: var(--card-bg);
-      background-image: none;
-    }
+    .modal-title.ficha-wrestler-name { color: #ffffff; font-family: 'Arial Black', Impact, 'Arial Narrow', sans-serif; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 2px 6px rgba(0,0,0,0.85); }
+    .modal-title-wrapper { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; flex-wrap: wrap; }
+    .ficha-header-logos { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .ficha-header-logo { height: 28px; width: auto; max-width: 52px; object-fit: contain; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8)); }
+    .modal-box.ficha-branded { background: var(--card-bg); background-image: none; }
     .modal-close { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; }
     .stats-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
     .stat-card { background: #2a2a2a; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
@@ -374,33 +216,60 @@
     .modal-header-actions { display: flex; align-items: center; gap: 8px; }
     .modal-edit-btn { background: none; border: none; color: var(--text-dim); font-size: 1.25rem; cursor: pointer; padding: 4px 6px; line-height: 1; }
     .modal-edit-btn:hover { color: var(--accent); }
-    .wrestler-elo-badge {
-      display: none;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-      border: 1px solid var(--gold-end);
-      color: var(--gold-end);
-      font-size: 0.78rem;
-      font-weight: 900;
-      letter-spacing: 0.3px;
-      white-space: nowrap;
-      line-height: 1;
-    }
-    .wrestler-elo-badge.visible {
-      display: inline-flex;
-    }
-    .wrestler-elo-badge .elo-num {
-      font-variant-numeric: tabular-nums;
-    }
+    .wrestler-elo-badge { display: none; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: linear-gradient(145deg, #2a2a2a, #1a1a1a); border: 1px solid var(--gold-end); color: var(--gold-end); font-size: 0.78rem; font-weight: 900; letter-spacing: 0.3px; white-space: nowrap; line-height: 1; }
+    .wrestler-elo-badge.visible { display: inline-flex; }
+    .wrestler-elo-badge .elo-num { font-variant-numeric: tabular-nums; }
     .ficha-hero { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
     .ficha-photo { width: 140px; height: 180px; object-fit: cover; object-position: top center; border-radius: 10px; border: 2px solid var(--border); background: #222; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
     .ficha-photo-placeholder { width: 140px; height: 180px; border-radius: 10px; border: 2px solid var(--border); background: #222; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--text-dim); }
     .ficha-name { font-size: 1.35rem; font-weight: 900; text-align: center; letter-spacing: 0.3px; }
     .ficha-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 100%; }
     .ficha-section-title { font-size: 0.75rem; color: var(--text-dim); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+
+    /* ========== TAG TEAMS - REDISEÑO VISUAL ========== */
+    #tab-teams .btn-trigger-add { margin-bottom: 16px; }
+    .teams-form-card { background: linear-gradient(145deg, #1c1c1c 0%, #161616 100%); border: 1px solid #3a3a3a; border-radius: 14px; padding: 18px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(0,0,0,0.45); position: relative; overflow: hidden; }
+    .teams-form-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, var(--accent), #ff6b6b); border-radius: 0 4px 4px 0; }
+    .teams-form-title { font-size: 0.95rem; font-weight: 900; color: var(--accent); letter-spacing: 0.4px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .teams-form-title span { background: var(--accent); color: #fff; font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; }
+    #form-teams { background: transparent; border: none; padding: 0; margin: 0; gap: 12px; }
+    #form-teams input[type="text"] { font-size: 1rem; font-weight: 700; padding: 12px 14px; }
+    .teams-members-label { font-size: 0.72rem; color: var(--text-dim); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    #team-members-select { max-height: 220px; border-radius: 10px; background: #1a1a1a; border: 1px solid #333; padding: 10px; }
+    .team-member-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 6px; border-radius: 8px; transition: background 0.15s; }
+    .team-member-row:hover { background: rgba(229,9,20,0.08); }
+    .team-member-row .checkbox-item { flex: 1; margin: 0; font-size: 0.9rem; font-weight: 600; }
+    .team-member-role { background: #2a2a2a !important; color: #fff !important; border: 1px solid #444 !important; border-radius: 6px !important; padding: 5px 8px !important; font-size: 0.78rem !important; min-width: 100px; }
+    #form-teams .btn-add { margin-top: 6px; padding: 13px; font-size: 0.95rem; border-radius: 10px; letter-spacing: 0.3px; }
+    .teams-form-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .teams-form-actions .btn-add { flex: 1; }
+    .btn-cancel-team-edit { background: #333; color: #ccc; border: 1px solid #444; padding: 13px; border-radius: 10px; font-weight: bold; cursor: pointer; flex: 1; }
+    .btn-cancel-team-edit:hover { background: #444; color: #fff; }
+    .team-card { background: var(--card-bg); border-radius: 14px; margin-bottom: 14px; overflow: hidden; border: 2px solid transparent; position: relative; cursor: default; box-shadow: 0 6px 18px rgba(0,0,0,0.4); min-height: 120px; display: flex; flex-direction: column; }
+    .team-card::before { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.58); z-index: 1; pointer-events: none; }
+    .team-card-inner { position: relative; z-index: 2; display: flex; align-items: stretch; min-height: 120px; padding: 0; }
+    .team-avatars { display: flex; align-items: stretch; flex-shrink: 0; width: 110px; border-right: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.25); }
+    .team-avatar-img { width: 55px; height: 100%; object-fit: cover; object-position: top center; border-right: 1px solid rgba(255,255,255,0.08); }
+    .team-avatar-placeholder { width: 55px; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--text-dim); background: #222; border-right: 1px solid rgba(255,255,255,0.08); }
+    .team-info { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 12px 14px; min-width: 0; }
+    .team-name { font-family: 'Arial Black', Impact, 'Arial Narrow', sans-serif; font-weight: 900; font-size: 1.15rem; letter-spacing: 0.6px; text-transform: uppercase; font-style: italic; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 12px rgba(229,9,20,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .team-members-line { font-size: 0.8rem; color: #ddd; line-height: 1.3; }
+    .team-tag-line { font-size: 0.75rem; color: var(--gold-end); font-weight: 700; }
+    .team-roles-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+    .team-role-pill { font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px; background: #333; color: #eee; border: 1px solid #555; }
+    .team-role-pill.tag { background: #ff9800; color: #000; border-color: #ffb74d; }
+    .team-role-pill.manager { background: #7b1fa2; color: #fff; border-color: #ba68c8; }
+    .team-role-pill.trio { background: #0288d1; color: #fff; border-color: #4fc3f7; }
+    .team-role-pill.cuarteto { background: #00695c; color: #fff; border-color: #4db6ac; }
+    .team-role-pill.individual { background: #455a64; color: #fff; border-color: #78909c; }
+    .team-side-actions { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; padding: 10px 12px 10px 0; gap: 8px; flex-shrink: 0; }
+    .team-elo-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: linear-gradient(145deg, #2a2a2a, #1a1a1a); border: 1px solid var(--gold-end); color: var(--gold-end); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.3px; white-space: nowrap; }
+    .team-actions-btns { display: flex; gap: 6px; }
+    .team-btn-edit, .team-btn-del { background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.2); color: #ddd; width: 36px; height: 36px; border-radius: 10px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .team-btn-edit:hover { border-color: var(--accent); color: var(--accent); background: rgba(229,9,20,0.15); }
+    .team-btn-del:hover { border-color: #c62828; color: #ff5252; background: rgba(198,40,40,0.2); }
+    .team-empty { text-align: center; padding: 40px 20px; color: var(--text-dim); font-size: 0.95rem; background: var(--card-bg); border-radius: 14px; border: 1px dashed #444; }
+    .team-empty span { display: block; font-size: 2.2rem; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -455,13 +324,26 @@
   </div>
 
   <div id="tab-teams" class="tab-content">
-    <form id="form-teams">
-      <input type="text" id="team-name" placeholder="Nombre del Tag Team / Ficción" autocapitalize="words" required>
-      <label style="font-size:0.75rem; color:var(--text-dim);">SELECCIONA MIEMBROS DEL ROSTER:</label>
-      <div class="checkbox-list" id="team-members-select"></div>
-      <button type="submit" class="btn-add">Crear Tag Team</button>
-    </form>
-    <div id="list-teams"></div>
+    <div class="teams-form-card">
+      <div class="teams-form-title">
+      🤝 Crear / Editar Tag Team
+        <span id="teams-form-mode-badge">NUEVO
+        </span>
+      </div>
+        <form id="form-teams">
+        <input type="text" id="team-name" placeholder="Nombre del Tag Team / Facción..." autocapitalize="words" required>
+        <div>
+          <div class="teams-members-label">Selecciona miembros del roster + rol</div>
+          <div class="checkbox-list" id="team-members-select"></div>
+        </div>
+        <div class="teams-form-actions">
+          <button type="submit" class="btn-add" id="btn-team-submit">Crear Tag Team</button>
+          <button type="button" class="btn-cancel-team-edit" id="btn-cancel-team-edit" style="display:none;" onclick="cancelEditTeam()">Cancelar</button>
+        </div>
+        </form>
+      </div>
+    <div id="list-teams">
+    </div>
   </div>
 
   <div id="tab-titles" class="tab-content">
@@ -1709,9 +1591,15 @@
           if (memberIds.includes(r.id)) r.teamId = team.id;
         });
         editingTeamId = null;
-        const btn = document.querySelector('#form-teams button[type="submit"]');
+        const btn = document.getElementById('btn-team-submit');
         if (btn) btn.textContent = 'Crear Tag Team';
-      } else {
+        const badge = document.getElementById('teams-form-mode-badge');
+        if (badge) badge.textContent = 'NUEVO';
+        const cancelBtn = document.getElementById('btn-cancel-team-edit');
+        if (cancelBtn) cancelBtn.style.display = 'none';
+      } 
+      
+      else {
         const teamId = Date.now();
         store.teams.push({ id: teamId, name: teamName, members });
         store.roster.forEach(r => {
@@ -1724,40 +1612,48 @@
     };
 
     function openEditTeam(teamId) {
-      const team = (store.teams || []).find(t => t.id === teamId);
-      if (!team) return;
-      editingTeamId = teamId;
-      document.getElementById('team-name').value = team.name || '';
+  const team = (store.teams || []).find(t => t.id === teamId);
+  if (!team) return;
+  editingTeamId = teamId;
+  document.getElementById('team-name').value = team.name || '';
 
-      const normalized = normalizeTeamMembers(team.members);
-      const selected = new Set(normalized.map(m => m.id));
-      const roleById = {};
-      normalized.forEach(m => { roleById[m.id] = m.role; });
+  const normalized = normalizeTeamMembers(team.members);
+  const selected = new Set(normalized.map(m => m.id));
+  const roleById = {};
+  normalized.forEach(m => { roleById[m.id] = m.role; });
 
-      document.querySelectorAll('#team-members-select .team-member-row').forEach(row => {
-        const chk = row.querySelector('.team-member-check');
-        const sel = row.querySelector('.team-member-role');
-        if (!chk) return;
-        const id = Number(chk.value);
-        chk.checked = selected.has(id);
-        if (sel) sel.value = roleById[id] || 'tag';
-      });
+  document.querySelectorAll('#team-members-select .team-member-row').forEach(row => {
+    const chk = row.querySelector('.team-member-check');
+    const sel = row.querySelector('.team-member-role');
+    if (!chk) return;
+    const id = Number(chk.value);
+    chk.checked = selected.has(id);
+    if (sel) sel.value = roleById[id] || 'tag';
+  });
 
-      const btn = document.querySelector('#form-teams button[type="submit"]');
-      if (btn) btn.textContent = 'Guardar cambios del equipo';
+  const btn = document.getElementById('btn-team-submit');
+  if (btn) btn.textContent = 'Guardar cambios del equipo';
+  const badge = document.getElementById('teams-form-mode-badge');
+  if (badge) badge.textContent = 'EDITANDO';
+  const cancelBtn = document.getElementById('btn-cancel-team-edit');
+  if (cancelBtn) cancelBtn.style.display = 'block';
 
-      const teamsBtn = Array.from(document.querySelectorAll('#main-nav button')).find(b => (b.textContent || '').includes('Tag'));
-      if (teamsBtn) switchTab('teams', teamsBtn);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
+  const teamsBtn = Array.from(document.querySelectorAll('#main-nav button')).find(b => (b.textContent || '').includes('Tag'));
+  if (teamsBtn) switchTab('teams', teamsBtn);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
     function cancelEditTeam() {
       editingTeamId = null;
       document.getElementById('team-name').value = '';
       document.querySelectorAll('#team-members-select .team-member-check').forEach(chk => { chk.checked = false; });
       document.querySelectorAll('#team-members-select .team-member-role').forEach(sel => { sel.value = 'tag'; });
-      const btn = document.querySelector('#form-teams button[type="submit"]');
+      const btn = document.getElementById('btn-team-submit');
       if (btn) btn.textContent = 'Crear Tag Team';
+      const badge = document.getElementById('teams-form-mode-badge');
+      if (badge) badge.textContent = 'NUEVO';
+      const cancelBtn = document.getElementById('btn-cancel-team-edit');
+      if (cancelBtn) cancelBtn.style.display = 'none';
+    }
     }
     function onTitleTypeChange() { 
       document.getElementById('champ2-wrapper').style.display = document.getElementById('title-type-select').value === 'tag' ? 'flex' : 'none'; }
@@ -3220,30 +3116,87 @@
         return `<div class="card" style="${bgStyle}" onclick="openShowModal('${s.id}')"><div class="card-left" style="padding-left:12px;">${logoHTML}<div class="card-info"><span class="card-title">${s.name}</span><span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span></div></div></div>`;
       }));
       document.getElementById('list-shows').innerHTML = showCards.length ? showCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay shows.</p>`;
-      document.getElementById('list-teams').innerHTML = store.teams.map(t => {
-        const normalized = normalizeTeamMembers(t.members);
-        const members = normalized.map(m => {
-          const r = store.roster.find(ros => ros.id === m.id);
-          const name = r ? r.name : '?';
-          const roleLabel = (TEAM_ROLES.find(x => x.value === m.role) || {}).label || m.role;
-          return `${name} (${roleLabel})`;
-        }).join(', ');
-        const tagReps = getTeamTagRepIds(t).map(id => {
-          const r = store.roster.find(ros => ros.id === id);
-          return r ? r.name : '?';
-        }).join(' & ');
-        return `<div class="card" style="padding:12px; height:auto;">
-          <div class="card-info" style="flex:1;">
-            <span class="card-title">${t.name}</span>
-            <span class="card-sub">${members || 'Sin miembros'}</span>
-            <span class="card-sub">Tag: ${tagReps || '—'}</span>
+const showBgCacheTeams = {};
+await Promise.all(store.shows.map(async s => {
+  showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
+}));
+
+const teamCards = await Promise.all((store.teams || []).map(async t => {
+  const normalized = normalizeTeamMembers(t.members);
+  const memberData = [];
+  for (const m of normalized) {
+    const r = store.roster.find(ros => ros.id === m.id);
+    const img = r ? await getImageFromDB('wrestler_' + r.id) : null;
+    memberData.push({
+      id: m.id,
+      name: r ? r.name : '?',
+      role: m.role || 'tag',
+      roleLabel: (TEAM_ROLES.find(x => x.value === (m.role || 'tag')) || {}).label || m.role,
+      img,
+      brands: r ? (r.brands || (r.brand ? [r.brand] : [])) : []
+    });
+  }
+
+  const tagReps = getTeamTagRepIds(t).map(id => {
+    const r = store.roster.find(ros => ros.id === id);
+    return r ? r.name : '?';
+  }).join(' & ');
+
+  // Fondo del show del primer miembro con marca
+  let bgStyle = '';
+  let brandColor = '#e50914';
+  const firstWithBrand = memberData.find(m => m.brands && m.brands.length > 0);
+  if (firstWithBrand) {
+    const showObj = store.shows.find(s => s.name === firstWithBrand.brands[0]);
+    if (showObj) {
+      brandColor = showObj.color || '#e50914';
+      if (showBgCacheTeams[showObj.id]) {
+        bgStyle = `background-image:url('${showBgCacheTeams[showObj.id]}'); background-size:cover; background-position:center;`;
+      }
+    }
+  }
+
+  // Avatares (máximo 2 visibles en la franja izquierda)
+  const avatarsHTML = memberData.slice(0, 2).map(m => {
+    if (m.img) return `<img src="${m.img}" class="team-avatar-img" alt="${m.name}" onerror="this.outerHTML='<div class=\\'team-avatar-placeholder\\'>👤</div>'">`;
+    return `<div class="team-avatar-placeholder">👤</div>`;
+  }).join('') || `<div class="team-avatar-placeholder">👤</div>`;
+
+  // Pills de roles
+  const rolesPills = memberData.map(m => {
+    const cls = (m.role || 'tag').toLowerCase().replace(/\s+/g, '');
+    return `<span class="team-role-pill ${cls}">${m.roleLabel}</span>`;
+  }).join('');
+
+  const membersLine = memberData.map(m => m.name).join(' · ') || 'Sin miembros';
+  const elo = getTeamTagElo(t);
+
+  const safeName = String(t.name).replace(/'/g, "\\'");
+
+  return `
+    <div class="team-card" style="${bgStyle} border-image: linear-gradient(to right, ${brandColor}, #000) 1;">
+      <div class="team-card-inner">
+        <div class="team-avatars">${avatarsHTML}</div>
+        <div class="team-info">
+          <div class="team-name">${t.name}</div>
+          <div class="team-members-line">${membersLine}</div>
+          <div class="team-tag-line">Tag: ${tagReps || '—'}</div>
+          <div class="team-roles-pills">${rolesPills}</div>
+        </div>
+        <div class="team-side-actions">
+          <div class="team-elo-badge">ELO <span>${elo}</span></div>
+          <div class="team-actions-btns">
+            <button type="button" class="team-btn-edit" onclick="event.stopPropagation(); openEditTeam(${t.id})" title="Editar">✏️</button>
+            <button type="button" class="team-btn-del" onclick="event.stopPropagation(); showConfirmModal('¿Eliminar el equipo ${safeName}?', () => deleteItem('teams', ${t.id}))" title="Eliminar">🗑</button>
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-            <button type="button" class="btn-reset-slot" onclick="event.stopPropagation(); openEditTeam(${t.id})">✏️ Editar</button>
-            <button class="btn-del" onclick="event.stopPropagation(); showConfirmModal('¿Eliminar el equipo ${String(t.name).replace(/'/g, "\\'")}?', () => deleteItem('teams', ${t.id}))">🗑</button>
-          </div>
-        </div>`;
-      }).join('') || `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay equipos.</p>`;
+        </div>
+      </div>
+    </div>`;
+}));
+
+document.getElementById('list-teams').innerHTML = teamCards.length
+  ? teamCards.join('')
+  : `<div class="team-empty"><span>🤝</span>Aún no hay Tag Teams.<br>Crea el primero arriba.</div>`;
       const currentDays = getTotalUniverseDays();
       const titleCards = await Promise.all(store.titles.map(async t => {
         const titleImg = await getImageFromDB('title_' + t.id);
