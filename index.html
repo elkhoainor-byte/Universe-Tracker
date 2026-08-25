@@ -464,6 +464,14 @@
     <div id="list-teams"></div>
   </div>
 
+  <div class="team-member-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;">
+  <label style="display:flex;align-items:center;gap:8px;flex:1;">
+    <input type="checkbox" class="team-member-check" value="${w.id}" ${checked}>
+    <span>${w.name}</span>
+  </label>
+  ${roleSelectHTML(currentRole, index)}
+</div>
+
   <div id="tab-titles" class="tab-content">
     <button class="btn-trigger-add" onclick="openTitleModal(null)">➕ Añadir Campeonato</button>
     <div id="list-titles"></div>
@@ -1047,10 +1055,63 @@
       img.replaceWith(ph);
     }
     function cleanName(str) { return str ? str.replace(/^["'“`«ʼ\s]+/, '') : ''; }
-    
+
+    const TEAM_ROLES = [
+      { value: "individual", label: "Individual" },
+      { value: "tag", label: "Tag Team" },
+      { value: "trio", label: "Trío" },
+      { value: "cuarteto", label: "Cuarteto" },
+      { value: "manager", label: "Mánager" }
+    ];
+  
     const DEFAULT_ELO = 1200;
     const ELO_K_FACTOR = 32;
 
+    function normalizeTeamMembers(members) {
+  if (!Array.isArray(members)) return [];
+  return members.map(m => {
+    if (m && typeof m === "object" && m.id != null) {
+      return { id: m.id, role: m.role || "tag" };
+    }
+    return { id: m, role: "tag" };
+  });
+}
+
+function getTeamMemberIds(team) {
+  return normalizeTeamMembers(team && team.members).map(m => m.id);
+}
+
+function getTeamTagRepIds(team) {
+  return normalizeTeamMembers(team && team.members)
+    .filter(m => m.role === "tag")
+    .map(m => m.id);
+}
+
+function getTeamTagElo(team) {
+  const ids = getTeamTagRepIds(team);
+  if (!ids.length) {
+    const all = getTeamMemberIds(team);
+    if (!all.length) return DEFAULT_ELO;
+    const sum = all.reduce((s, id) => {
+      const w = (store.roster || []).find(r => r.id === id);
+      return s + (w ? getWrestlerElo(w) : DEFAULT_ELO);
+    }, 0);
+    return Math.round(sum / all.length);
+  }
+  const sum = ids.reduce((s, id) => {
+    const w = (store.roster || []).find(r => r.id === id);
+    return s + (w ? getWrestlerElo(w) : DEFAULT_ELO);
+  }, 0);
+  return Math.round(sum / ids.length);
+}
+
+function roleSelectHTML(selectedRole, memberIndex) {
+  const opts = TEAM_ROLES.map(r =>
+    `<option value="${r.value}" ${r.value === (selectedRole || "tag") ? "selected" : ""}>${r.label}</option>`
+  ).join("");
+  return `<select class="team-member-role" data-member-index="${memberIndex}" style="margin-left:8px;background:var(--card-bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:0.8rem;">${opts}</select>`;
+}
+  
     function getWrestlerElo(w) {
       if (!w) return DEFAULT_ELO;
       const n = Number(w.elo);
@@ -1160,6 +1221,10 @@
     }
     function recalculateAllElos() {
       (store.roster || []).forEach(r => {
+      if (!store.teams) store.teams = [];
+(store.teams || []).forEach(t => {
+  t.members = normalizeTeamMembers(t.members);
+});
         r.elo = DEFAULT_ELO;
       });
 
@@ -1595,8 +1660,31 @@
       store.teams.push({ id: teamId, name: teamName, members: memberIds });
       store.roster.forEach(r => { if (memberIds.includes(r.id)) r.teamId = teamId; });
       e.target.reset();
+      const rows = document.querySelectorAll(".team-member-row"); // ajusta la clase si usas otra
+const members = [];
+rows.forEach((row, index) => {
+  const idEl = row.querySelector("[data-wrestler-id], .team-member-id, select.team-member-wrestler");
+  if (!idEl) return;
+  const id = Number(idEl.value || idEl.getAttribute("data-wrestler-id"));
+  if (!id && id !== 0) return;
+  const roleEl = row.querySelector(".team-member-role");
+  const role = roleEl ? roleEl.value : "tag";
+  members.push({ id, role });
+});
       saveData();
     };
+
+  store.teams.push({
+  id: Date.now(),
+  name: nombreDelEquipo,
+  members: members,
+  });
+
+  const t = store.teams.find(x => x.id === editingTeamId);
+if (t) {
+  t.name = nombreDelEquipo;
+  t.members = members;
+}
 
     function onTitleTypeChange() { document.getElementById('champ2-wrapper').style.display = document.getElementById('title-type-select').value === 'tag' ? 'flex' : 'none'; }
     function populateRosterDropdowns() {
