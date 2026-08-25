@@ -477,6 +477,17 @@
   background: rgba(40,40,40,0.7);
   border: 1px solid #555;
 }
+    .title-match-details { margin-top: 12px; background: #1f1f14; border: 1px solid var(--gold-end); border-radius: 8px; overflow: hidden; }
+    .title-match-details > summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px; font-size: 0.78rem; font-weight: 800; color: var(--gold-end); }
+    .title-match-details > summary::-webkit-details-marker { display: none; }
+    .title-match-details > summary::after { content: "▼"; font-size: 0.65rem; color: var(--text-dim); transition: transform 0.15s ease; }
+    .title-match-details[open] > summary::after { transform: rotate(180deg); }
+    .title-match-body { padding: 0 10px 12px 10px; border-top: 1px dashed rgba(255,215,0,0.25); display: flex; flex-direction: column; gap: 6px; }
+    .title-option { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; background: #2a2a1a; border: 1px solid #3a3a2a; cursor: pointer; font-size: 0.82rem; color: #eee; transition: background 0.15s, border-color 0.15s; }
+    .title-option:hover { background: #3a3a22; border-color: var(--gold-end); }
+    .title-option.selected { background: rgba(255,215,0,0.15); border-color: var(--gold-end); color: var(--gold-end); font-weight: 700; }
+    .title-option-none { color: var(--text-dim); font-style: italic; }
+    .title-warning { font-size: 0.72rem; color: #ff9800; margin-top: 6px; padding: 6px; background: #2a1f00; border-radius: 4px; border-left: 3px solid #ff9800; }
   </style>
 </head>
 <body>
@@ -2118,20 +2129,47 @@
     }
     function getTitleMatchBox(slot, slotIdx) {
       if (slot.type !== 'match' || !slot.matchType) return '';
-      const titleOpts = store.titles.map(t => ({ value: t.id, label: t.name }));
-      let h = `<div class="title-match-box"><label><input type="checkbox" ${slot.isTitleMatch ? 'checked' : ''} onchange="toggleTitleMatch(${slotIdx}, this.checked)"> 🏆 Combate por el título</label>`;
-      if (slot.isTitleMatch) {
-        h += buildSelect(titleOpts, slot.titleId, `updateSlotTitle(${slotIdx}, this.value)`, '-- Elegir título --');
-        if (slot.titleId && !hasChampionInMatch(slot)) {
-          h += `<div class="title-warning">⚠️ Ningún campeón actual de este título está en el combate. Si continúas, el ganador se convertirá en el nuevo campeón.</div>`;
-        }
+      const selectedTitle = slot.isTitleMatch && slot.titleId
+        ? store.titles.find(t => t.id === slot.titleId)
+        : null;
+      const summaryText = selectedTitle
+        ? `🏆 ${selectedTitle.name}`
+        : 'Ningún campeonato en juego';
+      let optionsHTML = `
+      <div class="title-option ${!slot.isTitleMatch ? 'selected title-option-none' : 'title-option-none'}"
+      onclick="selectTitleForSlot(${slotIdx}, null)">
+      Ningún campeonato en juego
+      </div>`;
+      store.titles.forEach(t => {
+        const isSelected = slot.isTitleMatch && slot.titleId === t.id;
+        const champs = (t.champions || []).map(id => {
+          const w = store.roster.find(r => r.id === id);
+          return w ? w.name : '?';
+        }).join(' & ') || 'Vacante';
+        optionsHTML += `
+        <div class="title-option ${isSelected ? 'selected' : ''}"
+        onclick="selectTitleForSlot(${slotIdx}, ${t.id})">
+        🏆 ${t.name}
+        <span style="font-size:0.7rem;color:var(--text-dim);margin-left:auto;">${champs}</span>
+        </div>`;
+      });
+      if (!store.titles.length) {
+        optionsHTML = `<div style="font-size:0.8rem;color:var(--text-dim);padding:8px 0;">No hay campeonatos creados.</div>`;
       }
-      return h + '</div>';
+      return `
+      <details class="title-match-details" ${selectedTitle ? 'open' : ''}>
+      <summary>${summaryText}</summary>
+      <div class="title-match-body">
+      ${optionsHTML}
+      </div>
+      </details>`;
     }
+  
     function getRefereeWarning(slot) {
       if (isRefereeInMatch(slot)) return `<div class="ref-warning">⚠️ El árbitro especial no puede participar también como luchador en este combate.</div>`;
       return '';
     }
+    
     function syncSlotToMatch(slot) {
       if (!slot || !slot.matchId) return;
       const match = store.matches.find(m => m.id === slot.matchId);
@@ -2159,6 +2197,7 @@
         match.titleId = slot.isTitleMatch ? slot.titleId : null;
       }
     }
+    
     function startEditSlot(idx) {
       editingSlotIndex = Number(idx);
       const slot = store.todayCard.slots[editingSlotIndex];
@@ -2167,23 +2206,37 @@
     }
 
     function doneEditSlot(idx) {
-      idx = Number(idx);
-      const slot = store.todayCard.slots[idx];
-      if (slot && isRefereeInMatch(slot)) {
-        alert('El árbitro especial no puede ser también participante. Corrígelo antes de cerrar la edición.');
-        return;
-      }
-      if (slot) syncSlotToMatch(slot);
-      if (slot && slot.matchId) {
-        const m = store.matches.find(x => x.id === slot.matchId);
-        if (m) {
-          applyEloForMatch(m);
-        }
-      }
-      editingSlotIndex = null;
-      localStorage.setItem('universe_data', JSON.stringify(store));
-      renderTodayCard();
-    }
+  idx = Number(idx);
+  const slot = store.todayCard.slots[idx];
+  if (!slot) {
+    editingSlotIndex = null;
+    renderTodayCard();
+    return;
+  }
+
+  if (isRefereeInMatch(slot)) {
+    alert('El árbitro especial no puede ser también participante. Corrígelo antes de cerrar la edición.');
+    return;
+  }
+
+  if (slot.isTitleMatch && slot.titleId && !hasChampionInMatch(slot)) {
+    const title = store.titles.find(t => t.id === slot.titleId);
+    const titleName = title ? title.name : 'este título';
+    const ok = confirm(`⚠️ El campeón no está disputando el combate.\n\nTítulo: ${titleName}\n\nSi continúas, el ganador se convertirá en el nuevo campeón.\n\n¿Quieres cerrar la edición de todas formas?`);
+    if (!ok) return;
+  }
+
+  syncSlotToMatch(slot);
+  if (slot.matchId) {
+    const m = store.matches.find(x => x.id === slot.matchId);
+    if (m) applyEloForMatch(m);
+  }
+
+  editingSlotIndex = null;
+  localStorage.setItem('universe_data', JSON.stringify(store));
+  renderTodayCard();
+}
+  
     function saveSlotData() {
       localStorage.setItem('universe_data', JSON.stringify(store));
       renderTodayCard();
@@ -2417,6 +2470,19 @@
     }
     
     function finalizeTodayCard() {
+      for (const slot of store.todayCard.slots) {
+  if (slot.type !== 'match') continue;
+  if (isRefereeInMatch(slot)) {
+    alert('Hay un combate donde el árbitro especial también es participante. Corrígelo antes de finalizar.');
+    return;
+  }
+  if (slot.isTitleMatch && slot.titleId && !hasChampionInMatch(slot)) {
+    const title = store.titles.find(t => t.id === slot.titleId);
+    const titleName = title ? title.name : 'un título';
+    const ok = confirm(`⚠️ El campeón no está disputando el combate de "${titleName}".\n\nSi continúas, el ganador se convertirá en el nuevo campeón.\n\n¿Finalizar la parrilla de todas formas?`);
+    if (!ok) return;
+  }
+}
       const event = getCurrentEvent();
       if (!event) return;
       const label = event.showNumber != null ? `${event.name} #${event.showNumber}` : event.name;
@@ -2601,7 +2667,6 @@
 
      if (modalBox) {
         modalBox.classList.add('ficha-branded');
-        // Degradado muy oscuro: solo un tinte del color de marca arriba
         modalBox.style.backgroundImage = isChamp
           ? `linear-gradient(to bottom, ${brandColor}33 0%, #0a0a0a 35%, #1a1500 70%, #2a2200 100%)`
           : `linear-gradient(to bottom, ${brandColor}28 0%, #0a0a0a 40%, #000000 100%)`;
@@ -2617,7 +2682,6 @@
             if (logo) {
               return `<img src="${logo}" class="ficha-header-logo" alt="${b}" title="${b}">`;
             }
-            // Sin logo: pastilla con el nombre del show
             return `<span class="tag" style="background:${showObj.color || '#555'}; color:#fff; font-size:0.65rem;">${b}</span>`;
           }));
           logosEl.innerHTML = parts.join('');
@@ -2637,7 +2701,6 @@
         form.style.display = 'none';
         if (editBtn) editBtn.style.display = activeWrestlerId ? 'block' : 'none';
         if (cancelBtn) cancelBtn.style.display = 'none';
-        // El título (nombre + logos) lo pone applyWrestlerFichaChrome / updateWrestlerStats
         if (eloBadge) eloBadge.classList.toggle('visible', !!activeWrestlerId);
       } else if (mode === 'edit') {
         viewPanel.style.display = 'none';
@@ -2719,7 +2782,6 @@
         document.getElementById('h2h-opponent').innerHTML = `<option value="">-- Selecciona un rival --</option>` + store.roster.filter(r => r.id !== id).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
         await updateWrestlerStats(wrestler);
         setWrestlerModalMode('view');
-        // Misma cabecera/fondo que desde Roster (nombre, logos, degradado)
         await applyWrestlerFichaChrome(wrestler);
       }
       document.getElementById('modal-wrestler').classList.add('active');
@@ -3015,6 +3077,7 @@
       if (btnT) btnT.classList.toggle('active', standingsFilters.mode === 'teams');
       renderStandings();
     }
+    
     function populateStandingsBrandSelect() {
       const container = document.getElementById('standings-brands-container');
       if (!container) return;
@@ -3027,14 +3090,57 @@
         </label>`;
       }).join('') || '<span style="color:var(--text-dim); font-size:0.8rem;">No hay shows registrados.</span>';
     }
-      
+  
+     function selectTitleForSlot(idx, titleId) {
+  idx = Number(idx);
+  if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
+
+  const slot = store.todayCard.slots[idx];
+  if (!slot) return;
+
+  if (!titleId) {
+    slot.isTitleMatch = false;
+    slot.titleId = null;
+    if (store.todayCard.locked) syncSlotToMatch(slot);
+    saveSlotData();
+    return;
+  }
+
+  const title = store.titles.find(t => t.id === titleId);
+  if (!title) return;
+
+  slot.isTitleMatch = true;
+  slot.titleId = titleId;
+
+  const champs = (title.champions || []).filter(Boolean);
+  if (champs.length > 0 && slot.participants) {
+    const needed = slot.participants.length;
+    if (needed >= 1) {
+      if (isTeamBasedMatch(slot.matchType, slot.subType)) {
+        const sides = getTeamSideCounts(slot.matchType, slot.subType, needed);
+        const startRight = sides.left;
+        for (let i = 0; i < champs.length && (startRight + i) < needed; i++) {
+          slot.participants[startRight + i] = champs[i];
+        }
+      } else {
+        const start = Math.max(0, needed - champs.length);
+        for (let i = 0; i < champs.length && (start + i) < needed; i++) {
+          slot.participants[start + i] = champs[i];
+        }
+      }
+    }
+  }
+
+  if (store.todayCard.locked) syncSlotToMatch(slot);
+  saveSlotData();
+}
+  
      async function renderStandings() {
       const container = document.getElementById('list-standings');
       if (!container) return;
 
       populateStandingsBrandSelect();
 
-      // Botones de pestaña
       const btnS = document.getElementById('standings-tab-superstars');
       const btnT = document.getElementById('standings-tab-teams');
       if (btnS) btnS.classList.toggle('active', standingsFilters.mode !== 'teams');
