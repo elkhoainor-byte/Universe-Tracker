@@ -464,14 +464,6 @@
     <div id="list-teams"></div>
   </div>
 
-  <div class="team-member-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;">
-  <label style="display:flex;align-items:center;gap:8px;flex:1;">
-    <input type="checkbox" class="team-member-check" value="${w.id}" ${checked}>
-    <span>${w.name}</span>
-  </label>
-  ${roleSelectHTML(currentRole, index)}
-</div>
-
   <div id="tab-titles" class="tab-content">
     <button class="btn-trigger-add" onclick="openTitleModal(null)">➕ Añadir Campeonato</button>
     <div id="list-titles"></div>
@@ -1040,8 +1032,8 @@
     };    let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
     let wrestlerModalMode = 'view';
     let calendarViewMonthIndex = null;
-    // IMPORTANTE: usar null (no 0) como "sin edición". Number(null)===0 provocaba el bug del primer combate.
     let editingSlotIndex = null;
+    let editingTeamId = null;
 
     function isSlotBeingEdited(idx) {
       return editingSlotIndex !== null && editingSlotIndex !== undefined && Number(editingSlotIndex) === Number(idx);
@@ -1221,10 +1213,24 @@ function roleSelectHTML(selectedRole, memberIndex) {
     }
     function recalculateAllElos() {
       (store.roster || []).forEach(r => {
-      if (!store.teams) store.teams = [];
-(store.teams || []).forEach(t => {
-  t.members = normalizeTeamMembers(t.members);
-});
+        r.elo = DEFAULT_ELO;
+      });
+
+      (store.matches || []).forEach(m => {
+        m.eloApplied = false;
+      });
+
+      const ordered = (store.matches || []).slice().sort((a, b) => {
+        const da = (typeof a.universeDay === 'number') ? a.universeDay : 0;
+        const db = (typeof b.universeDay === 'number') ? b.universeDay : 0;
+        if (da !== db) return da - db;
+        return String(a.id).localeCompare(String(b.id));
+      });
+
+      ordered.forEach(m => {
+        applyEloForMatch(m);
+      });
+    }
         r.elo = DEFAULT_ELO;
       });
 
@@ -1245,6 +1251,11 @@ function roleSelectHTML(selectedRole, memberIndex) {
     }
     (store.roster || []).forEach(r => {
       if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
+    });
+
+    if (!store.teams) store.teams = [];
+    (store.teams || []).forEach(t => {
+      t.members = normalizeTeamMembers(t.members);
     });
 
     recalculateAllElos();
@@ -1654,39 +1665,94 @@ function roleSelectHTML(selectedRole, memberIndex) {
     document.getElementById('form-teams').onsubmit = (e) => {
       e.preventDefault();
       const teamName = document.getElementById('team-name').value.trim();
-      const memberIds = Array.from(document.querySelectorAll('#team-members-select input:checked')).map(cb => parseInt(cb.value));
-      if (memberIds.length === 0) { alert("Selecciona al menos un luchador."); return; }
-      const teamId = Date.now();
-      store.teams.push({ id: teamId, name: teamName, members: memberIds });
-      store.roster.forEach(r => { if (memberIds.includes(r.id)) r.teamId = teamId; });
-      e.target.reset();
-      const rows = document.querySelectorAll(".team-member-row"); // ajusta la clase si usas otra
-const members = [];
-rows.forEach((row, index) => {
-  const idEl = row.querySelector("[data-wrestler-id], .team-member-id, select.team-member-wrestler");
-  if (!idEl) return;
-  const id = Number(idEl.value || idEl.getAttribute("data-wrestler-id"));
-  if (!id && id !== 0) return;
-  const roleEl = row.querySelector(".team-member-role");
-  const role = roleEl ? roleEl.value : "tag";
-  members.push({ id, role });
-});
+      if (!teamName) {
+        alert('Pon un nombre al equipo.');
+        return;
+      }
+
+      const rows = document.querySelectorAll('#team-members-select .team-member-row');
+      const members = [];
+      rows.forEach(row => {
+        const chk = row.querySelector('.team-member-check');
+        if (!chk || !chk.checked) return;
+        const id = Number(chk.value);
+        if (!Number.isFinite(id)) return;
+        const roleEl = row.querySelector('.team-member-role');
+        const role = roleEl ? roleEl.value : 'tag';
+        members.push({ id, role });
+      });
+
+      if (members.length === 0) {
+        alert('Selecciona al menos un luchador.');
+        return;
+      }
+
+      const memberIds = members.map(m => m.id);
+
+      if (editingTeamId) {
+        const team = store.teams.find(t => t.id === editingTeamId);
+        if (!team) return;
+        store.roster.forEach(r => {
+          if (r.teamId === team.id && !memberIds.includes(r.id)) r.teamId = null;
+        });
+        team.name = teamName;
+        team.members = members;
+        store.roster.forEach(r => {
+          if (memberIds.includes(r.id)) r.teamId = team.id;
+        });
+        editingTeamId = null;
+        const btn = document.querySelector('#form-teams button[type="submit"]');
+        if (btn) btn.textContent = 'Crear Tag Team';
+      } else {
+        const teamId = Date.now();
+        store.teams.push({ id: teamId, name: teamName, members });
+        store.roster.forEach(r => {
+          if (memberIds.includes(r.id)) r.teamId = teamId;
+        });
+      }
+
+      document.getElementById('team-name').value = '';
       saveData();
     };
 
-  store.teams.push({
-  id: Date.now(),
-  name: nombreDelEquipo,
-  members: members,
-  });
+    function openEditTeam(teamId) {
+      const team = (store.teams || []).find(t => t.id === teamId);
+      if (!team) return;
+      editingTeamId = teamId;
+      document.getElementById('team-name').value = team.name || '';
 
-  const t = store.teams.find(x => x.id === editingTeamId);
-if (t) {
-  t.name = nombreDelEquipo;
-  t.members = members;
-}
+      const normalized = normalizeTeamMembers(team.members);
+      const selected = new Set(normalized.map(m => m.id));
+      const roleById = {};
+      normalized.forEach(m => { roleById[m.id] = m.role; });
 
-    function onTitleTypeChange() { document.getElementById('champ2-wrapper').style.display = document.getElementById('title-type-select').value === 'tag' ? 'flex' : 'none'; }
+      document.querySelectorAll('#team-members-select .team-member-row').forEach(row => {
+        const chk = row.querySelector('.team-member-check');
+        const sel = row.querySelector('.team-member-role');
+        if (!chk) return;
+        const id = Number(chk.value);
+        chk.checked = selected.has(id);
+        if (sel) sel.value = roleById[id] || 'tag';
+      });
+
+      const btn = document.querySelector('#form-teams button[type="submit"]');
+      if (btn) btn.textContent = 'Guardar cambios del equipo';
+
+      const teamsBtn = Array.from(document.querySelectorAll('#main-nav button')).find(b => (b.textContent || '').includes('Tag'));
+      if (teamsBtn) switchTab('teams', teamsBtn);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEditTeam() {
+      editingTeamId = null;
+      document.getElementById('team-name').value = '';
+      document.querySelectorAll('#team-members-select .team-member-check').forEach(chk => { chk.checked = false; });
+      document.querySelectorAll('#team-members-select .team-member-role').forEach(sel => { sel.value = 'tag'; });
+      const btn = document.querySelector('#form-teams button[type="submit"]');
+      if (btn) btn.textContent = 'Crear Tag Team';
+    }
+    function onTitleTypeChange() { 
+      document.getElementById('champ2-wrapper').style.display = document.getElementById('title-type-select').value === 'tag' ? 'flex' : 'none'; }
     function populateRosterDropdowns() {
       const sorted = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
       const optionsHTML = `<option value="">-- Vacante / Ninguno --</option>` + sorted.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
@@ -2668,7 +2734,14 @@ if (t) {
         store.roster.push({ id: newId, name, brands, alignment, gender, division, teamId, elo });
         if (teamId) {
           const team = store.teams.find(t => t.id === teamId);
-          if (team && !team.members.includes(newId)) team.members.push(newId);
+          if (teamId) {
+          const team = store.teams.find(t => t.id === teamId);
+          if (team) {
+            team.members = normalizeTeamMembers(team.members);
+            if (!team.members.some(m => m.id === newId)) {
+              team.members.push({ id: newId, role: 'tag' });
+            }
+          }
         }
         closeWrestlerModal();
       } else {
@@ -2679,11 +2752,22 @@ if (t) {
           wrestler.name = name; wrestler.brands = brands; wrestler.alignment = alignment; wrestler.gender = gender; wrestler.division = division; wrestler.teamId = teamId; wrestler.elo = elo;
           if (oldTeamId && oldTeamId !== teamId) {
             const oldTeam = store.teams.find(t => t.id === oldTeamId);
-            if (oldTeam) oldTeam.members = oldTeam.members.filter(m => m !== wrestler.id);
+            if (oldTeamId && oldTeamId !== teamId) {
+            const oldTeam = store.teams.find(t => t.id === oldTeamId);
+            if (oldTeam) {
+              oldTeam.members = normalizeTeamMembers(oldTeam.members).filter(m => m.id !== wrestler.id);
+            }
           }
           if (teamId) {
             const team = store.teams.find(t => t.id === teamId);
-            if (team && !team.members.includes(wrestler.id)) team.members.push(wrestler.id);
+            if (teamId) {
+            const team = store.teams.find(t => t.id === teamId);
+            if (team) {
+              team.members = normalizeTeamMembers(team.members);
+              if (!team.members.some(m => m.id === wrestler.id)) {
+                team.members.push({ id: wrestler.id, role: 'tag' });
+              }
+            }
           }
           await updateWrestlerStats(wrestler);
           setWrestlerModalMode('view');
@@ -2708,7 +2792,9 @@ if (t) {
     function deleteItem(type, id) {
       if (type === 'roster') {
         store.roster = store.roster.filter(r => r.id !== id);
-        store.teams.forEach(t => { t.members = t.members.filter(m => m !== id); });
+        store.teams.forEach(t => {
+          t.members = normalizeTeamMembers(t.members).filter(m => m.id !== id);
+        });
         store.titles.forEach(t => { if (t.champions) t.champions = t.champions.filter(c => c !== id); });
         deleteImageFromDB('wrestler_' + id);
       } else if (type === 'shows') {
@@ -2851,14 +2937,63 @@ if (t) {
       if (standingsFilters.mode === 'teams') {
         const teams = store.teams.filter(t => t.members && t.members.length);
         ranked = teams.map(team => {
-          const members = team.members
+          const allIds = getTeamMemberIds(team);
+          const tagIds = getTeamTagRepIds(team);
+          const repIds = tagIds.length ? tagIds : allIds;
+
+          const members = repIds
             .map(id => store.roster.find(r => r.id === id))
             .filter(Boolean);
-          const inPool = team.members
+          const inPool = repIds
             .map(id => rosterPool.find(r => r.id === id))
             .filter(Boolean);
 
-          // Si hay filtros activos, el equipo necesita al menos 1 miembro que los cumpla
+          const hasAttrFilter =
+            (standingsFilters.brands && standingsFilters.brands.length > 0) ||
+            standingsFilters.alignment !== 'ALL' ||
+            standingsFilters.gender !== 'ALL' ||
+            standingsFilters.division !== 'ALL' ||
+            standingsFilters.hideInactive ||
+            standingsFilters.excludeChamps;
+
+          if (hasAttrFilter && !inPool.length) return null;
+
+          const useMembers = inPool.length ? inPool : members;
+          if (!useMembers.length) return null;
+
+          let wins = 0, losses = 0, draws = 0, total = 0;
+          useMembers.forEach(m => {
+            const rec = getWrestlerRecord(m, matchesPool);
+            wins += rec.wins;
+            losses += rec.losses;
+            draws += rec.draws;
+            total += rec.total;
+          });
+          const n = useMembers.length;
+          const avgWins = wins / n;
+          const avgLosses = losses / n;
+          const avgDraws = draws / n;
+          const avgTotal = total / n;
+          const pct = avgTotal > 0 ? avgWins / avgTotal : 0;
+          const elo = getTeamTagElo(team);
+          return {
+            isTeam: true,
+            team,
+            members: useMembers,
+            wins: Math.round(avgWins * 10) / 10,
+            losses: Math.round(avgLosses * 10) / 10,
+            draws: Math.round(avgDraws * 10) / 10,
+            total: Math.round(avgTotal * 10) / 10,
+            pct,
+            elo
+          };
+        }).filter(Boolean).sort((a, b) => {
+          if (b.elo !== a.elo) return b.elo - a.elo;
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          if (b.pct !== a.pct) return b.pct - a.pct;
+          return a.losses - b.losses;
+        });
+
           const hasAttrFilter =
             (standingsFilters.brands && standingsFilters.brands.length > 0) ||
             standingsFilters.alignment !== 'ALL' ||
@@ -3024,7 +3159,18 @@ if (t) {
       document.getElementById('stat-total-matches').innerText = store.matches.length;
       renderFilterSelect();
       renderActiveFiltersBar();
-      document.getElementById('team-members-select').innerHTML = store.roster.map(r => `<label class="checkbox-item"><input type="checkbox" value="${r.id}"> ${r.name}</label>`).join('');
+      document.getElementById('team-members-select').innerHTML = store.roster
+        .slice()
+        .sort((a, b) => cleanName(a.name).localeCompare(cleanName(b.name)))
+        .map((r, index) => {
+          return `<div class="team-member-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;">
+            <label class="checkbox-item" style="flex:1;margin:0;">
+              <input type="checkbox" class="team-member-check" value="${r.id}"> ${r.name}
+            </label>
+            ${roleSelectHTML('tag', index)}
+          </div>`;
+        }).join('');
+      
       let filtered = store.roster.filter(r => {
         const brands = r.brands || (r.brand ? [r.brand] : []);
         if (filters.brand !== 'ALL' && !brands.includes(filters.brand)) return false;
@@ -3072,7 +3218,6 @@ if (t) {
             }
           }
         }
-        // Borde degradado: color de marca → negro (o dorado si es campeón)
         const endColor = heldTitles.length > 0 ? '#ffd700' : '#000000';
         const borderStyle = `border-image: linear-gradient(to right, ${brandColor}, ${endColor}) 1;`;
         return `<div class="card" style="${bgStyle}${borderStyle}" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
@@ -3088,8 +3233,28 @@ if (t) {
       }));
       document.getElementById('list-shows').innerHTML = showCards.length ? showCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay shows.</p>`;
       document.getElementById('list-teams').innerHTML = store.teams.map(t => {
-        const members = t.members.map(id => { const r = store.roster.find(ros => ros.id === id); return r ? r.name : '?'; }).join(', ');
-        return `<div class="card" style="padding:12px; height:auto;"><div class="card-info"><span class="card-title">${t.name}</span><span class="card-sub">${members}</span></div><button class="btn-del" onclick="event.stopPropagation(); showConfirmModal('¿Eliminar el equipo ${t.name}?', () => deleteItem('teams', ${t.id}))">🗑</button></div>`;
+        const normalized = normalizeTeamMembers(t.members);
+        const members = normalized.map(m => {
+          const r = store.roster.find(ros => ros.id === m.id);
+          const name = r ? r.name : '?';
+          const roleLabel = (TEAM_ROLES.find(x => x.value === m.role) || {}).label || m.role;
+          return `${name} (${roleLabel})`;
+        }).join(', ');
+        const tagReps = getTeamTagRepIds(t).map(id => {
+          const r = store.roster.find(ros => ros.id === id);
+          return r ? r.name : '?';
+        }).join(' & ');
+        return `<div class="card" style="padding:12px; height:auto;">
+          <div class="card-info" style="flex:1;">
+            <span class="card-title">${t.name}</span>
+            <span class="card-sub">${members || 'Sin miembros'}</span>
+            <span class="card-sub">Tag: ${tagReps || '—'}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+            <button type="button" class="btn-reset-slot" onclick="event.stopPropagation(); openEditTeam(${t.id})">✏️ Editar</button>
+            <button class="btn-del" onclick="event.stopPropagation(); showConfirmModal('¿Eliminar el equipo ${String(t.name).replace(/'/g, "\\'")}?', () => deleteItem('teams', ${t.id}))">🗑</button>
+          </div>
+        </div>`;
       }).join('') || `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay equipos.</p>`;
       const currentDays = getTotalUniverseDays();
       const titleCards = await Promise.all(store.titles.map(async t => {
