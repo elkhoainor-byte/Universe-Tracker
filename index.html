@@ -233,19 +233,19 @@
     .teams-form-badge { background: var(--accent); color: #fff; font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; margin-left: auto; margin-right: 8px; }
     .teams-form-body { padding: 0 18px 18px 18px; border-top: 1px dashed #333; padding-top: 16px; }
     #form-teams { background: transparent; border: none; padding: 0; margin: 0; gap: 12px; }
-#form-teams input[type="text"] {
-  font-size: 1rem;
-  font-weight: 700;
-  padding: 12px 14px;
-}
-.teams-members-label {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-}
+    #form-teams input[type="text"] {
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 12px 14px;
+    }
+    .teams-members-label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
 #team-members-select {
   max-height: 220px;
   border-radius: 10px;
@@ -448,6 +448,34 @@
   display: block;
   font-size: 2.2rem;
   margin-bottom: 10px;
+}
+    .standing-trend {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 3;
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 8px;
+  letter-spacing: 0.2px;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+}
+.standing-trend.up {
+  color: #69f0ae;
+  background: rgba(0, 80, 40, 0.75);
+  border: 1px solid rgba(105, 240, 174, 0.45);
+}
+.standing-trend.down {
+  color: #ff8a80;
+  background: rgba(80, 10, 10, 0.75);
+  border: 1px solid rgba(255, 138, 128, 0.45);
+}
+.standing-trend.neutral {
+  color: #bbb;
+  background: rgba(40,40,40,0.7);
+  border: 1px solid #555;
 }
   </style>
 </head>
@@ -1209,10 +1237,13 @@
     return delta;
   }
 
-  function setWrestlerElo(wrestlerId, newElo) {
+  function setWrestlerElo(wrestlerId, newElo, delta = null) {
     const w = store.roster.find(r => r.id === wrestlerId);
     if (!w) return;
     w.elo = Math.max(0, Math.round(newElo));
+    if (delta !== null && delta !== undefined) {
+      w.lastEloDelta = Math.round(delta);
+    }
   }
   
   function applyEloForMatch(match) {
@@ -1257,24 +1288,31 @@
         const w = store.roster.find(r => r.id === id);
         if (!w) return;
         const my = getWrestlerElo(w);
-        setWrestlerElo(id, my + calcEloDelta(my, avgR, scoreLeft));
+        const delta = calcEloDelta(my, avgR, scoreLeft);
+        setWrestlerElo(id, my + delta, delta);
       });
       right.forEach(id => {
         const w = store.roster.find(r => r.id === id);
         if (!w) return;
         const my = getWrestlerElo(w);
-        setWrestlerElo(id, my + calcEloDelta(my, avgL, scoreRight));
+        const delta = calcEloDelta(my, avgL, scoreRight);
+        setWrestlerElo(id, my + delta, delta);
       });
-    } else {
+    } 
+    
+    else {
       if (isDraw) {
         parts.forEach(id => {
           const others = parts.filter(x => x !== id);
           const w = store.roster.find(r => r.id === id);
           if (!w || !others.length) return;
           const my = getWrestlerElo(w);
-          setWrestlerElo(id, my + calcEloDelta(my, avgElo(others), 0.5));
+          const delta = calcEloDelta(my, avgElo(others), 0.5);
+          setWrestlerElo(id, my + delta, delta);
         });
-      } else {
+      } 
+      
+      else {
         const winnerW = store.roster.find(r => r.name === match.winner);
         if (!winnerW || !parts.includes(winnerW.id)) return;
         const losers = parts.filter(id => id !== winnerW.id);
@@ -1288,20 +1326,19 @@
           const theirElo = getWrestlerElo(w);
           const delta = calcEloDelta(winElo, theirElo, 1);
           totalGain += delta;
-          setWrestlerElo(id, theirElo - delta);
+          setWrestlerElo(id, theirElo - delta, -delta);
         });
-        setWrestlerElo(winnerW.id, winElo + totalGain);
+        setWrestlerElo(winnerW.id, winElo + totalGain, totalGain);
       }
     }
-
     match.eloApplied = true;
   }
 
   function recalculateAllElos() {
     (store.roster || []).forEach(r => {
       r.elo = DEFAULT_ELO;
+      r.lastEloDelta = 0;
     });
-
     (store.matches || []).forEach(m => {
       m.eloApplied = false;
     });
@@ -3167,10 +3204,9 @@
                   <span class="card-title">🤝 ${row.team.name}</span>
                   <span class="card-sub">${names}</span>
                   <span class="card-sub">
-                    <span style="color:#4caf50;">${row.wins}V</span> ·
-                    <span style="color:#f44336;">${row.losses}D</span> ·
-                    <span style="color:#ffeb3b;">${row.draws}E</span>
-                    · media · ${pctText}
+                  <span style="color:#4caf50;font-weight:800;">${Math.round(row.wins)}</span>
+                  <span style="color:var(--text-dim);">-</span>
+                  <span style="color:#f44336;font-weight:800;">${Math.round(row.losses)}</span>
                   </span>
                 </div>
               </div>
@@ -3203,24 +3239,33 @@
           ? `<img src="${img}" class="wrestler-avatar" onerror="handleImgError(this)">`
           : `<div class="wrestler-avatar-placeholder">👤</div>`;
 
-        return `
-          <div class="card ${podiumClass}" style="${bgStyle}${borderStyle}" onclick="openWrestlerModal(${r.id})">
-            <span class="standing-rank">#${pos}</span>
-            <div class="card-left">
-              <div class="avatar-wrapper">${avatar}</div>
-              <div class="card-info">
-                <span class="card-title">${r.name}</span>
-                <span class="card-sub">
-                  <span style="color:#4caf50;">${row.wins}V</span> ·
-                  <span style="color:#f44336;">${row.losses}D</span> ·
-                  <span style="color:#ffeb3b;">${row.draws}E</span>
-                  · ${row.total} combates · ${pctText}
-                </span>
-              </div>
-            </div>
-            ${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}
-          </div>`;
-      }));
+        const trendDelta = (typeof r.lastEloDelta === 'number') ? r.lastEloDelta : 0;
+let trendHTML = '';
+if (trendDelta > 0) {
+  trendHTML = `<span class="standing-trend up">↑ +${trendDelta}</span>`;
+} else if (trendDelta < 0) {
+  trendHTML = `<span class="standing-trend down">↓ ${trendDelta}</span>`;
+} else {
+  trendHTML = `<span class="standing-trend neutral">–</span>`;
+}
+
+return `
+  <div class="card ${podiumClass}" style="${bgStyle}${borderStyle}" onclick="openWrestlerModal(${r.id})">
+    <span class="standing-rank">#${pos}</span>
+    ${trendHTML}
+    <div class="card-left">
+      <div class="avatar-wrapper">${avatar}</div>
+      <div class="card-info">
+        <span class="card-title">${r.name}</span>
+        <span class="card-sub">
+          <span style="color:#4caf50;font-weight:800;">${row.wins}</span>
+          <span style="color:var(--text-dim);">-</span>
+          <span style="color:#f44336;font-weight:800;">${row.losses}</span>
+        </span>
+      </div>
+    </div>
+    ${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}
+  </div>`;
 
       container.innerHTML = cards.join('');
     }
