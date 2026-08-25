@@ -3330,7 +3330,6 @@ const teamCards = await Promise.all((store.teams || []).map(async t => {
     return r ? r.name : '?';
   }).join(' & ');
 
-  // Fondo del show del primer miembro con marca
   let bgStyle = '';
   let brandColor = '#e50914';
   const firstWithBrand = memberData.find(m => m.brands && m.brands.length > 0);
@@ -3344,7 +3343,6 @@ const teamCards = await Promise.all((store.teams || []).map(async t => {
     }
   }
 
-  // Avatares (máximo 2)
   const avatarsHTML = memberData.slice(0, 2).map(m => {
     if (m.img) return `<img src="${m.img}" class="team-avatar-img" alt="${m.name}" onerror="this.outerHTML='<div class=\\'team-avatar-placeholder\\'>👤</div>'">`;
     return `<div class="team-avatar-placeholder">👤</div>`;
@@ -3375,67 +3373,7 @@ const teamCards = await Promise.all((store.teams || []).map(async t => {
 document.getElementById('list-teams').innerHTML = teamCards.length
   ? teamCards.join('')
   : `<div class="team-empty"><span>🤝</span>Aún no hay Tag Teams.<br>Crea el primero arriba.</div>`;
-
-  const tagReps = getTeamTagRepIds(t).map(id => {
-    const r = store.roster.find(ros => ros.id === id);
-    return r ? r.name : '?';
-  }).join(' & ');
-
-  // Fondo del show del primer miembro con marca
-  let bgStyle = '';
-  let brandColor = '#e50914';
-  const firstWithBrand = memberData.find(m => m.brands && m.brands.length > 0);
-  if (firstWithBrand) {
-    const showObj = store.shows.find(s => s.name === firstWithBrand.brands[0]);
-    if (showObj) {
-      brandColor = showObj.color || '#e50914';
-      if (showBgCacheTeams[showObj.id]) {
-        bgStyle = `background-image:url('${showBgCacheTeams[showObj.id]}'); background-size:cover; background-position:center;`;
-      }
-    }
-  }
-
-  // Avatares (máximo 2 visibles en la franja izquierda)
-  const avatarsHTML = memberData.slice(0, 2).map(m => {
-    if (m.img) return `<img src="${m.img}" class="team-avatar-img" alt="${m.name}" onerror="this.outerHTML='<div class=\\'team-avatar-placeholder\\'>👤</div>'">`;
-    return `<div class="team-avatar-placeholder">👤</div>`;
-  }).join('') || `<div class="team-avatar-placeholder">👤</div>`;
-
-  // Pills de roles
-  const rolesPills = memberData.map(m => {
-    const cls = (m.role || 'tag').toLowerCase().replace(/\s+/g, '');
-    return `<span class="team-role-pill ${cls}">${m.roleLabel}</span>`;
-  }).join('');
-
-  const membersLine = memberData.map(m => m.name).join(' · ') || 'Sin miembros';
-  const elo = getTeamTagElo(t);
-
-  const safeName = String(t.name).replace(/'/g, "\\'");
-
-  return `
-    <div class="team-card" style="${bgStyle} border-image: linear-gradient(to right, ${brandColor}, #000) 1;">
-      <div class="team-card-inner">
-        <div class="team-avatars">${avatarsHTML}</div>
-        <div class="team-info">
-          <div class="team-name">${t.name}</div>
-          <div class="team-members-line">${membersLine}</div>
-          <div class="team-tag-line">Tag: ${tagReps || '—'}</div>
-          <div class="team-roles-pills">${rolesPills}</div>
-        </div>
-        <div class="team-side-actions">
-          <div class="team-elo-badge">ELO <span>${elo}</span></div>
-          <div class="team-actions-btns">
-            <button type="button" class="team-btn-edit" onclick="event.stopPropagation(); openEditTeam(${t.id})" title="Editar">✏️</button>
-            <button type="button" class="team-btn-del" onclick="event.stopPropagation(); showConfirmModal('¿Eliminar el equipo ${safeName}?', () => deleteItem('teams', ${t.id}))" title="Eliminar">🗑</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
-}));
-
-document.getElementById('list-teams').innerHTML = teamCards.length
-  ? teamCards.join('')
-  : `<div class="team-empty"><span>🤝</span>Aún no hay Tag Teams.<br>Crea el primero arriba.</div>`;
+      
       const currentDays = getTotalUniverseDays();
       const titleCards = await Promise.all(store.titles.map(async t => {
         const titleImg = await getImageFromDB('title_' + t.id);
