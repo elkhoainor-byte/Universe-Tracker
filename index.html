@@ -1154,121 +1154,115 @@
     if (match.winner === 'Promo' || match.card === '🎤 Promo') return;
     if (!match.winner || match.winner === 'Pendiente') return;
     if (match.eloApplied) return;
+
     const parts = (match.participants || []).filter(Boolean);
     if (parts.length < 2) return;
+
     const isDraw = match.winner === 'Empate';
     const isTeam = isTeamBasedMatch(match.matchType, match.subType);
-      function avgElo(ids) {
-        const elos = ids.map(id => {
-          const w = store.roster.find(r => r.id === id);
-          return getWrestlerElo(w);
-        });
-        if (!elos.length) return DEFAULT_ELO;
-        return elos.reduce((a, b) => a + b, 0) / elos.length;
-      }
-      if (isTeam) {
-        const { left, right } = splitSides(parts, match.matchType, match.subType, isDraw ? null : match.winner);
-        if (!left.length || !right.length) return;
-        const avgL = avgElo(left);
-        const avgR = avgElo(right);
-        let scoreLeft = 0.5;
-        if (!isDraw) {
-          const winnerW = store.roster.find(r => r.name === match.winner);
-          if (!winnerW) return;
-          if (left.includes(winnerW.id)) scoreLeft = 1;
-          else if (right.includes(winnerW.id)) scoreLeft = 0;
-          else return;
-        }
-        const scoreRight = isDraw ? 0.5 : (1 - scoreLeft);
-        left.forEach(id => {
-          const w = store.roster.find(r => r.id === id);
-          if (!w) return;
-          const my = getWrestlerElo(w);
-          setWrestlerElo(id, my + calcEloDelta(my, avgR, scoreLeft));
-        });
-        right.forEach(id => {
-          const w = store.roster.find(r => r.id === id);
-          if (!w) return;
-          const my = getWrestlerElo(w);
-          setWrestlerElo(id, my + calcEloDelta(my, avgL, scoreRight));
-        });
-      } 
-      else {
-        if (isDraw) {
-          parts.forEach(id => {
-            const others = parts.filter(x => x !== id);
-            const w = store.roster.find(r => r.id === id);
-            if (!w || !others.length) return;
-            const my = getWrestlerElo(w);
-            setWrestlerElo(id, my + calcEloDelta(my, avgElo(others), 0.5));
-          });
-        } 
-        else {
-          const winnerW = store.roster.find(r => r.name === match.winner);
-          if (!winnerW || !parts.includes(winnerW.id)) return;
-          const losers = parts.filter(id => id !== winnerW.id);
-          if (!losers.length) return;
-          const winElo = getWrestlerElo(winnerW);
-          let totalGain = 0;
-          losers.forEach(id => {
-            const w = store.roster.find(r => r.id === id);
-            if (!w) return;
-            const theirElo = getWrestlerElo(w);
-            const delta = calcEloDelta(winElo, theirElo, 1);
-            totalGain += delta;
-            setWrestlerElo(id, theirElo - delta);
-          });
-          setWrestlerElo(winnerW.id, winElo + totalGain);
-        }
-      }
-      match.eloApplied = true;
-      function recalculateAllElos() {
-      (store.roster || []).forEach(r => {
-        r.elo = DEFAULT_ELO;
-      });
-  
-      (store.matches || []).forEach(m => {
-        m.eloApplied = false;
-      });
-  
-      const ordered = (store.matches || []).slice().sort((a, b) => {
-        const da = (typeof a.universeDay === 'number') ? a.universeDay : 0;
-        const db = (typeof b.universeDay === 'number') ? b.universeDay : 0;
-        if (da !== db) return da - db;
-        return String(a.id).localeCompare(String(b.id));
-      });
-  
-      ordered.forEach(m => {
-        applyEloForMatch(m);
-      });
-  }
-      
-      (store.matches || []).forEach(m => {
-        m.eloApplied = false;
-      });
 
-      const ordered = (store.matches || []).slice().sort((a, b) => {
-        const da = (typeof a.universeDay === 'number') ? a.universeDay : 0;
-        const db = (typeof b.universeDay === 'number') ? b.universeDay : 0;
-        if (da !== db) return da - db;
-        return String(a.id).localeCompare(String(b.id));
+    function avgElo(ids) {
+      const elos = ids.map(id => {
+        const w = store.roster.find(r => r.id === id);
+        return getWrestlerElo(w);
       });
-
-      ordered.forEach(m => {
-        applyEloForMatch(m);
-      });
+      if (!elos.length) return DEFAULT_ELO;
+      return elos.reduce((a, b) => a + b, 0) / elos.length;
     }
+
+    if (isTeam) {
+      const { left, right } = splitSides(parts, match.matchType, match.subType, isDraw ? null : match.winner);
+      if (!left.length || !right.length) return;
+
+      const avgL = avgElo(left);
+      const avgR = avgElo(right);
+
+      let scoreLeft = 0.5;
+      if (!isDraw) {
+        const winnerW = store.roster.find(r => r.name === match.winner);
+        if (!winnerW) return;
+        if (left.includes(winnerW.id)) scoreLeft = 1;
+        else if (right.includes(winnerW.id)) scoreLeft = 0;
+        else return;
+      }
+      const scoreRight = isDraw ? 0.5 : (1 - scoreLeft);
+
+      left.forEach(id => {
+        const w = store.roster.find(r => r.id === id);
+        if (!w) return;
+        const my = getWrestlerElo(w);
+        setWrestlerElo(id, my + calcEloDelta(my, avgR, scoreLeft));
+      });
+      right.forEach(id => {
+        const w = store.roster.find(r => r.id === id);
+        if (!w) return;
+        const my = getWrestlerElo(w);
+        setWrestlerElo(id, my + calcEloDelta(my, avgL, scoreRight));
+      });
+    } else {
+      if (isDraw) {
+        parts.forEach(id => {
+          const others = parts.filter(x => x !== id);
+          const w = store.roster.find(r => r.id === id);
+          if (!w || !others.length) return;
+          const my = getWrestlerElo(w);
+          setWrestlerElo(id, my + calcEloDelta(my, avgElo(others), 0.5));
+        });
+      } else {
+        const winnerW = store.roster.find(r => r.name === match.winner);
+        if (!winnerW || !parts.includes(winnerW.id)) return;
+        const losers = parts.filter(id => id !== winnerW.id);
+        if (!losers.length) return;
+
+        const winElo = getWrestlerElo(winnerW);
+        let totalGain = 0;
+        losers.forEach(id => {
+          const w = store.roster.find(r => r.id === id);
+          if (!w) return;
+          const theirElo = getWrestlerElo(w);
+          const delta = calcEloDelta(winElo, theirElo, 1);
+          totalGain += delta;
+          setWrestlerElo(id, theirElo - delta);
+        });
+        setWrestlerElo(winnerW.id, winElo + totalGain);
+      }
+    }
+
+    match.eloApplied = true;
+  }
+
+  function recalculateAllElos() {
     (store.roster || []).forEach(r => {
-      if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
+      r.elo = DEFAULT_ELO;
     });
 
-    if (!store.teams) store.teams = [];
-    (store.teams || []).forEach(t => {
-      t.members = normalizeTeamMembers(t.members);
+    (store.matches || []).forEach(m => {
+      m.eloApplied = false;
     });
 
-    recalculateAllElos();
-    localStorage.setItem('universe_data', JSON.stringify(store));
+    const ordered = (store.matches || []).slice().sort((a, b) => {
+      const da = (typeof a.universeDay === 'number') ? a.universeDay : 0;
+      const db = (typeof b.universeDay === 'number') ? b.universeDay : 0;
+      if (da !== db) return da - db;
+      return String(a.id).localeCompare(String(b.id));
+    });
+
+    ordered.forEach(m => {
+      applyEloForMatch(m);
+    });
+  }
+
+  (store.roster || []).forEach(r => {
+    if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
+  });
+
+  if (!store.teams) store.teams = [];
+  (store.teams || []).forEach(t => {
+    t.members = normalizeTeamMembers(t.members);
+  });
+
+  recalculateAllElos();
+  localStorage.setItem('universe_data', JSON.stringify(store));
     
     function saveData() { localStorage.setItem('universe_data', JSON.stringify(store)); render(); }
     function unlockNav() {
@@ -2727,9 +2721,9 @@
     document.getElementById('form-edit-wrestler').onsubmit = async (e) => {
       e.preventDefault();
       const name = document.getElementById('edit-name').value.trim();
-        let elo = parseInt(document.getElementById('edit-elo').value, 10);
-        if (!Number.isFinite(elo)) elo = DEFAULT_ELO;
-          elo = Math.max(0, Math.min(9999, elo));
+      let elo = parseInt(document.getElementById('edit-elo').value, 10);
+      if (!Number.isFinite(elo)) elo = DEFAULT_ELO;
+      elo = Math.max(0, Math.min(9999, elo));
       const brands = Array.from(document.querySelectorAll('#edit-brands-container input:checked')).map(cb => cb.value);
       const alignment = getRadioValue('edit-alignment') || 'Face';
       const gender = getRadioValue('edit-gender') || 'Men';
@@ -2737,13 +2731,12 @@
       const teamVal = document.getElementById('edit-team').value;
       const teamId = teamVal ? parseInt(teamVal) : null;
       const fileInput = document.getElementById('edit-image-file');
+
       if (activeWrestlerId === null) {
         const newId = Date.now();
         if (fileInput.files[0]) await saveImageToDB('wrestler_' + newId, await fileToBase64(fileInput.files[0]));
         store.roster.push({ id: newId, name, brands, alignment, gender, division, teamId, elo });
         if (teamId) {
-          const team = store.teams.find(t => t.id === teamId);
-          if (teamId) {
           const team = store.teams.find(t => t.id === teamId);
           if (team) {
             team.members = normalizeTeamMembers(team.members);
@@ -2758,18 +2751,21 @@
         if (wrestler) {
           if (fileInput.files[0]) await saveImageToDB('wrestler_' + wrestler.id, await fileToBase64(fileInput.files[0]));
           const oldTeamId = wrestler.teamId;
-          wrestler.name = name; wrestler.brands = brands; wrestler.alignment = alignment; wrestler.gender = gender; wrestler.division = division; wrestler.teamId = teamId; wrestler.elo = elo;
+          wrestler.name = name;
+          wrestler.brands = brands;
+          wrestler.alignment = alignment;
+          wrestler.gender = gender;
+          wrestler.division = division;
+          wrestler.teamId = teamId;
+          wrestler.elo = elo;
+
           if (oldTeamId && oldTeamId !== teamId) {
-            const oldTeam = store.teams.find(t => t.id === oldTeamId);
-            if (oldTeamId && oldTeamId !== teamId) {
             const oldTeam = store.teams.find(t => t.id === oldTeamId);
             if (oldTeam) {
               oldTeam.members = normalizeTeamMembers(oldTeam.members).filter(m => m.id !== wrestler.id);
             }
           }
           if (teamId) {
-            const team = store.teams.find(t => t.id === teamId);
-            if (teamId) {
             const team = store.teams.find(t => t.id === teamId);
             if (team) {
               team.members = normalizeTeamMembers(team.members);
