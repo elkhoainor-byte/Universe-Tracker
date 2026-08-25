@@ -1137,7 +1137,6 @@
           });
         } 
         else {
-          else {
           const winnerW = store.roster.find(r => r.name === match.winner);
           if (!winnerW || !parts.includes(winnerW.id)) return;
           const losers = parts.filter(id => id !== winnerW.id);
