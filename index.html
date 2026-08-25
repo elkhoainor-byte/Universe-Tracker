@@ -2474,10 +2474,7 @@
   btnFin.style.display = locked ? 'none' : 'block';
   btnNext.style.display = locked ? 'block' : 'none';
 }
-      container.innerHTML = html;
-      btnFin.style.display = locked ? 'none' : 'block';
-      btnNext.style.display = locked ? 'block' : 'none';
-    
+  
     function setSlotType(idx, type) {
       idx = Number(idx);
       if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
