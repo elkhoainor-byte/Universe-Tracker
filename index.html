@@ -1212,7 +1212,8 @@
   
   const ELO_K_FACTOR = 32;
   const PROMO_ELO_SCALE = 0.25;
-  const PROMO_AUTOBOMBO_GAIN = Math.round(ELO_K_FACTOR * PROMO_ELO_SCALE); // 8
+  const PROMO_AUTOBOMBO_GAIN = Math.round(ELO_K_FACTOR * PROMO_ELO_SCALE);
+  const ELO_ABSENCE_PENALTY = 2;
 
   function normalizeTeamMembers(members) {
     if (!Array.isArray(members)) return [];
@@ -1288,6 +1289,18 @@
   function applyEloForMatch(match) {
     if (!match) return;
     if (match.eloApplied) return;
+    if (match.inactivityPenalty || match.winner === 'Inactividad') {
+      const parts = (match.participants || []).filter(Boolean);
+      parts.forEach(id => {
+        const w = store.roster.find(r => r.id === id);
+        if (!w) return;
+        const my = getWrestlerElo(w);
+        const delta = -ELO_ABSENCE_PENALTY;
+        setWrestlerElo(id, my + delta, delta);
+      });
+      match.eloApplied = true;
+      return;
+    }
 
     if (match.winner === 'Promo' || match.promoType) {
       const parts = (match.participants || []).filter(Boolean);
@@ -1639,6 +1652,9 @@
         body.innerHTML = '<p style="color:var(--text-dim); text-align:center;">No hay combates registrados para este evento.</p>';
         document.getElementById('modal-past-event').classList.add('active');
         return;
+        if (m.inactivityPenalty || m.winner === 'Inactividad') {
+          return `<div class="past-promo-card">${m.card || '⏸ Sin participación'}</div>`;
+        }
       }
       const cards = await Promise.all(matches.map(async m => {
         if (m.winner === 'Promo' || m.promoType) {
@@ -2849,6 +2865,44 @@
         }
       });
 
+      const brandsOfEvent = (event.brands && event.brands.length)
+        ? event.brands
+        : store.shows.map(s => s.name);
+
+      const participatedIds = new Set();
+      store.todayCard.slots.forEach(slot => {
+        (slot.participants || []).filter(Boolean).forEach(id => participatedIds.add(id));
+      });
+
+      const absentIds = store.roster
+        .filter(r => {
+          if ((r.division || '') === 'Inactivo') return false;
+          const brands = r.brands || (r.brand ? [r.brand] : []);
+          const belongs = brands.some(b => brandsOfEvent.includes(b));
+          if (!belongs) return false;
+          return !participatedIds.has(r.id);
+        })
+        .map(r => r.id);
+
+      if (absentIds.length > 0) {
+        const matchId = Date.now() + Math.random();
+        const match = {
+          id: matchId,
+          show: label,
+          eventName: event.name,
+          showNumber: event.showNumber,
+          card: `⏸ Sin participación (${absentIds.length} luchador${absentIds.length === 1 ? '' : 'es'})`,
+          winner: 'Inactividad',
+          inactivityPenalty: true,
+          participants: absentIds,
+          matchType: null,
+          subType: null,
+          universeDay: getTotalUniverseDays()
+        };
+        store.matches.push(match);
+        applyEloForMatch(match);
+      }
+      
       store.todayCard.locked = true;
       editingSlotIndex = null;
       saveData();
@@ -3308,14 +3362,13 @@
       const currentDays = getTotalUniverseDays();
       const rangeDays = parseInt(weeks, 10) * 7;
       const minDay = Math.max(0, currentDays - rangeDays);
-      const withDay = store.matches.filter(m => m.winner !== 'Promo' && typeof m.universeDay === 'number');
-      // Si no hay suficientes datos fechados, usar TODO desde el inicio
+      const withDay = store.matches.filter(m => m.winner !== 'Promo' m.winner !== 'Promo' && m.winner !== 'Inactividad' && !m.inactivityPenalty)
       if (withDay.length === 0) {
         return store.matches.filter(m => m.winner !== 'Promo');
       }
       const filtered = store.matches.filter(m => {
         if (m.winner === 'Promo') return false;
-        if (typeof m.universeDay !== 'number') return true; // antiguos = desde el inicio
+        if (typeof m.universeDay !== 'number') return true;
         return m.universeDay >= minDay;
       });
       return filtered;
@@ -3323,7 +3376,13 @@
 
     function getWrestlerRecord(wrestler, matchesPool) {
       const pool = matchesPool || store.matches;
-      const history = pool.filter(m => m.participants && m.participants.includes(wrestler.id) && m.winner !== 'Promo');
+      const history = pool.filter(m =>
+  m.participants &&
+  m.participants.includes(wrestler.id) &&
+  m.winner !== 'Promo' &&
+  m.winner !== 'Inactividad' &&
+  !m.inactivityPenalty
+);
       let wins = 0, losses = 0, draws = 0;
       history.forEach(m => {
         if (m.winner === wrestler.name) wins++;
