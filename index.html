@@ -3310,11 +3310,6 @@ await Promise.all(store.shows.map(async s => {
   showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
 }));
 
-const showBgCacheTeams = {};
-await Promise.all(store.shows.map(async s => {
-  showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
-}));
-
 const teamCards = await Promise.all((store.teams || []).map(async t => {
   const normalized = normalizeTeamMembers(t.members);
   const memberData = [];
