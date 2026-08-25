@@ -491,6 +491,8 @@
     .title-option { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; background: #2a2a1a; border: 1px solid #3a3a2a; cursor: pointer; font-size: 0.88rem; color: #eee; transition: background 0.15s, border-color 0.15s; }
     .title-option-champs { font-size: 0.84rem; font-weight: 700; color: var(--gold-end); white-space: nowrap; margin-left: auto; }
     .title-option.selected .title-option-champs { color: #ffe566; }
+    .slot-section-label { font-size: 0.72rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 6px 0; }
+    .slot-section-label:first-of-type { margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -2342,32 +2344,52 @@
           html += `<div class="slot-summary">🎤 Segmento de promo</div>`;
           if (canEditUI) html += `<button class="btn-reset-slot" style="margin-top:8px;" onclick="resetSlot(${idx})">↺ Cambiar / Reset</button>`;
         } else {
-          if (slot.matchType) html += `<div class="match-type-label">${slot.matchType}${slot.subType ? ' · ' + slot.subType : ''}</div>`;
-          if (canEditUI) {
-            if (!slot.matchType) {
-              const typeOpts = MATCH_TYPE_LIST.map(t => ({ value: t, label: t }));
-              html += `<label style="font-size:0.72rem; color:var(--text-dim);">TIPO DE COMBATE</label>${buildSelect(typeOpts, '', `updateSlotMatchType(${idx},this.value)`, '-- Elegir tipo --')}`;
-            } else {
-              const subTypes = MATCH_TYPES[slot.matchType];
-              if (subTypes && !subTypes.special) {
-                const subOpts = Object.keys(subTypes).map(s => ({ value: s, label: s }));
-                html += `<label style="font-size:0.72rem; color:var(--text-dim);">FORMATO</label>${buildSelect(subOpts, slot.subType, `updateSlotSubType(${idx},this.value)`, '-- Elegir formato --')}`;
-              }
-              if (slot.matchType === '3 Stages of Hell') html += getStagesBoxes(slot, idx);
-              if (slot.matchType === 'Árbitro especial invitado') {
-                const refOpts = available.map(w => ({ value: w.id, label: w.name }));
-                html += `<label style="font-size:0.72rem; color:var(--text-dim);">ÁRBITRO ESPECIAL</label>${buildSelect(refOpts, slot.specialReferee, `updateSlotReferee(${idx},this.value)`, '-- Sin árbitro especial --')}`;
-              }
-              html += getParticipantBoxes(slot, idx, available);
-              html += getTitleMatchBox(slot, idx);
-              html += getRefereeWarning(slot);
-              html += getWinnerBox(slot, idx);
-            }
-          }
-          const summary = getSummaryText(slot);
-          if (summary) html += `<div class="slot-summary">${summary}</div>`;
-          if (locked && !isEditing && slot.winner) html += `<div class="winner-box"><label>🏆 Resultado</label><div style="font-weight:bold; color:#4caf50;">${slot.winner}</div></div>`;
-        }
+  if (canEditUI) {
+    html += `<div class="slot-section-label">🏆 Campeonato</div>`;
+    html += getTitleMatchBox(slot, idx);
+
+    html += `<div class="slot-section-label">⚔️ Tipo de combate</div>`;
+    const typeOpts = MATCH_TYPE_LIST.map(t => ({ value: t, label: t }));
+    html += buildSelect(typeOpts, slot.matchType || '', `updateSlotMatchType(${idx},this.value)`, '-- Elegir tipo --');
+
+    if (slot.matchType) {
+      const subTypes = MATCH_TYPES[slot.matchType];
+      if (subTypes && !subTypes.special) {
+        html += `<div class="slot-section-label">📋 Formato</div>`;
+        const subOpts = Object.keys(subTypes).map(s => ({ value: s, label: s }));
+        html += buildSelect(subOpts, slot.subType || '', `updateSlotSubType(${idx},this.value)`, '-- Elegir formato --');
+      }
+
+      if (slot.matchType === '3 Stages of Hell') {
+        html += `<div class="slot-section-label">🔥 Stages</div>`;
+        html += getStagesBoxes(slot, idx);
+      }
+
+      if (slot.matchType === 'Árbitro especial invitado') {
+        html += `<div class="slot-section-label">🧑‍⚖️ Árbitro especial</div>`;
+        const refOpts = available.map(w => ({ value: w.id, label: w.name }));
+        html += buildSelect(refOpts, slot.specialReferee, `updateSlotReferee(${idx},this.value)`, '-- Sin árbitro especial --');
+      }
+
+      if (slot.subType || slot.matchType === '3 Stages of Hell') {
+        html += `<div class="slot-section-label">👥 Luchadores</div>`;
+        html += getParticipantBoxes(slot, idx, available);
+        html += getRefereeWarning(slot);
+        html += getWinnerBox(slot, idx);
+      }
+    }
+  } else {
+    if (slot.matchType) {
+      html += `<div class="match-type-label">${slot.matchType}${slot.subType ? ' · ' + slot.subType : ''}</div>`;
+    }
+  }
+
+  const summary = getSummaryText(slot);
+  if (summary) html += `<div class="slot-summary">${summary}</div>`;
+  if (locked && !isEditing && slot.winner) {
+    html += `<div class="winner-box"><label>🏆 Resultado</label><div style="font-weight:bold; color:#4caf50;">${slot.winner}</div></div>`;
+  }
+}
         html += `</div>`;
       });
       container.innerHTML = html;
