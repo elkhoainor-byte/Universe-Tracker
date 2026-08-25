@@ -225,51 +225,230 @@
     .ficha-name { font-size: 1.35rem; font-weight: 900; text-align: center; letter-spacing: 0.3px; }
     .ficha-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 100%; }
     .ficha-section-title { font-size: 0.75rem; color: var(--text-dim); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
-
-    /* ========== TAG TEAMS - REDISEÑO VISUAL ========== */
-    #tab-teams .btn-trigger-add { margin-bottom: 16px; }
-    .teams-form-card { background: linear-gradient(145deg, #1c1c1c 0%, #161616 100%); border: 1px solid #3a3a3a; border-radius: 14px; padding: 18px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(0,0,0,0.45); position: relative; overflow: hidden; }
-    .teams-form-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, var(--accent), #ff6b6b); border-radius: 0 4px 4px 0; }
-    .teams-form-title { font-size: 0.95rem; font-weight: 900; color: var(--accent); letter-spacing: 0.4px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-    .teams-form-title span { background: var(--accent); color: #fff; font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; }
+    .teams-form-details { background: linear-gradient(145deg, #1c1c1c 0%, #161616 100%); border: 1px solid #3a3a3a; border-radius: 14px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(0,0,0,0.45); overflow: hidden; }
+    .teams-form-summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 18px; font-size: 0.95rem; font-weight: 900; color: var(--accent); letter-spacing: 0.4px; }
+    .teams-form-summary::-webkit-details-marker { display: none; }
+    .teams-form-summary::after { content: "▼"; font-size: 0.7rem; color: var(--text-dim); transition: transform 0.15s ease; }
+    .teams-form-details[open] > .teams-form-summary::after { transform: rotate(180deg); }
+    .teams-form-badge { background: var(--accent); color: #fff; font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; margin-left: auto; margin-right: 8px; }
+    .teams-form-body { padding: 0 18px 18px 18px; border-top: 1px dashed #333; padding-top: 16px; }
     #form-teams { background: transparent; border: none; padding: 0; margin: 0; gap: 12px; }
-    #form-teams input[type="text"] { font-size: 1rem; font-weight: 700; padding: 12px 14px; }
-    .teams-members-label { font-size: 0.72rem; color: var(--text-dim); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-    #team-members-select { max-height: 220px; border-radius: 10px; background: #1a1a1a; border: 1px solid #333; padding: 10px; }
-    .team-member-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 6px; border-radius: 8px; transition: background 0.15s; }
-    .team-member-row:hover { background: rgba(229,9,20,0.08); }
-    .team-member-row .checkbox-item { flex: 1; margin: 0; font-size: 0.9rem; font-weight: 600; }
-    .team-member-role { background: #2a2a2a !important; color: #fff !important; border: 1px solid #444 !important; border-radius: 6px !important; padding: 5px 8px !important; font-size: 0.78rem !important; min-width: 100px; }
-    #form-teams .btn-add { margin-top: 6px; padding: 13px; font-size: 0.95rem; border-radius: 10px; letter-spacing: 0.3px; }
-    .teams-form-actions { display: flex; gap: 10px; margin-top: 4px; }
-    .teams-form-actions .btn-add { flex: 1; }
-    .btn-cancel-team-edit { background: #333; color: #ccc; border: 1px solid #444; padding: 13px; border-radius: 10px; font-weight: bold; cursor: pointer; flex: 1; }
-    .btn-cancel-team-edit:hover { background: #444; color: #fff; }
-    .team-card { background: var(--card-bg); border-radius: 14px; margin-bottom: 14px; overflow: hidden; border: 2px solid transparent; position: relative; cursor: default; box-shadow: 0 6px 18px rgba(0,0,0,0.4); min-height: 120px; display: flex; flex-direction: column; }
-    .team-card::before { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.58); z-index: 1; pointer-events: none; }
-    .team-card-inner { position: relative; z-index: 2; display: flex; align-items: stretch; min-height: 120px; padding: 0; }
-    .team-avatars { display: flex; align-items: stretch; flex-shrink: 0; width: 110px; border-right: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.25); }
-    .team-avatar-img { width: 55px; height: 100%; object-fit: cover; object-position: top center; border-right: 1px solid rgba(255,255,255,0.08); }
-    .team-avatar-placeholder { width: 55px; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--text-dim); background: #222; border-right: 1px solid rgba(255,255,255,0.08); }
-    .team-info { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 12px 14px; min-width: 0; }
-    .team-name { font-family: 'Arial Black', Impact, 'Arial Narrow', sans-serif; font-weight: 900; font-size: 1.15rem; letter-spacing: 0.6px; text-transform: uppercase; font-style: italic; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 12px rgba(229,9,20,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .team-members-line { font-size: 0.8rem; color: #ddd; line-height: 1.3; }
-    .team-tag-line { font-size: 0.75rem; color: var(--gold-end); font-weight: 700; }
-    .team-roles-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
-    .team-role-pill { font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px; background: #333; color: #eee; border: 1px solid #555; }
-    .team-role-pill.tag { background: #ff9800; color: #000; border-color: #ffb74d; }
-    .team-role-pill.manager { background: #7b1fa2; color: #fff; border-color: #ba68c8; }
-    .team-role-pill.trio { background: #0288d1; color: #fff; border-color: #4fc3f7; }
-    .team-role-pill.cuarteto { background: #00695c; color: #fff; border-color: #4db6ac; }
-    .team-role-pill.individual { background: #455a64; color: #fff; border-color: #78909c; }
-    .team-side-actions { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; padding: 10px 12px 10px 0; gap: 8px; flex-shrink: 0; }
-    .team-elo-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: linear-gradient(145deg, #2a2a2a, #1a1a1a); border: 1px solid var(--gold-end); color: var(--gold-end); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.3px; white-space: nowrap; }
-    .team-actions-btns { display: flex; gap: 6px; }
-    .team-btn-edit, .team-btn-del { background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.2); color: #ddd; width: 36px; height: 36px; border-radius: 10px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-    .team-btn-edit:hover { border-color: var(--accent); color: var(--accent); background: rgba(229,9,20,0.15); }
-    .team-btn-del:hover { border-color: #c62828; color: #ff5252; background: rgba(198,40,40,0.2); }
-    .team-empty { text-align: center; padding: 40px 20px; color: var(--text-dim); font-size: 0.95rem; background: var(--card-bg); border-radius: 14px; border: 1px dashed #444; }
-    .team-empty span { display: block; font-size: 2.2rem; margin-bottom: 10px; }
+#form-teams input[type="text"] {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 12px 14px;
+}
+.teams-members-label {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+#team-members-select {
+  max-height: 220px;
+  border-radius: 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  padding: 10px;
+}
+.team-member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 6px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.team-member-row:hover {
+  background: rgba(229,9,20,0.08);
+}
+.team-member-row .checkbox-item {
+  flex: 1;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.team-member-role {
+  background: #2a2a2a !important;
+  color: #fff !important;
+  border: 1px solid #444 !important;
+  border-radius: 6px !important;
+  padding: 5px 8px !important;
+  font-size: 0.78rem !important;
+  min-width: 100px;
+}
+#form-teams .btn-add {
+  margin-top: 6px;
+  padding: 13px;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+}
+.teams-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.teams-form-actions .btn-add {
+  flex: 1;
+}
+.btn-cancel-team-edit {
+  background: #333;
+  color: #ccc;
+  border: 1px solid #444;
+  padding: 13px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  flex: 1;
+}
+.btn-cancel-team-edit:hover {
+  background: #444;
+  color: #fff;
+}
+
+/* Tarjetas de equipos (sin ELO ni pills de roles) */
+.team-card {
+  background: var(--card-bg);
+  border-radius: 14px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  position: relative;
+  cursor: default;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+}
+.team-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.58);
+  z-index: 1;
+  pointer-events: none;
+}
+.team-card-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: stretch;
+  min-height: 110px;
+  padding: 0;
+}
+.team-avatars {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  width: 110px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.25);
+}
+.team-avatar-img {
+  width: 55px;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+.team-avatar-placeholder {
+  width: 55px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--text-dim);
+  background: #222;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+.team-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+.team-name {
+  font-family: 'Arial Black', Impact, 'Arial Narrow', sans-serif;
+  font-weight: 900;
+  font-size: 1.15rem;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  font-style: italic;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 12px rgba(229,9,20,0.35);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.team-members-line {
+  font-size: 0.8rem;
+  color: #ddd;
+  line-height: 1.3;
+}
+.team-tag-line {
+  font-size: 0.75rem;
+  color: var(--gold-end);
+  font-weight: 700;
+}
+.team-side-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px 12px 10px 0;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.team-actions-btns {
+  display: flex;
+  gap: 6px;
+}
+.team-btn-edit, .team-btn-del {
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #ddd;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.team-btn-edit:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(229,9,20,0.15);
+}
+.team-btn-del:hover {
+  border-color: #c62828;
+  color: #ff5252;
+  background: rgba(198,40,40,0.2);
+}
+.team-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  background: var(--card-bg);
+  border-radius: 14px;
+  border: 1px dashed #444;
+}
+.team-empty span {
+  display: block;
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+}
   </style>
 </head>
 <body>
@@ -324,26 +503,26 @@
   </div>
 
   <div id="tab-teams" class="tab-content">
-    <div class="teams-form-card">
-      <div class="teams-form-title">
-      🤝 Crear / Editar Tag Team
-        <span id="teams-form-mode-badge">NUEVO
-        </span>
-      </div>
+    <details class="teams-form-details" id="teams-form-details">
+      <summary class="teams-form-summary">
+        <span>🤝 Crear / Editar Tag Team</span>
+        <span id="teams-form-mode-badge" class="teams-form-badge">NUEVO</span>
+      </summary>
+      <div class="teams-form-body">
         <form id="form-teams">
-        <input type="text" id="team-name" placeholder="Nombre del Tag Team / Facción..." autocapitalize="words" required>
-        <div>
-          <div class="teams-members-label">Selecciona miembros del roster + rol</div>
-          <div class="checkbox-list" id="team-members-select"></div>
-        </div>
-        <div class="teams-form-actions">
-          <button type="submit" class="btn-add" id="btn-team-submit">Crear Tag Team</button>
-          <button type="button" class="btn-cancel-team-edit" id="btn-cancel-team-edit" style="display:none;" onclick="cancelEditTeam()">Cancelar</button>
-        </div>
+          <input type="text" id="team-name" placeholder="Nombre del Tag Team / Facción..." autocapitalize="words" required>
+          <div>
+            <div class="teams-members-label">Selecciona miembros del roster + rol</div>
+            <div class="checkbox-list" id="team-members-select"></div>
+          </div>
+          <div class="teams-form-actions">
+            <button type="submit" class="btn-add" id="btn-team-submit">Crear Tag Team</button>
+            <button type="button" class="btn-cancel-team-edit" id="btn-cancel-team-edit" style="display:none;" onclick="cancelEditTeam()">Cancelar</button>
+          </div>
         </form>
       </div>
-    <div id="list-teams">
-    </div>
+    </details>
+    <div id="list-teams"></div>
   </div>
 
   <div id="tab-titles" class="tab-content">
@@ -1638,22 +1817,31 @@
   const cancelBtn = document.getElementById('btn-cancel-team-edit');
   if (cancelBtn) cancelBtn.style.display = 'block';
 
+  // Abrir el desplegable
+  const details = document.getElementById('teams-form-details');
+  if (details) details.open = true;
+
   const teamsBtn = Array.from(document.querySelectorAll('#main-nav button')).find(b => (b.textContent || '').includes('Tag'));
   if (teamsBtn) switchTab('teams', teamsBtn);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+  
     function cancelEditTeam() {
-      editingTeamId = null;
-      document.getElementById('team-name').value = '';
-      document.querySelectorAll('#team-members-select .team-member-check').forEach(chk => { chk.checked = false; });
-      document.querySelectorAll('#team-members-select .team-member-role').forEach(sel => { sel.value = 'tag'; });
-      const btn = document.getElementById('btn-team-submit');
-      if (btn) btn.textContent = 'Crear Tag Team';
-      const badge = document.getElementById('teams-form-mode-badge');
-      if (badge) badge.textContent = 'NUEVO';
-      const cancelBtn = document.getElementById('btn-cancel-team-edit');
-      if (cancelBtn) cancelBtn.style.display = 'none';
-    }
+  editingTeamId = null;
+  document.getElementById('team-name').value = '';
+  document.querySelectorAll('#team-members-select .team-member-check').forEach(chk => { chk.checked = false; });
+  document.querySelectorAll('#team-members-select .team-member-role').forEach(sel => { sel.value = 'tag'; });
+  const btn = document.getElementById('btn-team-submit');
+  if (btn) btn.textContent = 'Crear Tag Team';
+  const badge = document.getElementById('teams-form-mode-badge');
+  if (badge) badge.textContent = 'NUEVO';
+  const cancelBtn = document.getElementById('btn-cancel-team-edit');
+  if (cancelBtn) cancelBtn.style.display = 'none';
+
+  // Cerrar el desplegable
+  const details = document.getElementById('teams-form-details');
+  if (details) details.open = false;
+}
     
     function onTitleTypeChange() { 
       document.getElementById('champ2-wrapper').style.display = document.getElementById('title-type-select').value === 'tag' ? 'flex' : 'none'; }
@@ -3122,6 +3310,11 @@ await Promise.all(store.shows.map(async s => {
   showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
 }));
 
+const showBgCacheTeams = {};
+await Promise.all(store.shows.map(async s => {
+  showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
+}));
+
 const teamCards = await Promise.all((store.teams || []).map(async t => {
   const normalized = normalizeTeamMembers(t.members);
   const memberData = [];
@@ -3132,11 +3325,61 @@ const teamCards = await Promise.all((store.teams || []).map(async t => {
       id: m.id,
       name: r ? r.name : '?',
       role: m.role || 'tag',
-      roleLabel: (TEAM_ROLES.find(x => x.value === (m.role || 'tag')) || {}).label || m.role,
       img,
       brands: r ? (r.brands || (r.brand ? [r.brand] : [])) : []
     });
   }
+
+  const tagReps = getTeamTagRepIds(t).map(id => {
+    const r = store.roster.find(ros => ros.id === id);
+    return r ? r.name : '?';
+  }).join(' & ');
+
+  // Fondo del show del primer miembro con marca
+  let bgStyle = '';
+  let brandColor = '#e50914';
+  const firstWithBrand = memberData.find(m => m.brands && m.brands.length > 0);
+  if (firstWithBrand) {
+    const showObj = store.shows.find(s => s.name === firstWithBrand.brands[0]);
+    if (showObj) {
+      brandColor = showObj.color || '#e50914';
+      if (showBgCacheTeams[showObj.id]) {
+        bgStyle = `background-image:url('${showBgCacheTeams[showObj.id]}'); background-size:cover; background-position:center;`;
+      }
+    }
+  }
+
+  // Avatares (máximo 2)
+  const avatarsHTML = memberData.slice(0, 2).map(m => {
+    if (m.img) return `<img src="${m.img}" class="team-avatar-img" alt="${m.name}" onerror="this.outerHTML='<div class=\\'team-avatar-placeholder\\'>👤</div>'">`;
+    return `<div class="team-avatar-placeholder">👤</div>`;
+  }).join('') || `<div class="team-avatar-placeholder">👤</div>`;
+
+  const membersLine = memberData.map(m => m.name).join(' · ') || 'Sin miembros';
+  const safeName = String(t.name).replace(/'/g, "\\'");
+
+  return `
+    <div class="team-card" style="${bgStyle} border-image: linear-gradient(to right, ${brandColor}, #000) 1;">
+      <div class="team-card-inner">
+        <div class="team-avatars">${avatarsHTML}</div>
+        <div class="team-info">
+          <div class="team-name">${t.name}</div>
+          <div class="team-members-line">${membersLine}</div>
+          <div class="team-tag-line">Tag: ${tagReps || '—'}</div>
+        </div>
+        <div class="team-side-actions">
+          <div class="team-actions-btns">
+            <button type="button" class="team-btn-edit" onclick="event.stopPropagation(); openEditTeam(${t.id})" title="Editar">✏️</button>
+            <button type="button" class="team-btn-del" onclick="event.stopPropagation(); showConfirmModal('¿Eliminar el equipo ${safeName}?', () => deleteItem('teams', ${t.id}))" title="Eliminar">🗑</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}));
+
+document.getElementById('list-teams').innerHTML = teamCards.length
+  ? teamCards.join('')
+  : `<div class="team-empty"><span>🤝</span>Aún no hay Tag Teams.<br>Crea el primero arriba.</div>`;
 
   const tagReps = getTeamTagRepIds(t).map(id => {
     const r = store.roster.find(ros => ros.id === id);
