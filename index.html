@@ -799,7 +799,6 @@
     </div>
   </div>
 
-  <!-- CONFIRM MODAL -->
   <div id="modal-confirm" class="confirm-modal-overlay">
     <div class="confirm-box">
       <div class="confirm-text" id="confirm-modal-text">¿Seguro que quieres realizar esta acción?</div>
@@ -828,7 +827,7 @@
     "Last Man Standing", "No Holds Barred"
   ];
   
-  const MATCH_TYPES = [
+  const MATCH_TYPES = {
     "Normal": { 
       "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6, "8-Way": 8 
     },
@@ -870,7 +869,7 @@
     "Sumisión": { "1 contra 1": 2 }, "Ambulancia": { "1 contra 1": 2 }, "Ataúd": { "1 contra 1": 2 },
     "Battle Royal": { "Battle Royal": 8 }, "Falls Count Anywhere": { "1 contra 1": 2 }, "WarGames": { "WarGames": 8 },
     "Iron Man": { "1 contra 1": 2 }, "Last Man Standing": { "1 contra 1": 2 }, "No Holds Barred": { "1 contra 1": 2 }
-    };
+  };
     
   const MATCH_TYPE_LIST = Object.keys(MATCH_TYPES);
   
