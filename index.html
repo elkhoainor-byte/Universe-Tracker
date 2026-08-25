@@ -821,189 +821,205 @@
     <button onclick="switchTab('matches', this)">Cartelera de hoy</button>
   </nav>
 <script>
-      const STAGES_OF_HELL_OPTIONS = [
-      "Normal", "Extreme Rules", "Inferno", "I Quit", "Contenedor",
-      "Hell in a Cell", "Steel Cage", "Tables", "Ladder", "TLC",
-      "Sumisión", "Ambulancia", "Ataúd", "Falls Count Anywhere",
-      "Last Man Standing", "No Holds Barred"
-    ];
-    const MATCH_TYPES = {
-      "Normal": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6, "8-Way": 8 },
-      "Por equipos": {
-        "2 contra 2": 4, "2 contra 2 mixto": 4, "3 contra 3": 6, "4 contra 4": 8,
+  const STAGES_OF_HELL_OPTIONS = [
+    "Normal", "Extreme Rules", "Inferno", "I Quit", "Contenedor",
+    "Hell in a Cell", "Steel Cage", "Tables", "Ladder", "TLC",
+    "Sumisión", "Ambulancia", "Ataúd", "Falls Count Anywhere",
+    "Last Man Standing", "No Holds Barred"
+  ];
+  
+  const MATCH_TYPES = [
+    "Normal": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6, "8-Way": 8 },
+    "Por equipos": {
+      "2 contra 2": 4, "2 contra 2 mixto": 4, "3 contra 3": 6, "4 contra 4": 8,
         "1 contra 2 Handicap": 3, "1 contra 2 Handicap Tornado por parejas": 3,
         "1 contra 3 Handicap": 4, "2 contra 3 Handicap": 5,
         "2 contra 2 Tornado por parejas": 4, "3 contra 3 Tornado por parejas": 6,
         "Triple Threat Tornado por parejas": 6, "4-Way Tornado por parejas": 8
-      },
-      "Extreme Rules": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "2 contra 2": 4 },
-      "Inferno": { "1 contra 1": 2 },
-      "3 Stages of Hell": { "special": true },
-      "I Quit": { "1 contra 1": 2 },
-      "Contenedor": { "1 contra 1": 2 },
-      "Peleas": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "2 contra 2": 4, "1 contra 2 Handicap": 3, "6-Way": 6, "8-Way": 8 },
-      "Royal Rumble": { "10 participantes": 10, "20 participantes": 20, "30 participantes": 30 },
-      "Árbitro especial invitado": {
-        "Normal 1 contra 1": 2, "Normal Triple Threat": 3, "Normal Fatal 4-Way": 4, "Normal 5-Way": 5, "Normal 6-Way": 6,
-        "Por equipos 2 contra 2": 4, "Por equipos 3 contra 3": 6, "Por equipos 1 contra 2 Handicap": 3,
-        "Por equipos 1 contra 2 Handicap Tornado por parejas": 3, "Por equipos 1 contra 3 Handicap": 4, "Por equipos 2 contra 3 Handicap": 5,
-        "Por equipos 2 contra 2 Tornado por parejas": 4, "Por equipos 3 contra 3 Tornado por parejas": 6, "Por equipos Triple Threat Tornado por parejas": 6,
-        "Extreme Rules 1 contra 1": 2, "Extreme Rules Triple Threat": 3, "Extreme Rules Fatal 4-Way": 4, "Extreme Rules 5-Way": 5, "Extreme Rules 2 contra 2": 4,
-        "Hell in a Cell 1 contra 1": 2, "Hell in a Cell Triple Threat": 3, "Hell in a Cell Fatal 4-Way": 4, "Hell in a Cell 6-Way": 6, "Hell in a Cell 2 contra 2": 4,
-        "Iron Man 1 contra 1": 2, "Falls Count Anywhere 1 contra 1": 2, "Falls Count Anywhere Triple Threat": 3, "Falls Count Anywhere Fatal 4-Way": 4,
-        "Sumisión 1 contra 1": 2, "No Holds Barred 1 contra 1": 2
-      },
-      "Underground": { "1 contra 1": 2 },
-      "Reglas de Bloodline": { "4 vs 4 (Principal + 3 aliados por bando)": 8 },
-      "Hell in a Cell": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6, "2 contra 2": 4, "3 contra 3": 6, "Triple Threat Tornado por parejas": 6 },
-      "Steel Cage": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "2 contra 2": 4 },
-      "Elimination Chamber": { "6 participantes": 6 },
-      "Tables": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "2 contra 2": 4, "3 contra 3": 6, "6-Way": 6, "Triple Threat Tornado por parejas": 6 },
-      "Ladder": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6, "8-Way": 8, "2 contra 2": 4, "3 contra 3": 6, "4 contra 4": 8, "Triple Threat Tornado por parejas": 6, "4-Way Tornado por parejas": 8 },
-      "TLC": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "2 contra 2": 4, "3 contra 3": 6, "Triple Threat Tornado por parejas": 6 },
-      "Gauntlet": { "4 participantes": 4, "5 participantes": 5, "6 participantes": 6, "8 participantes": 8, "10 participantes": 10, "20 participantes": 20, "30 participantes": 30 },
-      "Turmoil Gauntlet": { "Turmoil Gauntlet": 2 },
-      "Eliminator Gauntlet": { "Eliminator Gauntlet": 2 },
-      "Sumisión": { "1 contra 1": 2 }, "Ambulancia": { "1 contra 1": 2 }, "Ataúd": { "1 contra 1": 2 },
-      "Battle Royal": { "Battle Royal": 8 }, "Falls Count Anywhere": { "1 contra 1": 2 }, "WarGames": { "WarGames": 8 },
-      "Iron Man": { "1 contra 1": 2 }, "Last Man Standing": { "1 contra 1": 2 }, "No Holds Barred": { "1 contra 1": 2 }
+    },
+    "Extreme Rules": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "2 contra 2": 4 },
+    "Inferno": { "1 contra 1": 2 },
+    "3 Stages of Hell": { "special": true },
+    "I Quit": { "1 contra 1": 2 },
+    "Contenedor": { "1 contra 1": 2 },
+    "Peleas": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "2 contra 2": 4, "1 contra 2 Handicap": 3, "6-Way": 6, "8-Way": 8 },
+    "Royal Rumble": { "10 participantes": 10, "20 participantes": 20, "30 participantes": 30 },
+    "Árbitro especial invitado": {
+      "Normal 1 contra 1": 2, "Normal Triple Threat": 3, "Normal Fatal 4-Way": 4, "Normal 5-Way": 5, "Normal 6-Way": 6,
+      "Por equipos 2 contra 2": 4, "Por equipos 3 contra 3": 6, "Por equipos 1 contra 2 Handicap": 3,
+      "Por equipos 1 contra 2 Handicap Tornado por parejas": 3, "Por equipos 1 contra 3 Handicap": 4, "Por equipos 2 contra 3 Handicap": 5,
+      "Por equipos 2 contra 2 Tornado por parejas": 4, "Por equipos 3 contra 3 Tornado por parejas": 6, "Por equipos Triple Threat Tornado por parejas": 6,
+      "Extreme Rules 1 contra 1": 2, "Extreme Rules Triple Threat": 3, "Extreme Rules Fatal 4-Way": 4, "Extreme Rules 5-Way": 5, "Extreme Rules 2 contra 2": 4,
+      "Hell in a Cell 1 contra 1": 2, "Hell in a Cell Triple Threat": 3, "Hell in a Cell Fatal 4-Way": 4, "Hell in a Cell 6-Way": 6, "Hell in a Cell 2 contra 2": 4,
+      "Iron Man 1 contra 1": 2, "Falls Count Anywhere 1 contra 1": 2, "Falls Count Anywhere Triple Threat": 3, "Falls Count Anywhere Fatal 4-Way": 4,
+      "Sumisión 1 contra 1": 2, "No Holds Barred 1 contra 1": 2
+    },
+    "Underground": { "1 contra 1": 2 },
+    "Reglas de Bloodline": { "4 vs 4 (Principal + 3 aliados por bando)": 8 },
+    "Hell in a Cell": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6, "2 contra 2": 4, "3 contra 3": 6, "Triple Threat Tornado por parejas": 6 },
+    "Steel Cage": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "2 contra 2": 4 },
+    "Elimination Chamber": { "6 participantes": 6 },
+    "Tables": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "2 contra 2": 4, "3 contra 3": 6, "6-Way": 6, "Triple Threat Tornado por parejas": 6 },
+    "Ladder": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "6-Way": 6, "8-Way": 8, "2 contra 2": 4, "3 contra 3": 6, "4 contra 4": 8, "Triple Threat Tornado por parejas": 6, "4-Way Tornado por parejas": 8 },
+    "TLC": { "1 contra 1": 2, "Triple Threat": 3, "Fatal 4-Way": 4, "5-Way": 5, "2 contra 2": 4, "3 contra 3": 6, "Triple Threat Tornado por parejas": 6 },
+    "Gauntlet": { "4 participantes": 4, "5 participantes": 5, "6 participantes": 6, "8 participantes": 8, "10 participantes": 10, "20 participantes": 20, "30 participantes": 30 },
+    "Turmoil Gauntlet": { "Turmoil Gauntlet": 2 },
+    "Eliminator Gauntlet": { "Eliminator Gauntlet": 2 },
+    "Sumisión": { "1 contra 1": 2 }, "Ambulancia": { "1 contra 1": 2 }, "Ataúd": { "1 contra 1": 2 },
+    "Battle Royal": { "Battle Royal": 8 }, "Falls Count Anywhere": { "1 contra 1": 2 }, "WarGames": { "WarGames": 8 },
+    "Iron Man": { "1 contra 1": 2 }, "Last Man Standing": { "1 contra 1": 2 }, "No Holds Barred": { "1 contra 1": 2 }
     };
-    const MATCH_TYPE_LIST = Object.keys(MATCH_TYPES);
-    const DEFAULT_PLE_TEMPLATES = [
-      { month: 4, day: 13, name: "Backlash", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
-      { month: 4, day: 27, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
-      { month: 4, day: 28, name: "NXT Battleground", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
-      { month: 5, day: 6,  name: "Money in the Bank", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
-      { month: 5, day: 27, name: "Night of Champions", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
-      { month: 6, day: 13, name: "NXT Great American Bash", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
-      { month: 6, day: 13, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
-      { month: 6, day: 14, name: "Evolution", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#9c27b0" },
-      { month: 7, day: 6,  name: "SummerSlam", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ff9800" },
-      { month: 7, day: 7,  name: "SummerSlam", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ff9800" },
-      { month: 7, day: 27, name: "Clash in Paris", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#2196f3" },
-      { month: 8, day: 20, name: "Wrestlepalooza", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
-      { month: 8, day: 28, name: "NXT No Mercy", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
-      { month: 9, day: 13, name: "Crown Jewel", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
-      { month: 9, day: 28, name: "NXT Halloween Havoc", brands: ["NXT"], parrillas: 7, color: "#ff5722" },
-      { month: 10, day: 27, name: "Survivor Series", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#b71c1c" },
-      { month: 11, day: 7,  name: "NXT Deadline", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
-      { month: 0, day: 20, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
-      { month: 0, day: 27, name: "Royal Rumble", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
-      { month: 1, day: 13, name: "NXT Vengeance Day", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
-      { month: 1, day: 27, name: "Elimination Chamber", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#607d8b" },
-      { month: 2, day: 20, name: "NXT STAND & DELIVER", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
-      { month: 2, day: 20, name: "WRESTLEMANIA", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
-      { month: 2, day: 21, name: "WRESTLEMANIA", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" }
-    ];
-    function formatMatchSummary(names, matchType, subType) {
-      if (!names || names.length === 0) return '?';
-      const clean = names.map(n => n || '?');
-      const sub = (subType || '').toLowerCase();
-      const type = (matchType || '').toLowerCase();
-      if (sub.includes('2 contra 2') || sub.includes('2 vs 2')) { if (clean.length >= 4) return `${clean[0]} & ${clean[1]} vs ${clean[2]} & ${clean[3]}`; }
-      if (sub.includes('3 contra 3') || sub.includes('3 vs 3')) { if (clean.length >= 6) return `${clean[0]} & ${clean[1]} & ${clean[2]} vs ${clean[3]} & ${clean[4]} & ${clean[5]}`; }
-      if (sub.includes('4 contra 4') || sub.includes('4 vs 4')) { if (clean.length >= 8) return `${clean.slice(0,4).join(' & ')} vs ${clean.slice(4,8).join(' & ')}`; }
-      if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) { if (clean.length >= 3) return `${clean[0]} vs ${clean[1]} & ${clean[2]}`; }
-      if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) { if (clean.length >= 4) return `${clean[0]} vs ${clean[1]} & ${clean[2]} & ${clean[3]}`; }
-      if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) { if (clean.length >= 5) return `${clean[0]} & ${clean[1]} vs ${clean[2]} & ${clean[3]} & ${clean[4]}`; }
-      if (type === 'reglas de bloodline' && clean.length >= 8) return `${clean[0]} (+ ${clean[1]}, ${clean[2]}, ${clean[3]}) vs ${clean[4]} (+ ${clean[5]}, ${clean[6]}, ${clean[7]})`;
-      return clean.join(' vs ');
-    }
-    function splitSides(participants, matchType, subType, winnerName) {
-      const ids = (participants || []).filter(Boolean);
-      const sub = (subType || '').toLowerCase();
-      const type = (matchType || '').toLowerCase();
-      let left = [], right = [];
-      const isTeamSplit = sub.includes('2 contra 2') || sub.includes('2 vs 2') || sub.includes('3 contra 3') || sub.includes('3 vs 3') || sub.includes('4 contra 4') || sub.includes('4 vs 4') || sub.includes('1 contra 2') || sub.includes('1 vs 2') || sub.includes('1 contra 3') || sub.includes('1 vs 3') || sub.includes('2 contra 3') || sub.includes('2 vs 3') || type === 'reglas de bloodline' || type === 'wargames';
-      if (isTeamSplit) {
-        if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) { left = ids.slice(0, 1); right = ids.slice(1, 3); }
-        else if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) { left = ids.slice(0, 1); right = ids.slice(1, 4); }
-        else if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) { left = ids.slice(0, 2); right = ids.slice(2, 5); }
-        else if (sub.includes('3 contra 3') || sub.includes('3 vs 3') || type === 'wargames') { left = ids.slice(0, 3); right = ids.slice(3, 6); }
-        else if (sub.includes('4 contra 4') || sub.includes('4 vs 4') || type === 'reglas de bloodline') { left = ids.slice(0, 4); right = ids.slice(4, 8); }
-        else { left = ids.slice(0, Math.ceil(ids.length / 2)); right = ids.slice(Math.ceil(ids.length / 2)); }
-      } else if (ids.length === 2) { left = [ids[0]]; right = [ids[1]]; }
-      else if (ids.length % 2 === 1 && winnerName) {
-        const winnerW = store.roster.find(r => r.name === winnerName);
-        const winnerId = winnerW ? winnerW.id : null;
-        if (winnerId && ids.includes(winnerId)) { left = [winnerId]; right = ids.filter(id => id !== winnerId); }
-        else { left = [ids[0]]; right = ids.slice(1); }
-      } else { const mid = Math.ceil(ids.length / 2); left = ids.slice(0, mid); right = ids.slice(mid); }
-      return { left, right };
-    }
-    function isTeamBasedMatch(matchType, subType) {
-      const sub = (subType || '').toLowerCase();
-      const type = (matchType || '').toLowerCase();
-      return sub.includes('2 contra 2') || sub.includes('2 vs 2') || sub.includes('3 contra 3') || sub.includes('3 vs 3') || sub.includes('4 contra 4') || sub.includes('4 vs 4') || sub.includes('1 contra 2') || sub.includes('1 vs 2') || sub.includes('1 contra 3') || sub.includes('1 vs 3') || sub.includes('2 contra 3') || sub.includes('2 vs 3') || type === 'reglas de bloodline' || type === 'wargames' || type === 'por equipos';
-    }
-    function getTeamSideCounts(matchType, subType, total) {
-      const sub = (subType || '').toLowerCase();
-      const type = (matchType || '').toLowerCase();
-      if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) return { left: 1, right: 2 };
-      if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) return { left: 1, right: 3 };
-      if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) return { left: 2, right: 3 };
-      if (sub.includes('3 contra 3') || sub.includes('3 vs 3') || type === 'wargames') return { left: 3, right: 3 };
-      if (sub.includes('4 contra 4') || sub.includes('4 vs 4') || type === 'reglas de bloodline') return { left: 4, right: 4 };
-      if (sub.includes('2 contra 2') || sub.includes('2 vs 2')) return { left: 2, right: 2 };
-      const mid = Math.ceil(total / 2);
-      return { left: mid, right: total - mid };
-    }
-
-    let db;
-    const request = indexedDB.open("UniversoTrackerDB", 2);
+    
+  const MATCH_TYPE_LIST = Object.keys(MATCH_TYPES);
+  
+  const DEFAULT_PLE_TEMPLATES = [
+    { month: 4, day: 13, name: "Backlash", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
+    { month: 4, day: 27, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
+    { month: 4, day: 28, name: "NXT Battleground", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+    { month: 5, day: 6,  name: "Money in the Bank", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
+    { month: 5, day: 27, name: "Night of Champions", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
+    { month: 6, day: 13, name: "NXT Great American Bash", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+    { month: 6, day: 13, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
+    { month: 6, day: 14, name: "Evolution", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#9c27b0" },
+    { month: 7, day: 6,  name: "SummerSlam", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ff9800" },
+    { month: 7, day: 7,  name: "SummerSlam", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ff9800" },
+    { month: 7, day: 27, name: "Clash in Paris", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#2196f3" },
+    { month: 8, day: 20, name: "Wrestlepalooza", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
+    { month: 8, day: 28, name: "NXT No Mercy", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+    { month: 9, day: 13, name: "Crown Jewel", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#ffd700" },
+    { month: 9, day: 28, name: "NXT Halloween Havoc", brands: ["NXT"], parrillas: 7, color: "#ff5722" },
+    { month: 10, day: 27, name: "Survivor Series", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#b71c1c" },
+    { month: 11, day: 7,  name: "NXT Deadline", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+    { month: 0, day: 20, name: "Saturday Night’s Main Event", brands: ["RAW", "SmackDown"], parrillas: 7, color: "#e50914" },
+    { month: 0, day: 27, name: "Royal Rumble", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
+    { month: 1, day: 13, name: "NXT Vengeance Day", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+    { month: 1, day: 27, name: "Elimination Chamber", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#607d8b" },
+    { month: 2, day: 20, name: "NXT STAND & DELIVER", brands: ["NXT"], parrillas: 7, color: "#d4a017" },
+    { month: 2, day: 20, name: "WRESTLEMANIA", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" },
+    { month: 2, day: 21, name: "WRESTLEMANIA", brands: ["RAW", "SmackDown"], parrillas: 9, color: "#ffd700" }
+  ];
+    
+  function formatMatchSummary(names, matchType, subType) {
+    if (!names || names.length === 0) return '?';
+    const clean = names.map(n => n || '?');
+    const sub = (subType || '').toLowerCase();
+    const type = (matchType || '').toLowerCase();
+    if (sub.includes('2 contra 2') || sub.includes('2 vs 2')) { if (clean.length >= 4) return `${clean[0]} & ${clean[1]} vs ${clean[2]} & ${clean[3]}`; }
+    if (sub.includes('3 contra 3') || sub.includes('3 vs 3')) { if (clean.length >= 6) return `${clean[0]} & ${clean[1]} & ${clean[2]} vs ${clean[3]} & ${clean[4]} & ${clean[5]}`; }
+    if (sub.includes('4 contra 4') || sub.includes('4 vs 4')) { if (clean.length >= 8) return `${clean.slice(0,4).join(' & ')} vs ${clean.slice(4,8).join(' & ')}`; }
+    if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) { if (clean.length >= 3) return `${clean[0]} vs ${clean[1]} & ${clean[2]}`; }
+    if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) { if (clean.length >= 4) return `${clean[0]} vs ${clean[1]} & ${clean[2]} & ${clean[3]}`; }
+    if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) { if (clean.length >= 5) return `${clean[0]} & ${clean[1]} vs ${clean[2]} & ${clean[3]} & ${clean[4]}`; }
+    if (type === 'reglas de bloodline' && clean.length >= 8) return `${clean[0]} (+ ${clean[1]}, ${clean[2]}, ${clean[3]}) vs ${clean[4]} (+ ${clean[5]}, ${clean[6]}, ${clean[7]})`;
+    return clean.join(' vs ');
+  }
+    
+  function splitSides(participants, matchType, subType, winnerName) {
+    const ids = (participants || []).filter(Boolean);
+    const sub = (subType || '').toLowerCase();
+    const type = (matchType || '').toLowerCase();
+    let left = [], right = [];
+    const isTeamSplit = sub.includes('2 contra 2') || sub.includes('2 vs 2') || sub.includes('3 contra 3') || sub.includes('3 vs 3') || sub.includes('4 contra 4') || sub.includes('4 vs 4') || sub.includes('1 contra 2') || sub.includes('1 vs 2') || sub.includes('1 contra 3') || sub.includes('1 vs 3') || sub.includes('2 contra 3') || sub.includes('2 vs 3') || type === 'reglas de bloodline' || type === 'wargames';
+    if (isTeamSplit) {
+      if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) { left = ids.slice(0, 1); right = ids.slice(1, 3); }
+      else if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) { left = ids.slice(0, 1); right = ids.slice(1, 4); }
+      else if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) { left = ids.slice(0, 2); right = ids.slice(2, 5); }
+      else if (sub.includes('3 contra 3') || sub.includes('3 vs 3') || type === 'wargames') { left = ids.slice(0, 3); right = ids.slice(3, 6); }
+      else if (sub.includes('4 contra 4') || sub.includes('4 vs 4') || type === 'reglas de bloodline') { left = ids.slice(0, 4); right = ids.slice(4, 8); }
+      else { left = ids.slice(0, Math.ceil(ids.length / 2)); right = ids.slice(Math.ceil(ids.length / 2)); }
+    } 
+    else if (ids.length === 2) { left = [ids[0]]; right = [ids[1]]; }
+    else if (ids.length % 2 === 1 && winnerName) {
+      const winnerW = store.roster.find(r => r.name === winnerName);
+      const winnerId = winnerW ? winnerW.id : null;
+      if (winnerId && ids.includes(winnerId)) { left = [winnerId]; right = ids.filter(id => id !== winnerId); }
+      else { left = [ids[0]]; right = ids.slice(1); }
+    } 
+    else { const mid = Math.ceil(ids.length / 2); left = ids.slice(0, mid); right = ids.slice(mid); }
+    return { left, right };
+  }
+    
+  function isTeamBasedMatch(matchType, subType) {
+    const sub = (subType || '').toLowerCase();
+    const type = (matchType || '').toLowerCase();
+    return sub.includes('2 contra 2') || sub.includes('2 vs 2') || sub.includes('3 contra 3') || sub.includes('3 vs 3') || sub.includes('4 contra 4') || sub.includes('4 vs 4') || sub.includes('1 contra 2') || sub.includes('1 vs 2') || sub.includes('1 contra 3') || sub.includes('1 vs 3') || sub.includes('2 contra 3') || sub.includes('2 vs 3') || type === 'reglas de bloodline' || type === 'wargames' || type === 'por equipos';
+  }
+    
+  function getTeamSideCounts(matchType, subType, total) {
+    const sub = (subType || '').toLowerCase();
+    const type = (matchType || '').toLowerCase();
+    if (sub.includes('1 contra 2') || sub.includes('1 vs 2')) return { left: 1, right: 2 };
+    if (sub.includes('1 contra 3') || sub.includes('1 vs 3')) return { left: 1, right: 3 };
+    if (sub.includes('2 contra 3') || sub.includes('2 vs 3')) return { left: 2, right: 3 };
+    if (sub.includes('3 contra 3') || sub.includes('3 vs 3') || type === 'wargames') return { left: 3, right: 3 };
+    if (sub.includes('4 contra 4') || sub.includes('4 vs 4') || type === 'reglas de bloodline') return { left: 4, right: 4 };
+    if (sub.includes('2 contra 2') || sub.includes('2 vs 2')) return { left: 2, right: 2 };
+    const mid = Math.ceil(total / 2);
+    return { left: mid, right: total - mid };
+  }
+  
+  let db;
+  const request = indexedDB.open("UniversoTrackerDB", 2);
     request.onupgradeneeded = (e) => { db = e.target.result; if (!db.objectStoreNames.contains("images")) db.createObjectStore("images"); };
     request.onsuccess = (e) => { db = e.target.result; render(); };
-    function saveImageToDB(key, base64Data) {
-      return new Promise((resolve) => {
-        if (!db) { resolve(); return; }
-        const tx = db.transaction("images", "readwrite");
-        tx.objectStore("images").put(base64Data, key);
-        tx.oncomplete = () => resolve();
-      });
-    }
-    function getImageFromDB(key) {
-      return new Promise((resolve) => {
-        if (!db) { resolve(null); return; }
-        const tx = db.transaction("images", "readonly");
-        const req = tx.objectStore("images").get(key);
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => resolve(null);
-      });
-    }
-    function deleteImageFromDB(key) { if (!db) return; const tx = db.transaction("images", "readwrite"); tx.objectStore("images").delete(key); }
-    function clearIndexedDB() {
-      return new Promise((resolve) => {
-        if (!db) { resolve(); return; }
-        const tx = db.transaction("images", "readwrite");
+  
+  function saveImageToDB(key, base64Data) {
+    return new Promise((resolve) => {
+    if (!db) { resolve(); return; }
+    const tx = db.transaction("images", "readwrite");
+      tx.objectStore("images").put(base64Data, key);
+      tx.oncomplete = () => resolve();
+    });
+  }
+    
+  function getImageFromDB(key) {
+    return new Promise((resolve) => {
+      if (!db) { resolve(null); return; }
+      const tx = db.transaction("images", "readonly");
+      const req = tx.objectStore("images").get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  }
+    
+  function deleteImageFromDB(key) { if (!db) return; const tx = db.transaction("images", "readwrite"); tx.objectStore("images").delete(key); }
+  
+  function clearIndexedDB() {
+    return new Promise((resolve) => {
+      if (!db) { resolve(); return; }
+      const tx = db.transaction("images", "readwrite");
         tx.objectStore("images").clear();
         tx.oncomplete = () => resolve();
-      });
-    }
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        if (!file) { resolve(null); return; }
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-      });
-    }
+    });
+  }
+  
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      if (!file) { resolve(null); return; }
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
 
-    const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
     let defaultShows = [
       { id: 'raw', name: 'RAW', color: '#b20710', day: 1, parrillas: 6 },
       { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2, parrillas: 5 },
       { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5, parrillas: 6 }
     ];
-    function createEmptyStore() {
-      return {
-        roster: [], teams: [], titles: [], matches: [],
-        shows: JSON.parse(JSON.stringify(defaultShows)),
-        calendar: { configured: false, startMonth: 0, currentMonthIndex: 0, currentDay: 1, ppvs: {} },
-        todayCard: { locked: false, slots: [], eventName: null, showNumber: null }
-      };
-    }
-    let store = JSON.parse(localStorage.getItem('universe_data')) || createEmptyStore();
+  
+  function createEmptyStore() {
+    return {
+      roster: [], teams: [], titles: [], matches: [],
+      shows: JSON.parse(JSON.stringify(defaultShows)),
+      calendar: { configured: false, startMonth: 0, currentMonthIndex: 0, currentDay: 1, ppvs: {} },
+      todayCard: { locked: false, slots: [], eventName: null, showNumber: null }
+    };
+  }
+    
+  let store = JSON.parse(localStorage.getItem('universe_data')) || createEmptyStore();
     if (!store.teams) store.teams = [];
     if (!store.titles) store.titles = [];
     if (!store.matches) store.matches = [];
@@ -1013,132 +1029,134 @@
     if (store.calendar.currentDay === undefined) store.calendar.currentDay = 1;
     if (!store.todayCard) store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
     store.shows.forEach(s => { if (s.parrillas === undefined) s.parrillas = 6; });
-    Object.keys(store.calendar.ppvs).forEach(k => {
-      const v = store.calendar.ppvs[k];
-      if (v && !Array.isArray(v)) store.calendar.ppvs[k] = [v];
-    });
-
-    let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
-    let standingsFilters = {
-      periodWeeks: 'all',
-      brands: [],
-      alignment: 'ALL',
-      gender: 'ALL',
-      division: 'ALL',
-      excludeChamps: false,
-      hideInactive: true,
-      mode: 'superstars', // 'superstars' | 'teams'
-      limit: 0
-    };    let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
-    let wrestlerModalMode = 'view';
-    let calendarViewMonthIndex = null;
-    let editingSlotIndex = null;
-    let editingTeamId = null;
-
-    function isSlotBeingEdited(idx) {
-      return editingSlotIndex !== null && editingSlotIndex !== undefined && Number(editingSlotIndex) === Number(idx);
-    }
-
-    function handleImgError(img) {
-      img.onerror = null;
-      const ph = document.createElement('div');
-      ph.className = 'wrestler-avatar-placeholder';
-      ph.innerHTML = '👤';
-      img.replaceWith(ph);
-    }
-    function cleanName(str) { return str ? str.replace(/^["'“`«ʼ\s]+/, '') : ''; }
-
-    const TEAM_ROLES = [
-      { value: "individual", label: "Individual" },
-      { value: "tag", label: "Tag Team" },
-      { value: "trio", label: "Trío" },
-      { value: "cuarteto", label: "Cuarteto" },
-      { value: "manager", label: "Mánager" }
-    ];
-  
-    const DEFAULT_ELO = 1200;
-    const ELO_K_FACTOR = 32;
-
-    function normalizeTeamMembers(members) {
-  if (!Array.isArray(members)) return [];
-  return members.map(m => {
-    if (m && typeof m === "object" && m.id != null) {
-      return { id: m.id, role: m.role || "tag" };
-    }
-    return { id: m, role: "tag" };
+    
+  Object.keys(store.calendar.ppvs).forEach(k => {
+    const v = store.calendar.ppvs[k];
+    if (v && !Array.isArray(v)) store.calendar.ppvs[k] = [v];
   });
-}
 
-function getTeamMemberIds(team) {
-  return normalizeTeamMembers(team && team.members).map(m => m.id);
-}
+  let filters = { brand: 'ALL', alignment: 'ALL', gender: 'ALL', division: 'ALL', search: '' };
+  let standingsFilters = {
+    periodWeeks: 'all',
+    brands: [],
+    alignment: 'ALL',
+    gender: 'ALL',
+    division: 'ALL',
+    excludeChamps: false,
+    hideInactive: true,
+    mode: 'superstars',
+    limit: 0
+  };    
+  
+  let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
+  let wrestlerModalMode = 'view';
+  let calendarViewMonthIndex = null;
+  let editingSlotIndex = null;
+  let editingTeamId = null;
 
-function getTeamTagRepIds(team) {
-  return normalizeTeamMembers(team && team.members)
+  function isSlotBeingEdited(idx) {
+    return editingSlotIndex !== null && editingSlotIndex !== undefined && Number(editingSlotIndex) === Number(idx);
+  }
+
+  function handleImgError(img) {
+    img.onerror = null;
+    const ph = document.createElement('div');
+    ph.className = 'wrestler-avatar-placeholder';
+    ph.innerHTML = '👤';
+    img.replaceWith(ph);
+  }
+    
+  function cleanName(str) { return str ? str.replace(/^["'“`«ʼ\s]+/, '') : ''; }
+
+  const TEAM_ROLES = [
+    { value: "individual", label: "Individual" },
+    { value: "tag", label: "Tag Team" },
+    { value: "trio", label: "Trío" },
+    { value: "cuarteto", label: "Cuarteto" },
+    { value: "manager", label: "Mánager" }
+  ];
+  
+  const DEFAULT_ELO = 1200;
+  
+  const ELO_K_FACTOR = 32;
+
+  function normalizeTeamMembers(members) {
+    if (!Array.isArray(members)) return [];
+    return members.map(m => {
+      if (m && typeof m === "object" && m.id != null) {
+      return { id: m.id, role: m.role || "tag" };
+      }
+    return { id: m, role: "tag" };
+    });
+  }
+
+  function getTeamMemberIds(team) {
+    return normalizeTeamMembers(team && team.members).map(m => m.id);
+  }
+
+  function getTeamTagRepIds(team) {
+    return normalizeTeamMembers(team && team.members)
     .filter(m => m.role === "tag")
     .map(m => m.id);
-}
+  }
 
-function getTeamTagElo(team) {
-  const ids = getTeamTagRepIds(team);
-  if (!ids.length) {
-    const all = getTeamMemberIds(team);
-    if (!all.length) return DEFAULT_ELO;
-    const sum = all.reduce((s, id) => {
+  function getTeamTagElo(team) {
+    const ids = getTeamTagRepIds(team);
+    if (!ids.length) {
+      const all = getTeamMemberIds(team);
+      if (!all.length) return DEFAULT_ELO;
+      const sum = all.reduce((s, id) => {
+        const w = (store.roster || []).find(r => r.id === id);
+        return s + (w ? getWrestlerElo(w) : DEFAULT_ELO);
+      }, 0);
+      return Math.round(sum / all.length);
+    }
+    const sum = ids.reduce((s, id) => {
       const w = (store.roster || []).find(r => r.id === id);
       return s + (w ? getWrestlerElo(w) : DEFAULT_ELO);
     }, 0);
-    return Math.round(sum / all.length);
+    return Math.round(sum / ids.length);
   }
-  const sum = ids.reduce((s, id) => {
-    const w = (store.roster || []).find(r => r.id === id);
-    return s + (w ? getWrestlerElo(w) : DEFAULT_ELO);
-  }, 0);
-  return Math.round(sum / ids.length);
-}
 
-function roleSelectHTML(selectedRole, memberIndex) {
-  const opts = TEAM_ROLES.map(r =>
+  function roleSelectHTML(selectedRole, memberIndex) {
+    const opts = TEAM_ROLES.map(r =>
     `<option value="${r.value}" ${r.value === (selectedRole || "tag") ? "selected" : ""}>${r.label}</option>`
-  ).join("");
-  return `<select class="team-member-role" data-member-index="${memberIndex}" style="margin-left:8px;background:var(--card-bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:0.8rem;">${opts}</select>`;
-}
+    ).join("");
+    return `<select class="team-member-role" data-member-index="${memberIndex}" style="margin-left:8px;background:var(--card-bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:0.8rem;">${opts}</select>`;
+  }
   
-    function getWrestlerElo(w) {
-      if (!w) return DEFAULT_ELO;
-      const n = Number(w.elo);
-      return Number.isFinite(n) ? Math.round(n) : DEFAULT_ELO;
-    }
+  function getWrestlerElo(w) {
+    if (!w) return DEFAULT_ELO;
+    const n = Number(w.elo);
+    return Number.isFinite(n) ? Math.round(n) : DEFAULT_ELO;
+  }
 
-    function eloExpectedScore(eloA, eloB) {
-      return 1 / (1 + Math.pow(10, (eloB - eloA) / 400));
-    }
+  function eloExpectedScore(eloA, eloB) {
+    return 1 / (1 + Math.pow(10, (eloB - eloA) / 400));
+  }
 
-    function calcEloDelta(myElo, opponentElo, score) {
-      const expected = eloExpectedScore(myElo, opponentElo);
-      let delta = Math.round(ELO_K_FACTOR * (score - expected));
-      if (score === 1 && delta < 1) delta = 1;
-      return delta;
-    }
+  function calcEloDelta(myElo, opponentElo, score) {
+    const expected = eloExpectedScore(myElo, opponentElo);
+    let delta = Math.round(ELO_K_FACTOR * (score - expected));
+    if (score === 1 && delta < 1) delta = 1;
+    return delta;
+  }
 
-    function setWrestlerElo(wrestlerId, newElo) {
-      const w = store.roster.find(r => r.id === wrestlerId);
-      if (!w) return;
-      w.elo = Math.max(0, Math.round(newElo));
-    }
-
-     function applyEloForMatch(match) {
-      if (!match) return;
-      if (match.winner === 'Promo' || match.card === '🎤 Promo') return;
-      if (!match.winner || match.winner === 'Pendiente') return;
-      if (match.eloApplied) return; // evitar aplicar dos veces el mismo combate
-
-      const parts = (match.participants || []).filter(Boolean);
-      if (parts.length < 2) return;
-
-      const isDraw = match.winner === 'Empate';
-      const isTeam = isTeamBasedMatch(match.matchType, match.subType);
-
+  function setWrestlerElo(wrestlerId, newElo) {
+    const w = store.roster.find(r => r.id === wrestlerId);
+    if (!w) return;
+    w.elo = Math.max(0, Math.round(newElo));
+  }
+  
+  function applyEloForMatch(match) {
+    if (!match) return;
+    if (match.winner === 'Promo' || match.card === '🎤 Promo') return;
+    if (!match.winner || match.winner === 'Pendiente') return;
+    if (match.eloApplied) return;
+    const parts = (match.participants || []).filter(Boolean);
+    if (parts.length < 2) return;
+    const isDraw = match.winner === 'Empate';
+    const isTeam = isTeamBasedMatch(match.matchType, match.subType);
       function avgElo(ids) {
         const elos = ids.map(id => {
           const w = store.roster.find(r => r.id === id);
@@ -1147,14 +1165,11 @@ function roleSelectHTML(selectedRole, memberIndex) {
         if (!elos.length) return DEFAULT_ELO;
         return elos.reduce((a, b) => a + b, 0) / elos.length;
       }
-
       if (isTeam) {
         const { left, right } = splitSides(parts, match.matchType, match.subType, isDraw ? null : match.winner);
         if (!left.length || !right.length) return;
-
         const avgL = avgElo(left);
         const avgR = avgElo(right);
-
         let scoreLeft = 0.5;
         if (!isDraw) {
           const winnerW = store.roster.find(r => r.name === match.winner);
@@ -1164,7 +1179,6 @@ function roleSelectHTML(selectedRole, memberIndex) {
           else return;
         }
         const scoreRight = isDraw ? 0.5 : (1 - scoreLeft);
-
         left.forEach(id => {
           const w = store.roster.find(r => r.id === id);
           if (!w) return;
@@ -1203,15 +1217,11 @@ function roleSelectHTML(selectedRole, memberIndex) {
             totalGain += delta;
             setWrestlerElo(id, theirElo - delta);
           });
-
           setWrestlerElo(winnerW.id, winElo + totalGain);
         }
       }
-
       match.eloApplied = true;
-    
-      
-  function recalculateAllElos() {
+      function recalculateAllElos() {
       (store.roster || []).forEach(r => {
         r.elo = DEFAULT_ELO;
       });
