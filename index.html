@@ -1210,9 +1210,10 @@ function roleSelectHTML(selectedRole, memberIndex) {
 
       match.eloApplied = true;
     
+      
       function recalculateAllElos() {
-        (store.roster || []).forEach(r => {
-          r.elo = DEFAULT_ELO;
+      (store.roster || []).forEach(r => {
+        r.elo = DEFAULT_ELO;
       });
 
       (store.matches || []).forEach(m => {
@@ -1226,29 +1227,10 @@ function roleSelectHTML(selectedRole, memberIndex) {
         return String(a.id).localeCompare(String(b.id));
       });
 
-      (store.roster || []).forEach(r => {
-      if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
-    });
-
-    if (!store.teams) store.teams = [];
-    (store.teams || []).forEach(t => {
-      t.members = normalizeTeamMembers(t.members);
-    });
-
-    recalculateAllElos();
-    localStorage.setItem('universe_data', JSON.stringify(store));
-       
       ordered.forEach(m => {
         applyEloForMatch(m);
       });
     }
-      ordered.forEach(m => {
-        applyEloForMatch(m);
-      });
-    }
-        r.elo = DEFAULT_ELO;
-      });
-
       (store.matches || []).forEach(m => {
         m.eloApplied = false;
       });
