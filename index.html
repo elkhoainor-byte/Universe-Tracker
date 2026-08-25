@@ -1211,26 +1211,27 @@ function roleSelectHTML(selectedRole, memberIndex) {
       match.eloApplied = true;
     
       
-      function recalculateAllElos() {
+  function recalculateAllElos() {
       (store.roster || []).forEach(r => {
         r.elo = DEFAULT_ELO;
       });
-
+  
       (store.matches || []).forEach(m => {
         m.eloApplied = false;
       });
-
+  
       const ordered = (store.matches || []).slice().sort((a, b) => {
         const da = (typeof a.universeDay === 'number') ? a.universeDay : 0;
         const db = (typeof b.universeDay === 'number') ? b.universeDay : 0;
         if (da !== db) return da - db;
         return String(a.id).localeCompare(String(b.id));
       });
-
+  
       ordered.forEach(m => {
         applyEloForMatch(m);
       });
-    }
+  }
+      
       (store.matches || []).forEach(m => {
         m.eloApplied = false;
       });
