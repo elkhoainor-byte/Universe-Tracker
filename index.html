@@ -1654,7 +1654,7 @@
       const cancelBtn = document.getElementById('btn-cancel-team-edit');
       if (cancelBtn) cancelBtn.style.display = 'none';
     }
-    }
+    
     function onTitleTypeChange() { 
       document.getElementById('champ2-wrapper').style.display = document.getElementById('title-type-select').value === 'tag' ? 'flex' : 'none'; }
     function populateRosterDropdowns() {
@@ -1663,6 +1663,7 @@
       document.getElementById('title-champ1-select').innerHTML = optionsHTML;
       document.getElementById('title-champ2-select').innerHTML = optionsHTML;
     }
+    
     function setTitleVacant() { document.getElementById('title-champ1-select').value = ''; document.getElementById('title-champ2-select').value = ''; }
     function openTitleModal(id = null) {
       activeTitleId = id;
