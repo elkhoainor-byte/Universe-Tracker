@@ -2378,94 +2378,102 @@
     }
   
     async function renderTodayCard() {
-      ensureTodaySlots();
-      const event = getCurrentEvent();
-      const header = document.getElementById('today-card-header');
-      const container = document.getElementById('today-slots-container');
-      const btnFin = document.getElementById('btn-finalize-card');
-      const btnNext = document.getElementById('btn-next-show');
-      if (!event) {
-        header.innerText = 'No hay show programado para hoy';
-        container.innerHTML = '<p style="color:var(--text-dim); text-align:center;">Avanza el calendario o configura un show para este día.</p>';
-        btnFin.style.display = 'none';
-        btnNext.style.display = 'block';
-        return;
+  ensureTodaySlots();
+  const event = getCurrentEvent();
+  const header = document.getElementById('today-card-header');
+  const container = document.getElementById('today-slots-container');
+  const btnFin = document.getElementById('btn-finalize-card');
+  const btnNext = document.getElementById('btn-next-show');
+
+  if (!event) {
+    header.innerText = 'No hay show programado para hoy';
+    container.innerHTML = '<p style="color:var(--text-dim); text-align:center;">Avanza el calendario o configura un show para este día.</p>';
+    btnFin.style.display = 'none';
+    btnNext.style.display = 'block';
+    return;
+  }
+
+  const label = event.showNumber != null ? `${event.name} #${event.showNumber}` : event.name;
+  header.innerText = `📺 ${label}`;
+  const available = getAvailableWrestlers(event.brands);
+  const locked = store.todayCard.locked;
+
+  let html = '';
+  for (let idx = 0; idx < store.todayCard.slots.length; idx++) {
+    const slot = store.todayCard.slots[idx];
+    const isEditing = locked && isSlotBeingEdited(idx);
+    const canEditUI = !locked || isEditing;
+
+    html += `<div class="card-slot ${locked && !isEditing ? 'locked' : ''} ${isEditing ? 'editing' : ''}">`;
+    html += `<div class="card-slot-header"><span class="card-slot-title"><span class="slot-num">${idx + 1}</span>Parrilla</span><div class="card-slot-header-actions">`;
+    if (!locked) html += `<button class="btn-reset-slot" onclick="resetSlot(${idx})">↺ Reset</button>`;
+    if (locked && !isEditing) html += `<button class="btn-edit-slot" onclick="startEditSlot(${idx})" title="Editar combate">✏️</button>`;
+    if (isEditing) html += `<button class="btn-done-edit-slot" onclick="doneEditSlot(${idx})">✓ Listo</button>`;
+    html += `</div></div>`;
+
+    if (!slot.type) {
+      if (canEditUI) {
+        html += `<div class="type-choice-btns"><button class="type-btn combate" onclick="setSlotType(${idx},'match')">⚔️ Combate</button><button class="type-btn promo" onclick="setSlotType(${idx},'promo')">🎤 Promo</button></div>`;
+      } else {
+        html += `<div style="color:var(--text-dim); font-size:0.85rem;">(Vacío)</div>`;
       }
-      const label = event.showNumber != null ? `${event.name} #${event.showNumber}` : event.name;
-      header.innerText = `📺 ${label}`;
-      const available = getAvailableWrestlers(event.brands);
-      const locked = store.todayCard.locked;
-      let html = '';
-      for (let idx = 0; idx < store.todayCard.slots.length; idx++) {
-        const slot = store.todayCard.slots[idx];
+    } else if (slot.type === 'promo') {
+      html += `<div class="slot-summary">🎤 Segmento de promo</div>`;
+      if (canEditUI) html += `<button class="btn-reset-slot" style="margin-top:8px;" onclick="resetSlot(${idx})">↺ Cambiar / Reset</button>`;
+    } else {
+      if (canEditUI) {
+        html += `<div class="slot-selects-row">`;
+        html += getTitleMatchBox(slot, idx);
+
+        const typeOpts = MATCH_TYPE_LIST.map(t => ({ value: t, label: t }));
+        html += buildSelect(typeOpts, slot.matchType || '', `updateSlotMatchType(${idx},this.value)`, '⚔️ Tipo de combate');
+
+        if (slot.matchType) {
+          const subTypes = MATCH_TYPES[slot.matchType];
+          if (subTypes && !subTypes.special) {
+            const subOpts = Object.keys(subTypes).map(s => ({ value: s, label: s }));
+            html += buildSelect(subOpts, slot.subType || '', `updateSlotSubType(${idx},this.value)`, '📋 Formato');
+          }
+        }
+        html += `</div>`;
+
+        if (slot.matchType) {
+          if (slot.matchType === '3 Stages of Hell') {
+            html += `<div class="slot-section-label" style="display:block;text-align:center;">🔥 Stages</div>`;
+            html += getStagesBoxes(slot, idx);
+          }
+          if (slot.matchType === 'Árbitro especial invitado') {
+            html += `<div class="slot-section-label" style="display:block;text-align:center;">🧑‍⚖️ Árbitro especial</div>`;
+            const refOpts = available.map(w => ({ value: w.id, label: w.name }));
+            html += buildSelect(refOpts, slot.specialReferee, `updateSlotReferee(${idx},this.value)`, '-- Sin árbitro especial --');
+          }
+          if (slot.subType || slot.matchType === '3 Stages of Hell') {
+            html += `<div class="slot-section-label" style="display:block;text-align:center;">👥 Luchadores</div>`;
+            html += await getParticipantBoxes(slot, idx, available);
+            html += getRefereeWarning(slot);
+            html += getWinnerBox(slot, idx);
+          }
+        }
+      } else {
+        if (slot.matchType) {
+          html += `<div class="match-type-label">${slot.matchType}${slot.subType ? ' · ' + slot.subType : ''}</div>`;
+        }
       }
-        const isEditing = locked && isSlotBeingEdited(idx);
-        const canEditUI = !locked || isEditing;
-        html += `<div class="card-slot ${locked && !isEditing ? 'locked' : ''} ${isEditing ? 'editing' : ''}"><div class="card-slot-header"><span class="card-slot-title"><span class="slot-num">${idx + 1}</span>Parrilla</span><div class="card-slot-header-actions">`;
-        if (!locked) html += `<button class="btn-reset-slot" onclick="resetSlot(${idx})">↺ Reset</button>`;
-        if (locked && !isEditing) html += `<button class="btn-edit-slot" onclick="startEditSlot(${idx})" title="Editar combate">✏️</button>`;
-        if (isEditing) html += `<button class="btn-done-edit-slot" onclick="doneEditSlot(${idx})">✓ Listo</button>`;
-        html += `</div></div>`;
-        if (!slot.type) {
-          if (canEditUI) html += `<div class="type-choice-btns"><button class="type-btn combate" onclick="setSlotType(${idx},'match')">⚔️ Combate</button><button class="type-btn promo" onclick="setSlotType(${idx},'promo')">🎤 Promo</button></div>`;
-          else html += `<div style="color:var(--text-dim); font-size:0.85rem;">(Vacío)</div>`;
-        } else if (slot.type === 'promo') {
-          html += `<div class="slot-summary">🎤 Segmento de promo</div>`;
-          if (canEditUI) html += `<button class="btn-reset-slot" style="margin-top:8px;" onclick="resetSlot(${idx})">↺ Cambiar / Reset</button>`;
-        } else {
-  if (canEditUI) {
-    html += `<div class="slot-selects-row">`;
 
-    // 1. CAMPEONATO
-    html += getTitleMatchBox(slot, idx);
-
-    // 2. TIPO DE COMBATE
-    const typeOpts = MATCH_TYPE_LIST.map(t => ({ value: t, label: t }));
-    html += buildSelect(typeOpts, slot.matchType || '', `updateSlotMatchType(${idx},this.value)`, '⚔️ Tipo de combate');
-
-    // 3. FORMATO
-    if (slot.matchType) {
-      const subTypes = MATCH_TYPES[slot.matchType];
-      if (subTypes && !subTypes.special) {
-        const subOpts = Object.keys(subTypes).map(s => ({ value: s, label: s }));
-        html += buildSelect(subOpts, slot.subType || '', `updateSlotSubType(${idx},this.value)`, '📋 Formato');
+      const summary = getSummaryText(slot);
+      if (summary) html += `<div class="slot-summary">${summary}</div>`;
+      if (locked && !isEditing && slot.winner) {
+        html += `<div class="winner-box"><label>🏆 Resultado</label><div style="font-weight:bold; color:#4caf50;">${slot.winner}</div></div>`;
       }
     }
 
     html += `</div>`;
-
-    // Stages / Árbitro / Luchadores
-    if (slot.matchType) {
-      if (slot.matchType === '3 Stages of Hell') {
-        html += `<div class="slot-section-label" style="display:block;text-align:center;">🔥 Stages</div>`;
-        html += getStagesBoxes(slot, idx);
-      }
-      if (slot.matchType === 'Árbitro especial invitado') {
-        html += `<div class="slot-section-label" style="display:block;text-align:center;">🧑‍⚖️ Árbitro especial</div>`;
-        const refOpts = available.map(w => ({ value: w.id, label: w.name }));
-        html += buildSelect(refOpts, slot.specialReferee, `updateSlotReferee(${idx},this.value)`, '-- Sin árbitro especial --');
-      }
-      if (slot.subType || slot.matchType === '3 Stages of Hell') {
-        html += `<div class="slot-section-label" style="display:block;text-align:center;">👥 Luchadores</div>`;
-        html += await getParticipantBoxes(slot, idx, available);
-        html += getRefereeWarning(slot);
-        html += getWinnerBox(slot, idx);
-      }
-    }
-  } else {
-    if (slot.matchType) {
-      html += `<div class="match-type-label">${slot.matchType}${slot.subType ? ' · ' + slot.subType : ''}</div>`;
-    }
   }
 
-  const summary = getSummaryText(slot);
-  if (summary) html += `<div class="slot-summary">${summary}</div>`;
-  if (locked && !isEditing && slot.winner) {
-    html += `<div class="winner-box"><label>🏆 Resultado</label><div style="font-weight:bold; color:#4caf50;">${slot.winner}</div></div>`;
-  }
+  container.innerHTML = html;
+  btnFin.style.display = locked ? 'none' : 'block';
+  btnNext.style.display = locked ? 'block' : 'none';
 }
-        html += `</div>`;
-      };
       container.innerHTML = html;
       btnFin.style.display = locked ? 'none' : 'block';
       btnNext.style.display = locked ? 'block' : 'none';
