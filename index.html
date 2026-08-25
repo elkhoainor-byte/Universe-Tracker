@@ -488,6 +488,9 @@
     .title-option.selected { background: rgba(255,215,0,0.15); border-color: var(--gold-end); color: var(--gold-end); font-weight: 700; }
     .title-option-none { color: var(--text-dim); font-style: italic; }
     .title-warning { font-size: 0.72rem; color: #ff9800; margin-top: 6px; padding: 6px; background: #2a1f00; border-radius: 4px; border-left: 3px solid #ff9800; }
+    .title-option { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; background: #2a2a1a; border: 1px solid #3a3a2a; cursor: pointer; font-size: 0.88rem; color: #eee; transition: background 0.15s, border-color 0.15s; }
+    .title-option-champs { font-size: 0.84rem; font-weight: 700; color: var(--gold-end); white-space: nowrap; margin-left: auto; }
+    .title-option.selected .title-option-champs { color: #ffe566; }
   </style>
 </head>
 <body>
@@ -2128,42 +2131,65 @@
       return `<div class="winner-box"><label>🏆 Resultado / Ganador</label>${buildSelect(winnerOpts, current, `updateSlotWinner(${slotIdx},this.value)`, '-- Pendiente --')}</div>`;
     }
     function getTitleMatchBox(slot, slotIdx) {
-      if (slot.type !== 'match' || !slot.matchType) return '';
-      const selectedTitle = slot.isTitleMatch && slot.titleId
-        ? store.titles.find(t => t.id === slot.titleId)
-        : null;
-      const summaryText = selectedTitle
-        ? `🏆 ${selectedTitle.name}`
-        : 'Ningún campeonato en juego';
-      let optionsHTML = `
-      <div class="title-option ${!slot.isTitleMatch ? 'selected title-option-none' : 'title-option-none'}"
-      onclick="selectTitleForSlot(${slotIdx}, null)">
+  if (slot.type !== 'match' || !slot.matchType) return '';
+
+  const event = getCurrentEvent();
+  const eventBrands = (event && event.brands && event.brands.length)
+    ? event.brands
+    : store.shows.map(s => s.name);
+      
+      const relevantTitles = (store.titles || []).filter(t => {
+        const champs = t.champions || [];
+        if (champs.length === 0) return true;
+        return champs.some(cId => {
+      const w = store.roster.find(r => r.id === cId);
+      if (!w) return false;
+      const wBrands = w.brands || (w.brand ? [w.brand] : []);
+      return wBrands.some(b => eventBrands.includes(b));
+    });
+  });
+
+  const selectedTitle = slot.isTitleMatch && slot.titleId
+    ? store.titles.find(t => t.id === slot.titleId)
+    : null;
+
+  const summaryText = selectedTitle
+    ? `🏆 ${selectedTitle.name}`
+    : 'Ningún campeonato en juego';
+
+  let optionsHTML = `
+    <div class="title-option ${!slot.isTitleMatch ? 'selected title-option-none' : 'title-option-none'}"
+         onclick="selectTitleForSlot(${slotIdx}, null)">
       Ningún campeonato en juego
+    </div>`;
+
+  relevantTitles.forEach(t => {
+    const isSelected = slot.isTitleMatch && slot.titleId === t.id;
+    const champs = (t.champions || []).map(id => {
+      const w = store.roster.find(r => r.id === id);
+      return w ? w.name : '?';
+    }).join(' & ') || 'Vacante';
+
+    optionsHTML += `
+      <div class="title-option ${isSelected ? 'selected' : ''}"
+           onclick="selectTitleForSlot(${slotIdx}, ${t.id})">
+        <span style="flex:1;min-width:0;">🏆 ${t.name}</span>
+        <span class="title-option-champs">${champs}</span>
       </div>`;
-      store.titles.forEach(t => {
-        const isSelected = slot.isTitleMatch && slot.titleId === t.id;
-        const champs = (t.champions || []).map(id => {
-          const w = store.roster.find(r => r.id === id);
-          return w ? w.name : '?';
-        }).join(' & ') || 'Vacante';
-        optionsHTML += `
-        <div class="title-option ${isSelected ? 'selected' : ''}"
-        onclick="selectTitleForSlot(${slotIdx}, ${t.id})">
-        🏆 ${t.name}
-        <span style="font-size:0.7rem;color:var(--text-dim);margin-left:auto;">${champs}</span>
-        </div>`;
-      });
-      if (!store.titles.length) {
-        optionsHTML = `<div style="font-size:0.8rem;color:var(--text-dim);padding:8px 0;">No hay campeonatos creados.</div>`;
-      }
-      return `
-      <details class="title-match-details" ${selectedTitle ? 'open' : ''}>
+  });
+
+  if (!relevantTitles.length) {
+    optionsHTML = `<div style="font-size:0.85rem;color:var(--text-dim);padding:8px 0;">No hay campeonatos de esta marca.</div>`;
+  }
+
+  return `
+    <details class="title-match-details" ${selectedTitle ? 'open' : ''}>
       <summary>${summaryText}</summary>
       <div class="title-match-body">
-      ${optionsHTML}
+        ${optionsHTML}
       </div>
-      </details>`;
-    }
+    </details>`;
+}
   
     function getRefereeWarning(slot) {
       if (isRefereeInMatch(slot)) return `<div class="ref-warning">⚠️ El árbitro especial no puede participar también como luchador en este combate.</div>`;
