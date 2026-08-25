@@ -1211,6 +1211,8 @@
   const DEFAULT_ELO = 1200;
   
   const ELO_K_FACTOR = 32;
+  const PROMO_ELO_SCALE = 0.25;
+  const PROMO_AUTOBOMBO_GAIN = Math.round(ELO_K_FACTOR * PROMO_ELO_SCALE); // 8
 
   function normalizeTeamMembers(members) {
     if (!Array.isArray(members)) return [];
@@ -1285,9 +1287,51 @@
   
   function applyEloForMatch(match) {
     if (!match) return;
-    if (match.winner === 'Promo' || match.card === '🎤 Promo') return;
-    if (!match.winner || match.winner === 'Pendiente') return;
     if (match.eloApplied) return;
+
+    if (match.winner === 'Promo' || match.promoType) {
+      const parts = (match.participants || []).filter(Boolean);
+      if (match.promoType === 'autobombo') {
+        if (parts.length < 1) return;
+        const id = parts[0];
+        const w = store.roster.find(r => r.id === id);
+        if (!w) return;
+        const my = getWrestlerElo(w);
+        const delta = PROMO_AUTOBOMBO_GAIN;
+        setWrestlerElo(id, my + delta, delta);
+        match.eloApplied = true;
+        return;
+      }
+      if (match.promoType === 'provocacion') {
+        if (parts.length < 2) return;
+        if (!match.promoWinner || match.promoWinner === 'Pendiente') return;
+        const a = store.roster.find(r => r.id === parts[0]);
+        const b = store.roster.find(r => r.id === parts[1]);
+        if (!a || !b) return;
+        const eloA = getWrestlerElo(a);
+        const eloB = getWrestlerElo(b);
+        const aWins = match.promoWinner === a.name;
+        const bWins = match.promoWinner === b.name;
+        if (!aWins && !bWins) return;
+        if (aWins) {
+          const full = calcEloDelta(eloA, eloB, 1);
+          const delta = Math.round(full * PROMO_ELO_SCALE) || (full > 0 ? 1 : 0);
+          setWrestlerElo(a.id, eloA + delta, delta);
+          setWrestlerElo(b.id, eloB - delta, -delta);
+        } else {
+          const full = calcEloDelta(eloB, eloA, 1);
+          const delta = Math.round(full * PROMO_ELO_SCALE) || (full > 0 ? 1 : 0);
+          setWrestlerElo(b.id, eloB + delta, delta);
+          setWrestlerElo(a.id, eloA - delta, -delta);
+        }
+        match.eloApplied = true;
+        return;
+      }
+      return;
+    }
+
+    if (!match.winner || match.winner === 'Pendiente') return;
+    if (!match.winner || match.winner === 'Pendiente') return;
 
     const parts = (match.participants || []).filter(Boolean);
     if (parts.length < 2) return;
@@ -1597,7 +1641,9 @@
         return;
       }
       const cards = await Promise.all(matches.map(async m => {
-        if (m.card === '🎤 Promo' || m.winner === 'Promo') return `<div class="past-promo-card">🎤 Segmento de promo</div>`;
+        if (m.winner === 'Promo' || m.promoType) {
+          return `<div class="past-promo-card">${m.card || '🎤 Segmento de promo'}</div>`;
+        }
         const parts = m.participants || [];
         const { left, right } = splitSides(parts, m.matchType, m.subType, m.winner);
         const winnerName = m.winner || '';
@@ -2045,7 +2091,8 @@
           locked: false, eventName: event.name, showNumber: event.showNumber,
           slots: Array.from({ length: needed }, (_, i) => ({
             id: Date.now() + i, type: null, matchType: null, subType: null, stages: [null, null, null],
-            participants: [], specialReferee: null, winner: '', matchId: null, titleId: null, isTitleMatch: false
+            participants: [], specialReferee: null, winner: '', matchId: null, titleId: null, isTitleMatch: false,
+            promoType: null, promoWinner: ''
           }))
         };
         editingSlotIndex = null;
@@ -2158,7 +2205,21 @@
       return h;
     }
     function getSummaryText(slot) {
-      if (slot.type === 'promo') return '🎤 Segmento de promo';
+      if (slot.type === 'promo') {
+        const names = (slot.participants || []).filter(Boolean).map(id => {
+          const w = store.roster.find(r => r.id == id);
+          return w ? w.name : '?';
+        });
+        if (slot.promoType === 'autobombo') {
+          return `🎤 Autobombo: ${names[0] || '—'}`;
+        }
+        if (slot.promoType === 'provocacion') {
+          let t = `🎤 Provocación: ${names[0] || '?'} vs ${names[1] || '?'}`;
+          if (slot.promoWinner) t += ` (ventaja: ${slot.promoWinner})`;
+          return t;
+        }
+        return '🎤 Segmento de promo';
+      }
       if (!slot.matchType) return '';
       const names = (slot.participants || []).filter(Boolean).map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; });
       let text = formatMatchSummary(names, slot.matchType, slot.subType);
@@ -2271,9 +2332,11 @@
       const match = store.matches.find(m => m.id === slot.matchId);
       if (!match) return;
       if (slot.type === 'promo') {
-        match.card = '🎤 Promo';
+        match.card = getSummaryText(slot);
         match.winner = 'Promo';
-        match.participants = [];
+        match.promoType = slot.promoType || null;
+        match.promoWinner = slot.promoWinner || '';
+        match.participants = (slot.participants || []).filter(Boolean);
         match.matchType = null;
         match.subType = null;
         match.stages = null;
@@ -2363,6 +2426,10 @@
       if (!slot.type) {
         slot.type = (m.winner === 'Promo' || m.card === '🎤 Promo') ? 'promo' : 'match';
       }
+      if (slot.type === 'promo') {
+        if (m.promoType) slot.promoType = m.promoType;
+        if (m.promoWinner) slot.promoWinner = m.promoWinner;
+      }
       if (!slot.matchType && m.matchType) slot.matchType = m.matchType;
       if (!slot.subType && m.subType) slot.subType = m.subType;
       if ((!slot.participants || !slot.participants.filter(Boolean).length) && m.participants) {
@@ -2418,8 +2485,52 @@
         html += `<div style="color:var(--text-dim); font-size:0.85rem;">(Vacío)</div>`;
       }
     } else if (slot.type === 'promo') {
-      html += `<div class="slot-summary">🎤 Segmento de promo</div>`;
-      if (canEditUI) html += `<button class="btn-reset-slot" style="margin-top:8px;" onclick="resetSlot(${idx})">↺ Cambiar / Reset</button>`;
+      if (canEditUI) {
+        const promoTypeOpts = [
+          { value: 'autobombo', label: 'Promo de autobombo' },
+          { value: 'provocacion', label: 'Provocación' }
+        ];
+        html += `<div class="slot-selects-row">`;
+        html += buildSelect(promoTypeOpts, slot.promoType || '', `updateSlotPromoType(${idx},this.value)`, '🎤 Tipo de promo');
+        html += `</div>`;
+
+        if (slot.promoType === 'autobombo') {
+          while (slot.participants.length < 1) slot.participants.push(null);
+          slot.participants = slot.participants.slice(0, 1);
+          const opts = available.map(w => ({ value: w.id, label: w.name }));
+          html += `<div class="slot-section-label" style="display:block;text-align:center;">⭐ Luchador</div>`;
+          html += `<div class="participants-grid"><div class="participant-box">
+            <label>Protagonista</label>
+            ${buildSelect(opts, slot.participants[0], `updateSlotParticipant(${idx},0,this.value)`, '-- Elegir --')}
+          </div></div>`;
+        } else if (slot.promoType === 'provocacion') {
+          while (slot.participants.length < 2) slot.participants.push(null);
+          slot.participants = slot.participants.slice(0, 2);
+          const opts = available.map(w => ({ value: w.id, label: w.name }));
+          html += `<div class="slot-section-label" style="display:block;text-align:center;">🔥 Participantes</div>`;
+          html += `<div class="participants-grid">
+            <div class="participant-box"><label>Luchador A</label>
+              ${buildSelect(opts, slot.participants[0], `updateSlotParticipant(${idx},0,this.value)`, '-- Elegir --')}
+            </div>
+            <div class="participant-box"><label>Luchador B</label>
+              ${buildSelect(opts, slot.participants[1], `updateSlotParticipant(${idx},1,this.value)`, '-- Elegir --')}
+            </div>
+          </div>`;
+          const filled = (slot.participants || []).filter(Boolean);
+          if (filled.length >= 2) {
+            const wOpts = filled.map(id => {
+              const w = store.roster.find(r => r.id == id);
+              return w ? { value: w.name, label: w.name } : null;
+            }).filter(Boolean);
+            html += `<div class="winner-box"><label>Quién queda mejor en la promo</label>
+              ${buildSelect(wOpts, slot.promoWinner || '', `updateSlotPromoWinner(${idx},this.value)`, '-- Pendiente --')}
+            </div>`;
+          }
+        }
+        html += `<button class="btn-reset-slot" style="margin-top:8px;" onclick="resetSlot(${idx})">↺ Cambiar / Reset</button>`;
+      }
+      const summary = getSummaryText(slot);
+      if (summary) html += `<div class="slot-summary">${summary}</div>`;
     } else {
       if (canEditUI) {
         html += `<div class="slot-selects-row">`;
@@ -2486,6 +2597,33 @@
         slot.participants = [];
         slot.winner = 'Promo';
         slot.specialReferee = null;
+        slot.promoType = null;
+        slot.promoWinner = '';
+        slot.isTitleMatch = false;
+        slot.titleId = null;
+      } else {
+        slot.promoType = null;
+        slot.promoWinner = '';
+      }
+      function updateSlotPromoType(idx, val) {
+      idx = Number(idx);
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
+      const slot = store.todayCard.slots[idx];
+      slot.promoType = val || null;
+      slot.participants = [];
+      slot.promoWinner = '';
+      if (store.todayCard.locked) syncSlotToMatch(slot);
+      saveSlotData();
+    }
+
+    function updateSlotPromoWinner(idx, val) {
+      idx = Number(idx);
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
+      const slot = store.todayCard.slots[idx];
+      slot.promoWinner = val || '';
+      if (store.todayCard.locked) syncSlotToMatch(slot);
+      saveSlotData();
+    }
       }
       if (store.todayCard.locked) syncSlotToMatch(slot);
       saveSlotData();
@@ -2496,17 +2634,7 @@
       if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const oldMatchId = store.todayCard.slots[idx].matchId;
       store.todayCard.slots[idx] = {
-        id: Date.now(),
-        type: null,
-        matchType: null,
-        subType: null,
-        stages: [null, null, null],
-        participants: [],
-        specialReferee: null,
-        winner: '',
-        matchId: oldMatchId,
-        titleId: null,
-        isTitleMatch: false
+        id: Date.now(), type: null, matchType: null, subType: null, stages: [null, null, null], participants: [], specialReferee: null, winner: '', matchId: null, titleId: null, isTitleMatch: false, promoType: null, promoWinner: ''
       };
       if (store.todayCard.locked) syncSlotToMatch(store.todayCard.slots[idx]);
       saveSlotData();
@@ -2619,20 +2747,25 @@
       store.todayCard.slots.forEach(slot => {
         if (slot.type === 'promo') {
           const matchId = Date.now() + Math.random();
-          store.matches.push({
+          const match = {
             id: matchId,
             show: label,
             eventName: event.name,
             showNumber: event.showNumber,
-            card: '🎤 Promo',
+            card: getSummaryText(slot),
             winner: 'Promo',
-            participants: [],
+            promoType: slot.promoType || null,
+            promoWinner: slot.promoWinner || '',
+            participants: (slot.participants || []).filter(Boolean),
             matchType: null,
             subType: null,
             universeDay: getTotalUniverseDays()
-          });
+          };
+          store.matches.push(match);
           slot.matchId = matchId;
+          applyEloForMatch(match);
           return;
+        }
         }
         if (slot.type === 'match' && slot.matchType) {
           const cardText = getSummaryText(slot);
