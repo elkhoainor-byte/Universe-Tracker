@@ -2494,25 +2494,49 @@
         html += buildSelect(promoTypeOpts, slot.promoType || '', `updateSlotPromoType(${idx},this.value)`, '🎤 Tipo de promo');
         html += `</div>`;
 
+        // Cache de fotos de los participantes de la promo
+        const promoImgCache = {};
+        await Promise.all(
+          (slot.participants || []).filter(Boolean).map(async id => {
+            promoImgCache[id] = await getImageFromDB('wrestler_' + id);
+          })
+        );
+
+        function promoPhotoHTML(id) {
+          if (!id) return `<div class="participant-photo empty">👤</div>`;
+          const src = promoImgCache[id];
+          if (src) {
+            return `<img src="${src}" class="participant-photo" alt="" onerror="this.outerHTML='<div class=\\'participant-photo empty\\'>👤</div>'">`;
+          }
+          return `<div class="participant-photo empty">👤</div>`;
+        }
+
+        const opts = available.map(w => ({ value: w.id, label: w.name }));
+
         if (slot.promoType === 'autobombo') {
           while (slot.participants.length < 1) slot.participants.push(null);
           slot.participants = slot.participants.slice(0, 1);
-          const opts = available.map(w => ({ value: w.id, label: w.name }));
           html += `<div class="slot-section-label" style="display:block;text-align:center;">⭐ Luchador</div>`;
-          html += `<div class="participants-grid"><div class="participant-box">
-            <label>Protagonista</label>
-            ${buildSelect(opts, slot.participants[0], `updateSlotParticipant(${idx},0,this.value)`, '-- Elegir --')}
-          </div></div>`;
+          html += `<div class="participants-grid">
+            <div class="participant-box participant-with-photo">
+              ${promoPhotoHTML(slot.participants[0])}
+              <label>Protagonista</label>
+              ${buildSelect(opts, slot.participants[0], `updateSlotParticipant(${idx},0,this.value)`, '-- Elegir --')}
+            </div>
+          </div>`;
         } else if (slot.promoType === 'provocacion') {
           while (slot.participants.length < 2) slot.participants.push(null);
           slot.participants = slot.participants.slice(0, 2);
-          const opts = available.map(w => ({ value: w.id, label: w.name }));
           html += `<div class="slot-section-label" style="display:block;text-align:center;">🔥 Participantes</div>`;
           html += `<div class="participants-grid">
-            <div class="participant-box"><label>Luchador A</label>
+            <div class="participant-box participant-with-photo">
+              ${promoPhotoHTML(slot.participants[0])}
+              <label>Luchador A</label>
               ${buildSelect(opts, slot.participants[0], `updateSlotParticipant(${idx},0,this.value)`, '-- Elegir --')}
             </div>
-            <div class="participant-box"><label>Luchador B</label>
+            <div class="participant-box participant-with-photo">
+              ${promoPhotoHTML(slot.participants[1])}
+              <label>Luchador B</label>
               ${buildSelect(opts, slot.participants[1], `updateSlotParticipant(${idx},1,this.value)`, '-- Elegir --')}
             </div>
           </div>`;
