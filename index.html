@@ -1137,21 +1137,23 @@
           });
         } 
         else {
+          else {
           const winnerW = store.roster.find(r => r.name === match.winner);
           if (!winnerW || !parts.includes(winnerW.id)) return;
           const losers = parts.filter(id => id !== winnerW.id);
           if (!losers.length) return;
-
           const winElo = getWrestlerElo(winnerW);
-          const oppAvg = avgElo(losers);
-          setWrestlerElo(winnerW.id, winElo + calcEloDelta(winElo, oppAvg, 1));
-
+          let totalGain = 0;
           losers.forEach(id => {
             const w = store.roster.find(r => r.id === id);
             if (!w) return;
-            const my = getWrestlerElo(w);
-            setWrestlerElo(id, my + calcEloDelta(my, winElo, 0));
+            const theirElo = getWrestlerElo(w);
+            const delta = calcEloDelta(winElo, theirElo, 1);
+            totalGain += delta;
+            setWrestlerElo(id, theirElo - delta);
           });
+
+          setWrestlerElo(winnerW.id, winElo + totalGain);
         }
       }
 
