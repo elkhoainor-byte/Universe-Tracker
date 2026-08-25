@@ -1067,7 +1067,12 @@
     img.replaceWith(ph);
   }
     
-  function cleanName(str) { return str ? str.replace(/^["'“`«ʼ\s]+/, '') : ''; }
+  function cleanName(str) {
+    if (!str) return '';
+    let s = String(str).replace(/^["'“`«ʼ\s]+/, '');
+    s = s.replace(/^the\s+/i, '');
+    return s;
+  }
 
   const TEAM_ROLES = [
     { value: "individual", label: "Individual" },
