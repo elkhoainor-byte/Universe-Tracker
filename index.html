@@ -3168,13 +3168,11 @@
             }
           }
 
-          // Títulos por parejas que lleva este equipo
           const teamMemberIds = new Set(getTeamMemberIds(row.team));
           const heldTitles = (store.titles || []).filter(t => {
             if ((t.type || 'individual') !== 'tag') return false;
             const champs = t.champions || [];
             if (!champs.length) return false;
-            // Todos los campeones actuales deben ser miembros del equipo
             return champs.every(id => teamMemberIds.has(id));
           });
 
@@ -3204,9 +3202,9 @@
                   <span class="card-title">🤝 ${row.team.name}</span>
                   <span class="card-sub">${names}</span>
                   <span class="card-sub">
-                  <span style="color:#4caf50;font-weight:800;">${Math.round(row.wins)}</span>
-                  <span style="color:var(--text-dim);">-</span>
-                  <span style="color:#f44336;font-weight:800;">${Math.round(row.losses)}</span>
+                    <span style="color:#4caf50;font-weight:800;">${Math.round(row.wins)}</span>
+                    <span style="color:var(--text-dim);">-</span>
+                    <span style="color:#f44336;font-weight:800;">${Math.round(row.losses)}</span>
                   </span>
                 </div>
               </div>
@@ -3214,6 +3212,7 @@
             </div>`;
         }
 
+        // ===== SUPERSTARS =====
         const r = row.wrestler;
         const img = await getImageFromDB('wrestler_' + r.id);
         const brands = r.brands || (r.brand ? [r.brand] : []);
@@ -3240,35 +3239,36 @@
           : `<div class="wrestler-avatar-placeholder">👤</div>`;
 
         const trendDelta = (typeof r.lastEloDelta === 'number') ? r.lastEloDelta : 0;
-let trendHTML = '';
-if (trendDelta > 0) {
-  trendHTML = `<span class="standing-trend up">↑ +${trendDelta}</span>`;
-} else if (trendDelta < 0) {
-  trendHTML = `<span class="standing-trend down">↓ ${trendDelta}</span>`;
-} else {
-  trendHTML = `<span class="standing-trend neutral">–</span>`;
-}
+        let trendHTML = '';
+        if (trendDelta > 0) {
+          trendHTML = `<span class="standing-trend up">↑ +${trendDelta}</span>`;
+        } else if (trendDelta < 0) {
+          trendHTML = `<span class="standing-trend down">↓ ${trendDelta}</span>`;
+        } else {
+          trendHTML = `<span class="standing-trend neutral">–</span>`;
+        }
 
-return `
-  <div class="card ${podiumClass}" style="${bgStyle}${borderStyle}" onclick="openWrestlerModal(${r.id})">
-    <span class="standing-rank">#${pos}</span>
-    ${trendHTML}
-    <div class="card-left">
-      <div class="avatar-wrapper">${avatar}</div>
-      <div class="card-info">
-        <span class="card-title">${r.name}</span>
-        <span class="card-sub">
-          <span style="color:#4caf50;font-weight:800;">${row.wins}</span>
-          <span style="color:var(--text-dim);">-</span>
-          <span style="color:#f44336;font-weight:800;">${row.losses}</span>
-        </span>
-      </div>
-    </div>
-    ${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}
-  </div>`;
+        return `
+          <div class="card ${podiumClass}" style="${bgStyle}${borderStyle}" onclick="openWrestlerModal(${r.id})">
+            <span class="standing-rank">#${pos}</span>
+            ${trendHTML}
+            <div class="card-left">
+              <div class="avatar-wrapper">${avatar}</div>
+              <div class="card-info">
+                <span class="card-title">${r.name}</span>
+                <span class="card-sub">
+                  <span style="color:#4caf50;font-weight:800;">${row.wins}</span>
+                  <span style="color:var(--text-dim);">-</span>
+                  <span style="color:#f44336;font-weight:800;">${row.losses}</span>
+                </span>
+              </div>
+            </div>
+            ${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}
+          </div>`;
+      }));
 
       container.innerHTML = cards.join('');
-    }
+    }}
   
     async function render() {
       document.getElementById('stat-total-roster').innerText = store.roster.length;
