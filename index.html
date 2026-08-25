@@ -3358,22 +3358,33 @@
 
     function getMatchesInPeriod() {
       const weeks = standingsFilters.periodWeeks;
-      if (weeks === 'all' || weeks === '0') return store.matches.filter(m => m.winner !== 'Promo');
+      const isRealMatch = (m) =>
+        m.winner !== 'Promo' &&
+        m.winner !== 'Inactividad' &&
+        !m.inactivityPenalty;
+
+      if (weeks === 'all' || weeks === '0') {
+        return store.matches.filter(isRealMatch);
+      }
+
       const currentDays = getTotalUniverseDays();
       const rangeDays = parseInt(weeks, 10) * 7;
       const minDay = Math.max(0, currentDays - rangeDays);
-      const withDay = store.matches.filter(m => m.winner !== 'Promo' m.winner !== 'Promo' && m.winner !== 'Inactividad' && !m.inactivityPenalty)
+
+      const withDay = store.matches.filter(
+        m => isRealMatch(m) && typeof m.universeDay === 'number'
+      );
+
       if (withDay.length === 0) {
-        return store.matches.filter(m => m.winner !== 'Promo');
+        return store.matches.filter(isRealMatch);
       }
-      const filtered = store.matches.filter(m => {
-        if (m.winner === 'Promo') return false;
-        if (typeof m.universeDay !== 'number') return true;
+
+      return store.matches.filter(m => {
+        if (!isRealMatch(m)) return false;
+        if (typeof m.universeDay !== 'number') return true; // antiguos = desde el inicio
         return m.universeDay >= minDay;
       });
-      return filtered;
     }
-
     function getWrestlerRecord(wrestler, matchesPool) {
       const pool = matchesPool || store.matches;
       const history = pool.filter(m =>
