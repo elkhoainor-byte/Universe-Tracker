@@ -2248,8 +2248,8 @@
   async function getManagerBoxesHTML(slot, slotIdx, available) {
       if (!Array.isArray(slot.managersLeft)) slot.managersLeft = [null];
       if (!Array.isArray(slot.managersRight)) slot.managersRight = [null];
-      slot.managersLeft = normalizeManagers(slot.managersLeft);
-      slot.managersRight = normalizeManagers(slot.managersRight);
+      slot.managersLeft: normalizeManagers(slot.managersLeft);
+      slot.managersRight: normalizeManagers(slot.managersRight);
 
       const opts = available.map(w => ({ value: w.id, label: w.name }));
 
@@ -3013,8 +3013,8 @@
             titleId: slot.isTitleMatch ? slot.titleId : null,
             isDefense: false,
             universeDay: getTotalUniverseDays(),
-            match.managersLeft = (slot.managersLeft || []).filter(Boolean);
-            match.managersRight = (slot.managersRight || []).filter(Boolean);
+            managersLeft: (slot.managersLeft || []).filter(Boolean),
+            managersRight: (slot.managersRight || []).filter(Boolean)
           };
           if (slot.isTitleMatch && slot.titleId && slot.winner && slot.winner !== 'Empate' && slot.winner !== 'Pendiente') {
             const title = store.titles.find(t => t.id === slot.titleId);
