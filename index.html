@@ -514,13 +514,42 @@
     .participants-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-top: 10px; justify-items: center; }
     .participants-grid .participant-box { width: 100%; max-width: 140px; text-align: center; }
     .side-vs { display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--accent); font-size: 1.1rem; min-width: 32px; padding: 0 2px; }
-    .managers-row { display: flex; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #444; align-items: flex-start; }
-    .managers-column { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; background: #181818; border: 1px dashed #555; border-radius: 10px; padding: 10px 8px; }
+    .managers-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed #444;
+      align-items: flex-start;
+    }
+    .managers-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      background: #181818;
+      border: 1px dashed #555;
+      border-radius: 10px;
+      padding: 10px 8px;
+    }
     .managers-left { border-color: #2e7d32; }
     .managers-right { border-color: #c62828; }
-    .managers-label { font-size: 0.68rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+    .managers-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
     .managers-gap { min-width: 28px; }
-    .manager-box { max-width: 130px; width: 100%; opacity: 0.92; background: #1a1a1a; }
+    .manager-box {
+      max-width: 130px;
+      width: 100%;
+      opacity: 0.92;
+      background: #1a1a1a;
+    }
   </style>
 </head>
 <body>
@@ -2232,7 +2261,8 @@
         count = (typeof conf === 'number') ? conf : 0;
       }
       if (count === 0) return '';
-      while (slot.participants.length < count) slot.participants.push(null); slot.participants = slot.participants.slice(0, count);
+      while (slot.participants.length < count) slot.participants.push(null);
+      slot.participants = slot.participants.slice(0, count);
       const opts = available.map(w => ({ value: w.id, label: w.name }));
       const imgCache = {};
       await Promise.all(
@@ -2240,191 +2270,60 @@
           imgCache[id] = await getImageFromDB('wrestler_' + id);
         })
       );
-  
-    function normalizeManagers(arr) {
-      const filled = (Array.isArray(arr) ? arr : []).filter(Boolean).slice(0, 3);
-      if (filled.length === 0) return [null];
-      if (filled.length < 3) return filled.concat([null]);
-      return filled;
-    }
-
-    function updateSlotManager(idx, side, mIdx, val) {
-      idx = Number(idx);
-      mIdx = Number(mIdx);
-      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
-      const slot = store.todayCard.slots[idx];
-      if (!slot) return;
-
-      if (!Array.isArray(slot.managersLeft)) slot.managersLeft = [null];
-      if (!Array.isArray(slot.managersRight)) slot.managersRight = [null];
-
-      const arr = side === 'right' ? slot.managersRight : slot.managersLeft;
-      arr[mIdx] = val ? parseInt(val, 10) : null;
-
-      const filled = arr.filter(Boolean).slice(0, 3);
-      const next = filled.length < 3 ? filled.concat([null]) : filled;
-      if (filled.length === 0) {
-        if (side === 'right') slot.managersRight = [null];
-        else slot.managersLeft = [null];
-      } else if (side === 'right') {
-        slot.managersRight = next;
-      } else {
-        slot.managersLeft = next;
-      }
-
-      if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveSlotData();
-    }
-
-    async function getManagerBoxesHTML(slot, slotIdx, available) {
-      if (!slot) return '';
-      try {
-        if (!Array.isArray(slot.managersLeft)) slot.managersLeft = [null];
-        if (!Array.isArray(slot.managersRight)) slot.managersRight = [null];
-        slot.managersLeft = normalizeManagers(slot.managersLeft);
-        slot.managersRight = normalizeManagers(slot.managersRight);
-
-        const opts = (available || []).map(w => ({ value: w.id, label: w.name }));
-
-        const imgCache = {};
-        const allIds = [...slot.managersLeft, ...slot.managersRight].filter(Boolean);
-        await Promise.all(allIds.map(async id => {
-          imgCache[id] = await getImageFromDB('wrestler_' + id);
-        }));
-
-        function photoHTML(id) {
-          if (!id) {
-            return `<div class="participant-photo empty" style="width:48px;height:60px;font-size:1.2rem;">👤</div>`;
-          }
-          const src = imgCache[id];
-          if (src) {
-            return `<img src="${src}" class="participant-photo" style="width:48px;height:60px;" alt="" onerror="this.outerHTML='<div class=\\'participant-photo empty\\' style=\\'width:48px;height:60px;\\'>👤</div>'">`;
-          }
-          return `<div class="participant-photo empty" style="width:48px;height:60px;font-size:1.2rem;">👤</div>`;
-        }
-
-        function sideManagers(side, arr) {
-          let h = `<div class="managers-column managers-${side}">`;
-          h += `<div class="managers-label">👔 Mánagers</div>`;
-          (arr || [null]).forEach((id, i) => {
-            h += `<div class="participant-box participant-with-photo manager-box">
-              ${photoHTML(id)}
-              <label>Mánager ${i + 1}</label>
-              ${buildSelect(opts, id, `updateSlotManager(${slotIdx},'${side}',${i},this.value)`, '-- Ninguno --')}
-            </div>`;
-          });
-          h += `</div>`;
-          return h;
-        }
-
-        return `<div class="managers-row">
-          ${sideManagers('left', slot.managersLeft)}
-          <div class="managers-gap"></div>
-          ${sideManagers('right', slot.managersRight)}
-        </div>`;
-      } catch (e) {
-        console.error('getManagerBoxesHTML', e);
-        return '';
-      }
-    }
-
-  async function getManagerBoxesHTML(slot, slotIdx, available) {
-      if (!Array.isArray(slot.managersLeft)) slot.managersLeft = [null];
-      if (!Array.isArray(slot.managersRight)) slot.managersRight = [null];
-      slot.managersLeft = normalizeManagers(slot.managersLeft);
-      slot.managersRight = normalizeManagers(slot.managersRight);
-
-      const opts = available.map(w => ({ value: w.id, label: w.name }));
-
-      const imgCache = {};
-      const allIds = [...slot.managersLeft, ...slot.managersRight].filter(Boolean);
-      await Promise.all(allIds.map(async id => {
-        imgCache[id] = await getImageFromDB('wrestler_' + id);
-      }));
 
       function photoHTML(id) {
-        if (!id) return `<div class="participant-photo empty" style="width:48px;height:60px;font-size:1.2rem;">👤</div>`;
+        if (!id) return `<div class="participant-photo empty">👤</div>`;
         const src = imgCache[id];
-        if (src) {
-          return `<img src="${src}" class="participant-photo" style="width:48px;height:60px;" alt="" onerror="this.outerHTML='<div class=\\'participant-photo empty\\' style=\\'width:48px;height:60px;\\'>👤</div>'">`;
-        }
-        return `<div class="participant-photo empty" style="width:48px;height:60px;font-size:1.2rem;">👤</div>`;
+        if (src) return `<img src="${src}" class="participant-photo" alt="" onerror="this.outerHTML='<div class=\\'participant-photo empty\\'>👤</div>'">`;
+        return `<div class="participant-photo empty">👤</div>`;
       }
 
-      function sideManagers(side, arr) {
-        let h = `<div class="managers-column managers-${side}">`;
-        h += `<div class="managers-label">👔 Mánagers</div>`;
-        arr.forEach((id, i) => {
-          h += `<div class="participant-box participant-with-photo manager-box">
-            ${photoHTML(id)}
-            <label>Mánager ${i + 1}</label>
-            ${buildSelect(opts, id, `updateSlotManager(${slotIdx},'${side}',${i},this.value)`, '-- Ninguno --')}
+      function oneBox(i, label) {
+        return `
+          <div class="participant-box participant-with-photo">
+            ${photoHTML(slot.participants[i])}
+            <label>${label || ('Luchador ' + (i + 1))}</label>
+            ${buildSelect(opts, slot.participants[i], `updateSlotParticipant(${slotIdx},${i},this.value)`, '-- Elegir --')}
           </div>`;
-        });
-        h += `</div>`;
-        return h;
       }
 
-      return `<div class="managers-row">
-        ${sideManagers('left', slot.managersLeft)}
-        <div class="managers-gap"></div>
-        ${sideManagers('right', slot.managersRight)}
-      </div>`;
-    }    
-      
-  function photoHTML(id) {
-    if (!id) return `<div class="participant-photo empty">👤</div>`;
-    const src = imgCache[id];
-    if (src) return `<img src="${src}" class="participant-photo" alt="" onerror="this.outerHTML='<div class=\\'participant-photo empty\\'>👤</div>'">`;
-    return `<div class="participant-photo empty">👤</div>`;
-  }
+      if (isTeamBasedMatch(slot.matchType, slot.subType)) {
+        const sides = getTeamSideCounts(slot.matchType, slot.subType, count);
+        let leftH = `<div class="side-column left"><div class="side-label">Bando A</div><div class="side-photos">`;
+        for (let i = 0; i < sides.left; i++) leftH += photoHTML(slot.participants[i]);
+        leftH += `</div>`;
+        for (let i = 0; i < sides.left; i++) {
+          leftH += `
+            <div class="participant-box">
+              <label>Luchador ${i + 1}</label>
+              ${buildSelect(opts, slot.participants[i], `updateSlotParticipant(${slotIdx},${i},this.value)`, '-- Elegir --')}
+            </div>`;
+        }
+        leftH += `</div>`;
 
-  function oneBox(i, label) {
-    return `
-      <div class="participant-box participant-with-photo">
-        ${photoHTML(slot.participants[i])}
-        <label>${label || ('Luchador ' + (i + 1))}</label>
-        ${buildSelect(opts, slot.participants[i], `updateSlotParticipant(${slotIdx},${i},this.value)`, '-- Elegir --')}
-      </div>`;
-  }
+        let rightH = `<div class="side-column right"><div class="side-label">Bando B</div><div class="side-photos">`;
+        for (let i = 0; i < sides.right; i++) rightH += photoHTML(slot.participants[sides.left + i]);
+        rightH += `</div>`;
+        for (let i = 0; i < sides.right; i++) {
+          const pi = sides.left + i;
+          rightH += `
+            <div class="participant-box">
+              <label>Luchador ${i + 1}</label>
+              ${buildSelect(opts, slot.participants[pi], `updateSlotParticipant(${slotIdx},${pi},this.value)`, '-- Elegir --')}
+            </div>`;
+        }
+        rightH += `</div>`;
 
-  if (isTeamBasedMatch(slot.matchType, slot.subType)) {
-    const sides = getTeamSideCounts(slot.matchType, slot.subType, count);
-    let leftH = `<div class="side-column left"><div class="side-label">Bando A</div><div class="side-photos">`;
-    for (let i = 0; i < sides.left; i++) leftH += photoHTML(slot.participants[i]);
-    leftH += `</div>`;
-    for (let i = 0; i < sides.left; i++) {
-      leftH += `
-        <div class="participant-box">
-          <label>Luchador ${i + 1}</label>
-          ${buildSelect(opts, slot.participants[i], `updateSlotParticipant(${slotIdx},${i},this.value)`, '-- Elegir --')}
-        </div>`;
+        return `<div class="participants-sides">${leftH}<div class="side-vs">VS</div>${rightH}</div>`;
+      }
+
+      let h = `<div class="participants-grid">`;
+      for (let i = 0; i < count; i++) {
+        h += oneBox(i);
+      }
+      h += `</div>`;
+      return h;
     }
-    leftH += `</div>`;
-
-    let rightH = `<div class="side-column right"><div class="side-label">Bando B</div><div class="side-photos">`;
-    for (let i = 0; i < sides.right; i++) rightH += photoHTML(slot.participants[sides.left + i]);
-    rightH += `</div>`;
-    for (let i = 0; i < sides.right; i++) {
-      const pi = sides.left + i;
-      rightH += `
-        <div class="participant-box">
-          <label>Luchador ${i + 1}</label>
-          ${buildSelect(opts, slot.participants[pi], `updateSlotParticipant(${slotIdx},${pi},this.value)`, '-- Elegir --')}
-        </div>`;
-    }
-    rightH += `</div>`;
-
-    return `<div class="participants-sides">${leftH}<div class="side-vs">VS</div>${rightH}</div>`;
-  }
-
-  let h = `<div class="participants-grid">`;
-  for (let i = 0; i < count; i++) {
-    h += oneBox(i);
-  }
-  h += `</div>`;
-  return h;
-}
     function getStagesBoxes(slot, slotIdx) {
       if (slot.matchType !== '3 Stages of Hell') return '';
       if (!slot.stages) slot.stages = [null, null, null];
@@ -2597,6 +2496,8 @@
         match.stages = slot.stages ? [...slot.stages] : null;
         match.specialReferee = slot.specialReferee;
         match.titleId = slot.isTitleMatch ? slot.titleId : null;
+        match.managersLeft = (slot.managersLeft || []).filter(Boolean);
+        match.managersRight = (slot.managersRight || []).filter(Boolean);
       }
     }
     
@@ -2903,8 +2804,10 @@
           if (slot.subType || slot.matchType === '3 Stages of Hell') {
             html += `<div class="slot-section-label" style="display:block;text-align:center;">👥 Luchadores</div>`;
             html += await getParticipantBoxes(slot, idx, available);
+            html += await getManagerBoxesHTML(slot, idx, available);
             html += getRefereeWarning(slot);
             html += getWinnerBox(slot, idx);
+          }
           }
         }
       } else {
@@ -3003,6 +2906,8 @@
       slot.winner = '';
       slot.titleId = null;
       slot.isTitleMatch = false;
+      slot.managersLeft = [null];
+      slot.managersRight = [null];
       if (store.todayCard.locked) syncSlotToMatch(slot);
       saveSlotData();
     }
@@ -3014,6 +2919,8 @@
       slot.subType = val || null;
       slot.participants = [];
       slot.winner = '';
+      slot.managersLeft = [null];
+      slot.managersRight = [null];
       if (store.todayCard.locked) syncSlotToMatch(slot);
       saveSlotData();
     }
@@ -3035,37 +2942,6 @@
       slot.participants[pIdx] = val ? parseInt(val) : null;
       if (store.todayCard.locked) syncSlotToMatch(slot);
       saveSlotData();
-    }
-
-    function updateSlotManager(idx, side, mIdx, val) {
-      idx = Number(idx);
-      mIdx = Number(mIdx);
-      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
-      const slot = store.todayCard.slots[idx];
-      if (!slot) return;
-
-      if (!Array.isArray(slot.managersLeft)) slot.managersLeft = [null];
-      if (!Array.isArray(slot.managersRight)) slot.managersRight = [null];
-
-      const arr = side === 'right' ? slot.managersRight : slot.managersLeft;
-      arr[mIdx] = val ? parseInt(val, 10) : null;
-
-      const filled = arr.filter(Boolean);
-      const next = filled.slice(0, 3);
-      if (next.length < 3) next.push(null);
-      if (side === 'right') slot.managersRight = next;
-      else slot.managersLeft = next;
-
-      if (store.todayCard.locked) syncSlotToMatch(slot);
-      saveSlotData();
-    }
-
-    function normalizeManagers(arr) {
-      const filled = (arr || []).filter(Boolean).slice(0, 3);
-      if (filled.length < 3) filled.push(null);
-      // Si no hay ninguno, solo una casilla vacía
-      if (filled.filter(Boolean).length === 0) return [null];
-      return filled;
     }
 
     function updateSlotReferee(idx, val) {
