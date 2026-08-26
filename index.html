@@ -1250,6 +1250,7 @@
   const PROMO_ELO_SCALE = 0.25;
   const PROMO_AUTOBOMBO_GAIN = Math.round(ELO_K_FACTOR * PROMO_ELO_SCALE);
   const ELO_ABSENCE_PENALTY = 2;
+  const MANAGER_ELO_SHARE = 0.15;
 
   function normalizeTeamMembers(members) {
     if (!Array.isArray(members)) return [];
@@ -1380,7 +1381,6 @@
     }
 
     if (!match.winner || match.winner === 'Pendiente') return;
-    if (!match.winner || match.winner === 'Pendiente') return;
 
     const parts = (match.participants || []).filter(Boolean);
     if (parts.length < 2) return;
@@ -1388,87 +1388,6 @@
     const isDraw = match.winner === 'Empate';
     const isTeam = isTeamBasedMatch(match.matchType, match.subType);
 
-    function rebuildAbsencePenaltiesFromHistory() {
-    store.matches = (store.matches || []).filter(
-      m => !m.inactivityPenalty && m.winner !== 'Inactividad'
-    );
-
-    const byShow = {};
-    (store.matches || []).forEach(m => {
-      if (!m.show) return;
-      if (m.winner === 'Promo' && !m.promoType && !(m.participants || []).length) return;
-      if (m.winner === 'Inactividad' || m.inactivityPenalty) return;
-      if (!byShow[m.show]) {
-        byShow[m.show] = {
-          label: m.show,
-          eventName: m.eventName || m.show,
-          showNumber: m.showNumber,
-          universeDay: typeof m.universeDay === 'number' ? m.universeDay : 0,
-          participantIds: new Set()
-        };
-      }
-      const g = byShow[m.show];
-      if (typeof m.universeDay === 'number') {
-        g.universeDay = Math.max(g.universeDay, m.universeDay);
-      }
-      (m.participants || []).filter(Boolean).forEach(id => g.participantIds.add(id));
-    });
-
-    function brandsForEvent(eventName) {
-      const show = (store.shows || []).find(s => s.name === eventName);
-      if (show) return [show.name];
-      return null;
-    }
-
-    const newPenalties = [];
-
-    Object.values(byShow).forEach(g => {
-      let brands = brandsForEvent(g.eventName);
-
-      if (!brands || !brands.length) {
-        const brandSet = new Set();
-        g.participantIds.forEach(id => {
-          const w = store.roster.find(r => r.id === id);
-          if (!w) return;
-          const bs = w.brands || (w.brand ? [w.brand] : []);
-          bs.forEach(b => brandSet.add(b));
-        });
-        brands = Array.from(brandSet);
-        if (!brands.length) return;
-      }
-
-      const absentIds = store.roster
-        .filter(r => {
-          if ((r.division || '') === 'Inactivo') return false;
-          const rb = r.brands || (r.brand ? [r.brand] : []);
-          if (!rb.some(b => brands.includes(b))) return false;
-          return !g.participantIds.has(r.id);
-        })
-        .map(r => r.id);
-
-      if (!absentIds.length) return;
-
-      newPenalties.push({
-        id: Date.now() + Math.random() + Math.random(),
-        show: g.label,
-        eventName: g.eventName,
-        showNumber: g.showNumber,
-        card: `⏸ Sin participación (${absentIds.length} luchador${absentIds.length === 1 ? '' : 'es'}) [retro]`,
-        winner: 'Inactividad',
-        inactivityPenalty: true,
-        participants: absentIds,
-        matchType: null,
-        subType: null,
-        universeDay: g.universeDay,
-        eloApplied: false
-      });
-    });
-
-    store.matches.push(...newPenalties);
-    recalculateAllElos();
-    localStorage.setItem('universe_data', JSON.stringify(store));
-  }
-    
     function avgElo(ids) {
       const elos = ids.map(id => {
         const w = store.roster.find(r => r.id === id);
@@ -1477,6 +1396,8 @@
       if (!elos.length) return DEFAULT_ELO;
       return elos.reduce((a, b) => a + b, 0) / elos.length;
     }
+
+    const wrestlerDeltas = {};
 
     if (isTeam) {
       const { left, right } = splitSides(parts, match.matchType, match.subType, isDraw ? null : match.winner);
@@ -1499,31 +1420,24 @@
         const w = store.roster.find(r => r.id === id);
         if (!w) return;
         const my = getWrestlerElo(w);
-        const delta = calcEloDelta(my, avgR, scoreLeft);
-        setWrestlerElo(id, my + delta, delta);
+        wrestlerDeltas[id] = calcEloDelta(my, avgR, scoreLeft);
       });
       right.forEach(id => {
         const w = store.roster.find(r => r.id === id);
         if (!w) return;
         const my = getWrestlerElo(w);
-        const delta = calcEloDelta(my, avgL, scoreRight);
-        setWrestlerElo(id, my + delta, delta);
+        wrestlerDeltas[id] = calcEloDelta(my, avgL, scoreRight);
       });
-    } 
-    
-    else {
+    } else {
       if (isDraw) {
         parts.forEach(id => {
           const others = parts.filter(x => x !== id);
           const w = store.roster.find(r => r.id === id);
           if (!w || !others.length) return;
           const my = getWrestlerElo(w);
-          const delta = calcEloDelta(my, avgElo(others), 0.5);
-          setWrestlerElo(id, my + delta, delta);
+          wrestlerDeltas[id] = calcEloDelta(my, avgElo(others), 0.5);
         });
-      } 
-      
-      else {
+      } else {
         const winnerW = store.roster.find(r => r.name === match.winner);
         if (!winnerW || !parts.includes(winnerW.id)) return;
         const losers = parts.filter(id => id !== winnerW.id);
@@ -1537,11 +1451,76 @@
           const theirElo = getWrestlerElo(w);
           const delta = calcEloDelta(winElo, theirElo, 1);
           totalGain += delta;
-          setWrestlerElo(id, theirElo - delta, -delta);
+          wrestlerDeltas[id] = -delta;
         });
-        setWrestlerElo(winnerW.id, winElo + totalGain, totalGain);
+        wrestlerDeltas[winnerW.id] = totalGain;
       }
     }
+
+    const { left: leftIds, right: rightIds } = splitSides(
+      parts,
+      match.matchType,
+      match.subType,
+      isDraw ? null : match.winner
+    );
+    const mgrLeft = (match.managersLeft || []).filter(Boolean);
+    const mgrRight = (match.managersRight || []).filter(Boolean);
+    const leftHasMgr = mgrLeft.length > 0;
+    const rightHasMgr = mgrRight.length > 0;
+
+    const bothHaveMgr = leftHasMgr && rightHasMgr;
+    const leftFactor = (leftHasMgr && !bothHaveMgr) ? (1 - MANAGER_ELO_SHARE) : 1;
+    const rightFactor = (rightHasMgr && !bothHaveMgr) ? (1 - MANAGER_ELO_SHARE) : 1;
+
+    function sumSideDelta(ids) {
+      return ids.reduce((s, id) => s + (wrestlerDeltas[id] || 0), 0);
+    }
+
+    leftIds.forEach(id => {
+      const full = wrestlerDeltas[id];
+      if (full === undefined) return;
+      const w = store.roster.find(r => r.id === id);
+      if (!w) return;
+      const applied = Math.round(full * leftFactor);
+      setWrestlerElo(id, getWrestlerElo(w) + applied, applied);
+    });
+    rightIds.forEach(id => {
+      const full = wrestlerDeltas[id];
+      if (full === undefined) return;
+      const w = store.roster.find(r => r.id === id);
+      if (!w) return;
+      const applied = Math.round(full * rightFactor);
+      setWrestlerElo(id, getWrestlerElo(w) + applied, applied);
+    });
+
+    parts.forEach(id => {
+      if (leftIds.includes(id) || rightIds.includes(id)) return;
+      const full = wrestlerDeltas[id];
+      if (full === undefined) return;
+      const w = store.roster.find(r => r.id === id);
+      if (!w) return;
+      setWrestlerElo(id, getWrestlerElo(w) + full, full);
+    });
+
+    function applyManagersShare(managerIds, sideIds, sideHasMgr) {
+      if (!sideHasMgr || !managerIds.length) return;
+      const sideTotal = sumSideDelta(sideIds);
+      const pool = sideTotal * MANAGER_ELO_SHARE;
+      if (pool === 0) return;
+      const each = pool / managerIds.length;
+      managerIds.forEach(mid => {
+        if (parts.includes(mid)) return;
+        const mw = store.roster.find(r => r.id === mid);
+        if (!mw) return;
+        const d = Math.round(each) || (each > 0 ? 1 : (each < 0 ? -1 : 0));
+        if (d === 0) return;
+        setWrestlerElo(mid, getWrestlerElo(mw) + d, d);
+      });
+    }
+
+    applyManagersShare(mgrLeft, leftIds, leftHasMgr);
+    applyManagersShare(mgrRight, rightIds, rightHasMgr);
+
     match.eloApplied = true;
   }
 
