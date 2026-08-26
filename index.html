@@ -3486,24 +3486,10 @@
       titlesHistory.innerHTML = titleLines.length ? titleLines.join('') : '<span style="font-size:0.8rem; color:var(--text-dim);">Sin títulos registrados.</span>';
       renderWrestlerHistoryList(wrestler);
       highlightHistoryStatCards();
-      else {
-        list.innerHTML = history.slice().reverse().map(m => {
-          let cls = 'draw';
-          if (m.winner === wrestler.name) cls = 'win';
-          else if (m.winner && m.winner !== 'Empate' && m.winner !== 'Pendiente' && m.winner !== 'Promo') {
-            if (isTeamBasedMatch(m.matchType, m.subType)) {
-              const { left, right } = splitSides(m.participants, m.matchType, m.subType, m.winner);
-              const winnerW = store.roster.find(r => r.name === m.winner);
-              if (winnerW && ((left.includes(winnerW.id) && left.includes(wrestler.id)) || (right.includes(winnerW.id) && right.includes(wrestler.id)))) cls = 'win';
-              else cls = 'loss';
-            } else cls = 'loss';
-          }
-          return `<div class="match-item ${cls}"><b>${m.show || ''}</b><br>${m.card || ''}<br><span style="color:var(--text-dim);">Resultado: ${m.winner || 'Pendiente'}</span></div>`;
-        }).join('');
-      }
       renderH2H();
       await applyWrestlerFichaChrome(wrestler);
     }
+    
     function renderH2H() {
       const oppId = parseInt(document.getElementById('h2h-opponent').value);
       const result = document.getElementById('h2h-result');
