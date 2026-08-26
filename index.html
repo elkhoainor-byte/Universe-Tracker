@@ -125,7 +125,9 @@
     .modal-box.ficha-branded { background: var(--card-bg); background-image: none; }
     .modal-close { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; }
     .stats-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
-    .stat-card { background: #2a2a2a; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
+    .stat-card { background: #2a2a2a; padding: 8px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; user-select: none; }
+    .stat-card:hover { border-color: #555; }
+    .stat-card.stat-card-active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
     .stat-val { font-size: 1.1rem; font-weight: bold; }
     .stat-lbl { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; }
     .h2h-section { background: #252525; padding: 10px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
@@ -900,15 +902,15 @@
           <span class="ficha-section-title">Récord global</span>
           <div class="stats-summary">
             <div class="stats-summary">
-            <div class="stat-card" id="stat-card-wins" style="cursor:pointer;" onclick="filterWrestlerHistory('win')" title="Ver solo victorias">
+            <div class="stat-card" id="stat-card-wins" onclick="filterWrestlerHistory('win')" title="Ver solo victorias">
               <div class="stat-val" id="stat-wins" style="color:#4caf50;">0</div>
               <div class="stat-lbl">Victorias</div>
             </div>
-            <div class="stat-card" id="stat-card-losses" style="cursor:pointer;" onclick="filterWrestlerHistory('loss')" title="Ver solo derrotas">
+            <div class="stat-card" id="stat-card-losses" onclick="filterWrestlerHistory('loss')" title="Ver solo derrotas">
               <div class="stat-val" id="stat-losses" style="color:#f44336;">0</div>
               <div class="stat-lbl">Derrotas</div>
             </div>
-            <div class="stat-card" id="stat-card-draws" style="cursor:pointer;" onclick="filterWrestlerHistory('draw')" title="Ver solo empates">
+            <div class="stat-card" id="stat-card-draws" onclick="filterWrestlerHistory('draw')" title="Ver solo empates">
               <div class="stat-val" id="stat-draws" style="color:#ffeb3b;">0</div>
               <div class="stat-lbl">Empates</div>
             </div>
@@ -3362,7 +3364,6 @@
 
     function filterWrestlerHistory(type) {
       if (!activeWrestlerId) return;
-      // Pulsar otra vez el mismo contador = mostrar todos
       if (wrestlerHistoryFilter === type) wrestlerHistoryFilter = 'all';
       else wrestlerHistoryFilter = type;
       const wrestler = store.roster.find(r => r.id === activeWrestlerId);
@@ -3379,13 +3380,9 @@
       Object.keys(map).forEach(k => {
         const el = map[k];
         if (!el) return;
-        if (wrestlerHistoryFilter === k) {
-          el.style.outline = '2px solid var(--accent)';
-          el.style.background = '#333';
-        } else {
-          el.style.outline = '';
-          el.style.background = '';
-        }
+        el.classList.toggle('stat-card-active', wrestlerHistoryFilter === k);
+        el.style.outline = '';
+        el.style.background = '';
       });
     }
 
