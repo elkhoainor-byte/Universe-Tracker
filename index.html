@@ -899,9 +899,20 @@
         <div>
           <span class="ficha-section-title">Récord global</span>
           <div class="stats-summary">
-            <div class="stat-card"><div class="stat-val" id="stat-wins" style="color:#4caf50;">0</div><div class="stat-lbl">Victorias</div></div>
-            <div class="stat-card"><div class="stat-val" id="stat-losses" style="color:#f44336;">0</div><div class="stat-lbl">Derrotas</div></div>
-            <div class="stat-card"><div class="stat-val" id="stat-draws" style="color:#ffeb3b;">0</div><div class="stat-lbl">Empates</div></div>
+            <div class="stats-summary">
+            <div class="stat-card" id="stat-card-wins" style="cursor:pointer;" onclick="filterWrestlerHistory('win')" title="Ver solo victorias">
+              <div class="stat-val" id="stat-wins" style="color:#4caf50;">0</div>
+              <div class="stat-lbl">Victorias</div>
+            </div>
+            <div class="stat-card" id="stat-card-losses" style="cursor:pointer;" onclick="filterWrestlerHistory('loss')" title="Ver solo derrotas">
+              <div class="stat-val" id="stat-losses" style="color:#f44336;">0</div>
+              <div class="stat-lbl">Derrotas</div>
+            </div>
+            <div class="stat-card" id="stat-card-draws" style="cursor:pointer;" onclick="filterWrestlerHistory('draw')" title="Ver solo empates">
+              <div class="stat-val" id="stat-draws" style="color:#ffeb3b;">0</div>
+              <div class="stat-lbl">Empates</div>
+            </div>
+          </div>
           </div>
         </div>
         <div>
@@ -1212,6 +1223,7 @@
   };    
   
   let activeWrestlerId = null, activeShowId = null, activeTitleId = null, confirmAction = null;
+  let wrestlerHistoryFilter = 'all';
   let wrestlerModalMode = 'view';
   let calendarViewMonthIndex = null;
   let editingSlotIndex = null;
@@ -3281,6 +3293,7 @@
     }
     async function openWrestlerModal(id = null) {
       activeWrestlerId = id;
+      wrestlerHistoryFilter = 'all';
       const avatarContainer = document.getElementById('modal-avatar-container');
       document.getElementById('edit-image-file').value = '';
       document.getElementById('edit-brands-container').innerHTML = store.shows.map(s => `<label class="option-checkbox-item"><input type="checkbox" value="${s.name}"> ${s.name}</label>`).join('');
@@ -3329,6 +3342,83 @@
       wrestlerModalMode = 'view';
       applyWrestlerFichaChrome(null);
     }
+
+    function getMatchResultClassForWrestler(m, wrestler) {
+      if (!m || !wrestler) return 'draw';
+      if (m.winner === wrestler.name) return 'win';
+      if (m.winner === 'Empate' || m.winner === 'Pendiente' || !m.winner) return 'draw';
+      if (m.winner === 'Promo' || m.promoType) return 'draw';
+      if (m.winner === 'Inactividad' || m.inactivityPenalty) return 'draw';
+      if (isTeamBasedMatch(m.matchType, m.subType)) {
+        const { left, right } = splitSides(m.participants, m.matchType, m.subType, m.winner);
+        const winnerW = store.roster.find(r => r.name === m.winner);
+        if (winnerW && ((left.includes(winnerW.id) && left.includes(wrestler.id)) || (right.includes(winnerW.id) && right.includes(wrestler.id)))) {
+          return 'win';
+        }
+        return 'loss';
+      }
+      return 'loss';
+    }
+
+    function filterWrestlerHistory(type) {
+      if (!activeWrestlerId) return;
+      // Pulsar otra vez el mismo contador = mostrar todos
+      if (wrestlerHistoryFilter === type) wrestlerHistoryFilter = 'all';
+      else wrestlerHistoryFilter = type;
+      const wrestler = store.roster.find(r => r.id === activeWrestlerId);
+      if (wrestler) renderWrestlerHistoryList(wrestler);
+      highlightHistoryStatCards();
+    }
+
+    function highlightHistoryStatCards() {
+      const map = {
+        win: document.getElementById('stat-card-wins'),
+        loss: document.getElementById('stat-card-losses'),
+        draw: document.getElementById('stat-card-draws')
+      };
+      Object.keys(map).forEach(k => {
+        const el = map[k];
+        if (!el) return;
+        if (wrestlerHistoryFilter === k) {
+          el.style.outline = '2px solid var(--accent)';
+          el.style.background = '#333';
+        } else {
+          el.style.outline = '';
+          el.style.background = '';
+        }
+      });
+    }
+
+    function renderWrestlerHistoryList(wrestler) {
+      const list = document.getElementById('wrestler-history-list');
+      if (!list || !wrestler) return;
+
+      let history = store.matches.filter(m => {
+        if (!m.participants || !m.participants.includes(wrestler.id)) return false;
+        if (m.inactivityPenalty) return false;
+        if (m.winner === 'Inactividad') return false;
+        const card = String(m.card || '');
+        if (card.includes('Sin participación')) return false;
+        if (card.includes('⏸')) return false;
+        return true;
+      });
+
+      if (wrestlerHistoryFilter !== 'all') {
+        history = history.filter(m => getMatchResultClassForWrestler(m, wrestler) === wrestlerHistoryFilter);
+      }
+
+      if (!history.length) {
+        const labels = { win: 'victorias', loss: 'derrotas', draw: 'empates', all: 'combates' };
+        list.innerHTML = `<p style="color:var(--text-dim); font-size:0.85rem;">Sin ${labels[wrestlerHistoryFilter] || 'combates'} registrados.</p>`;
+        return;
+      }
+
+      list.innerHTML = history.slice().reverse().map(m => {
+        const cls = getMatchResultClassForWrestler(m, wrestler);
+        return `<div class="match-item ${cls}"><b>${m.show || ''}</b><br>${m.card || ''}<br><span style="color:var(--text-dim);">Resultado: ${m.winner || 'Pendiente'}</span></div>`;
+      }).join('');
+    }  
+    
     async function updateWrestlerStats(wrestler) {
       const photoContainer = document.getElementById('ficha-photo-container');
       const base64Img = await getImageFromDB('wrestler_' + wrestler.id);
@@ -3394,10 +3484,9 @@
         }
       });
       titlesHistory.innerHTML = titleLines.length ? titleLines.join('') : '<span style="font-size:0.8rem; color:var(--text-dim);">Sin títulos registrados.</span>';
-      const list = document.getElementById('wrestler-history-list');
-      if (!history.length) {
-        list.innerHTML = '<p style="color:var(--text-dim); font-size:0.85rem;">Sin combates registrados.</p>';
-      } else {
+      renderWrestlerHistoryList(wrestler);
+      highlightHistoryStatCards();
+      else {
         list.innerHTML = history.slice().reverse().map(m => {
           let cls = 'draw';
           if (m.winner === wrestler.name) cls = 'win';
