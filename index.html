@@ -2044,63 +2044,58 @@
     };
 
     function openEditTeam(teamId) {
-  const team = (store.teams || []).find(t => t.id === teamId);
-  if (!team) return;
-  editingTeamId = teamId;
-  document.getElementById('team-name').value = team.name || '';
-
-  const normalized = normalizeTeamMembers(team.members);
-  const selected = new Set(normalized.map(m => m.id));
-  const roleById = {};
-  normalized.forEach(m => { roleById[m.id] = m.role; });
-
-  document.querySelectorAll('#team-members-select .team-member-row').forEach(row => {
+      const team = (store.teams || []).find(t => t.id === teamId);
+      if (!team) return;
+      editingTeamId = teamId;
+      document.getElementById('team-name').value = team.name || '';
+      
+    const normalized = normalizeTeamMembers(team.members);
+    const selected = new Set(normalized.map(m => m.id));
+    const roleById = {};
+      normalized.forEach(m => { roleById[m.id] = m.role; });
+      document.querySelectorAll('#team-members-select .team-member-row').forEach(row => {
+    
     const chk = row.querySelector('.team-member-check');
     const sel = row.querySelector('.team-member-role');
     if (!chk) return;
     const id = Number(chk.value);
-    chk.checked = selected.has(id);
+        chk.checked = selected.has(id);
     if (sel) sel.value = roleById[id] || 'tag';
-  });
+    });
 
-  const btn = document.getElementById('btn-team-submit');
-  if (btn) btn.textContent = 'Guardar cambios del equipo';
-  const badge = document.getElementById('teams-form-mode-badge');
-  if (badge) badge.textContent = 'EDITANDO';
-  const cancelBtn = document.getElementById('btn-cancel-team-edit');
-  if (cancelBtn) cancelBtn.style.display = 'block';
-
-  // Abrir el desplegable
-  const details = document.getElementById('teams-form-details');
-  if (details) details.open = true;
-
-  const teamsBtn = Array.from(document.querySelectorAll('#main-nav button')).find(b => (b.textContent || '').includes('Tag'));
-  if (teamsBtn) switchTab('teams', teamsBtn);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+    const btn = document.getElementById('btn-team-submit');
+    if (btn) btn.textContent = 'Guardar cambios del equipo';
+    const badge = document.getElementById('teams-form-mode-badge');
+    if (badge) badge.textContent = 'EDITANDO';
+    const cancelBtn = document.getElementById('btn-cancel-team-edit');
+    if (cancelBtn) cancelBtn.style.display = 'block';
+    const details = document.getElementById('teams-form-details');
+    if (details) details.open = true;
+    const teamsBtn = Array.from(document.querySelectorAll('#main-nav button')).find(b => (b.textContent || '').includes('Tag'));
+    if (teamsBtn) switchTab('teams', teamsBtn);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   
     function cancelEditTeam() {
-  editingTeamId = null;
-  document.getElementById('team-name').value = '';
-  document.querySelectorAll('#team-members-select .team-member-check').forEach(chk => { chk.checked = false; });
-  document.querySelectorAll('#team-members-select .team-member-role').forEach(sel => { sel.value = 'tag'; });
-  const btn = document.getElementById('btn-team-submit');
-  if (btn) btn.textContent = 'Crear Tag Team';
-  const badge = document.getElementById('teams-form-mode-badge');
-  if (badge) badge.textContent = 'NUEVO';
-  const cancelBtn = document.getElementById('btn-cancel-team-edit');
-  if (cancelBtn) cancelBtn.style.display = 'none';
-
-  // Cerrar el desplegable
-  const details = document.getElementById('teams-form-details');
-  if (details) details.open = false;
-}
+      editingTeamId = null;
+      document.getElementById('team-name').value = '';
+      document.querySelectorAll('#team-members-select .team-member-check').forEach(chk => { chk.checked = false; });
+      document.querySelectorAll('#team-members-select .team-member-role').forEach(sel => { sel.value = 'tag'; });
+    const btn = document.getElementById('btn-team-submit');
+    if (btn) btn.textContent = 'Crear Tag Team';
+    const badge = document.getElementById('teams-form-mode-badge');
+    if (badge) badge.textContent = 'NUEVO';
+    const cancelBtn = document.getElementById('btn-cancel-team-edit');
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    const details = document.getElementById('teams-form-details');
+    if (details) details.open = false;
+    }
     
     function onTitleTypeChange() { 
       document.getElementById('champ2-wrapper').style.display = document.getElementById('title-type-select').value === 'tag' ? 'flex' : 'none'; }
     function populateRosterDropdowns() {
-      const sorted = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
-      const optionsHTML = `<option value="">-- Vacante / Ninguno --</option>` + sorted.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+    const sorted = [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
+    const optionsHTML = `<option value="">-- Vacante / Ninguno --</option>` + sorted.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
       document.getElementById('title-champ1-select').innerHTML = optionsHTML;
       document.getElementById('title-champ2-select').innerHTML = optionsHTML;
     }
@@ -2242,16 +2237,16 @@
       return (slot.participants || []).filter(Boolean).includes(slot.specialReferee);
     }
     function buildSelect(options, selected, onchange, emptyLabel) {
-  let h = `<select class="slot-select" onchange="${onchange}">`;
-  const hasValue = selected !== null && selected !== undefined && String(selected) !== '';
-  if (emptyLabel && !hasValue) {
-    h += `<option value="" selected disabled hidden>${emptyLabel}</option>`;
-  }
-  options.forEach(o => {
+    let h = `<select class="slot-select" onchange="${onchange}">`;
+    const hasValue = selected !== null && selected !== undefined && String(selected) !== '';
+    if (emptyLabel && !hasValue) {
+      h += `<option value="" selected disabled hidden>${emptyLabel}</option>`;
+    }
+    options.forEach(o => {
     h += `<option value="${o.value}" ${String(selected) === String(o.value) ? 'selected' : ''}>${o.label}</option>`;
-  });
-  return h + '</select>';
-}
+    });
+    return h + '</select>';
+    }
     async function getParticipantBoxes(slot, slotIdx, available) {
       const is3Stages = slot.matchType === '3 Stages of Hell';
       let count = 0;
@@ -2462,7 +2457,7 @@
         ${optionsHTML}
       </div>
     </details>`;
-}
+  }
   
     function getRefereeWarning(slot) {
       if (isRefereeInMatch(slot)) return `<div class="ref-warning">⚠️ El árbitro especial no puede participar también como luchador en este combate.</div>`;
@@ -2538,7 +2533,7 @@
   editingSlotIndex = null;
   localStorage.setItem('universe_data', JSON.stringify(store));
   renderTodayCard();
-}
+  }
   
     function saveSlotData() {
       localStorage.setItem('universe_data', JSON.stringify(store));
@@ -2823,7 +2818,7 @@
   container.innerHTML = html;
   btnFin.style.display = locked ? 'none' : 'block';
   btnNext.style.display = locked ? 'block' : 'none';
-}
+  }
   
     function setSlotType(idx, type) {
       idx = Number(idx);
@@ -3602,7 +3597,7 @@
   m.winner !== 'Promo' &&
   m.winner !== 'Inactividad' &&
   !m.inactivityPenalty
-);
+  );
       let wins = 0, losses = 0, draws = 0;
       history.forEach(m => {
         if (m.winner === wrestler.name) wins++;
@@ -3707,7 +3702,7 @@
 
   if (store.todayCard.locked) syncSlotToMatch(slot);
   saveSlotData();
-}
+  }
   
      async function renderStandings() {
       const container = document.getElementById('list-standings');
@@ -4030,18 +4025,19 @@
         return `<div class="card" style="${bgStyle}" onclick="openShowModal('${s.id}')"><div class="card-left" style="padding-left:12px;">${logoHTML}<div class="card-info"><span class="card-title">${s.name}</span><span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span></div></div></div>`;
       }));
       document.getElementById('list-shows').innerHTML = showCards.length ? showCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay shows.</p>`;
-const showBgCacheTeams = {};
-await Promise.all(store.shows.map(async s => {
-  showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
-}));
+      
+      const showBgCacheTeams = {};
+      await Promise.all(store.shows.map(async s => {
+        showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
+      }));
 
-const teamCards = await Promise.all((store.teams || []).map(async t => {
-  const normalized = normalizeTeamMembers(t.members);
-  const memberData = [];
-  for (const m of normalized) {
-    const r = store.roster.find(ros => ros.id === m.id);
-    const img = r ? await getImageFromDB('wrestler_' + r.id) : null;
-    memberData.push({
+      const teamCards = await Promise.all((store.teams || []).map(async t => {
+        const normalized = normalizeTeamMembers(t.members);
+        const memberData = [];
+        for (const m of normalized) {
+          const r = store.roster.find(ros => ros.id === m.id);
+          const img = r ? await getImageFromDB('wrestler_' + r.id) : null;
+          memberData.push({
       id: m.id,
       name: r ? r.name : '?',
       role: m.role || 'tag',
