@@ -514,6 +514,13 @@
     .participants-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-top: 10px; justify-items: center; }
     .participants-grid .participant-box { width: 100%; max-width: 140px; text-align: center; }
     .side-vs { display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--accent); font-size: 1.1rem; min-width: 32px; padding: 0 2px; }
+    .managers-row { display: flex; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #444; align-items: flex-start; }
+    .managers-column { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; background: #181818; border: 1px dashed #555; border-radius: 10px; padding: 10px 8px; }
+    .managers-left { border-color: #2e7d32; }
+    .managers-right { border-color: #c62828; }
+    .managers-label { font-size: 0.68rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+    .managers-gap { min-width: 28px; }
+    .manager-box { max-width: 130px; width: 100%; opacity: 0.92; background: #1a1a1a; }
   </style>
 </head>
 <body>
@@ -2189,7 +2196,7 @@
           slots: Array.from({ length: needed }, (_, i) => ({
             id: Date.now() + i, type: null, matchType: null, subType: null, stages: [null, null, null],
             participants: [], specialReferee: null, winner: '', matchId: null, titleId: null, isTitleMatch: false,
-            promoType: null, promoWinner: ''
+            promoType: null, promoWinner: '', managersLeft: [null], managersRight: [null],''
           }))
         };
         editingSlotIndex = null;
@@ -2238,6 +2245,50 @@
     })
   );
 
+  async function getManagerBoxesHTML(slot, slotIdx, available) {
+      if (!Array.isArray(slot.managersLeft)) slot.managersLeft = [null];
+      if (!Array.isArray(slot.managersRight)) slot.managersRight = [null];
+      slot.managersLeft = normalizeManagers(slot.managersLeft);
+      slot.managersRight = normalizeManagers(slot.managersRight);
+
+      const opts = available.map(w => ({ value: w.id, label: w.name }));
+
+      const imgCache = {};
+      const allIds = [...slot.managersLeft, ...slot.managersRight].filter(Boolean);
+      await Promise.all(allIds.map(async id => {
+        imgCache[id] = await getImageFromDB('wrestler_' + id);
+      }));
+
+      function photoHTML(id) {
+        if (!id) return `<div class="participant-photo empty" style="width:48px;height:60px;font-size:1.2rem;">👤</div>`;
+        const src = imgCache[id];
+        if (src) {
+          return `<img src="${src}" class="participant-photo" style="width:48px;height:60px;" alt="" onerror="this.outerHTML='<div class=\\'participant-photo empty\\' style=\\'width:48px;height:60px;\\'>👤</div>'">`;
+        }
+        return `<div class="participant-photo empty" style="width:48px;height:60px;font-size:1.2rem;">👤</div>`;
+      }
+
+      function sideManagers(side, arr) {
+        let h = `<div class="managers-column managers-${side}">`;
+        h += `<div class="managers-label">👔 Mánagers</div>`;
+        arr.forEach((id, i) => {
+          h += `<div class="participant-box participant-with-photo manager-box">
+            ${photoHTML(id)}
+            <label>Mánager ${i + 1}</label>
+            ${buildSelect(opts, id, `updateSlotManager(${slotIdx},'${side}',${i},this.value)`, '-- Ninguno --')}
+          </div>`;
+        });
+        h += `</div>`;
+        return h;
+      }
+
+      return `<div class="managers-row">
+        ${sideManagers('left', slot.managersLeft)}
+        <div class="managers-gap"></div>
+        ${sideManagers('right', slot.managersRight)}
+      </div>`;
+    }    
+      
   function photoHTML(id) {
     if (!id) return `<div class="participant-photo empty">👤</div>`;
     const src = imgCache[id];
@@ -2301,6 +2352,7 @@
       }
       return h;
     }
+    
     function getSummaryText(slot) {
       if (slot.type === 'promo') {
         const names = (slot.participants || []).filter(Boolean).map(id => {
@@ -2332,8 +2384,19 @@
         const t = store.titles.find(tt => tt.id === slot.titleId);
         if (t) text += ` | 🏆 ${t.name}`;
       }
+      const ml = (slot.managersLeft || []).filter(Boolean).map(id => {
+        const w = store.roster.find(r => r.id == id);
+        return w ? w.name : null;
+      }).filter(Boolean);
+      const mr = (slot.managersRight || []).filter(Boolean).map(id => {
+        const w = store.roster.find(r => r.id == id);
+        return w ? w.name : null;
+      }).filter(Boolean);
+      if (ml.length) text += ` | 👔 A: ${ml.join(', ')}`;
+      if (mr.length) text += ` | 👔 B: ${mr.join(', ')}`;
       return text;
     }
+    
     function getWinnerBox(slot, slotIdx) {
       if (slot.type !== 'match' || !slot.matchType) return '';
       const filled = getSlotFilledParticipants(slot);
@@ -2539,6 +2602,8 @@
         slot.titleId = m.titleId;
       }
       if (!slot.winner && m.winner) slot.winner = m.winner;
+      if (m.managersLeft) slot.managersLeft = normalizeManagers([...m.managersLeft]);
+      if (m.managersRight) slot.managersRight = normalizeManagers([...m.managersRight]);
     }
   
     async function renderTodayCard() {
@@ -2682,6 +2747,7 @@
           if (slot.subType || slot.matchType === '3 Stages of Hell') {
             html += `<div class="slot-section-label" style="display:block;text-align:center;">👥 Luchadores</div>`;
             html += await getParticipantBoxes(slot, idx, available);
+            html += await getManagerBoxesHTML(slot, idx, available);
             html += getRefereeWarning(slot);
             html += getWinnerBox(slot, idx);
           }
@@ -2764,7 +2830,7 @@
       if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
       const oldMatchId = store.todayCard.slots[idx].matchId;
       store.todayCard.slots[idx] = {
-        id: Date.now(), type: null, matchType: null, subType: null, stages: [null, null, null], participants: [], specialReferee: null, winner: '', matchId: null, titleId: null, isTitleMatch: false, promoType: null, promoWinner: ''
+        id: Date.now(), type: null, matchType: null, subType: null, stages: [null, null, null], participants: [], specialReferee: null, winner: '', matchId: null, titleId: null, isTitleMatch: false, promoType: null, promoWinner: '', managersLeft: [null], managersRight: [null],
       };
       if (store.todayCard.locked) syncSlotToMatch(store.todayCard.slots[idx]);
       saveSlotData();
@@ -2816,6 +2882,37 @@
       saveSlotData();
     }
 
+    function updateSlotManager(idx, side, mIdx, val) {
+      idx = Number(idx);
+      mIdx = Number(mIdx);
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
+      const slot = store.todayCard.slots[idx];
+      if (!slot) return;
+
+      if (!Array.isArray(slot.managersLeft)) slot.managersLeft = [null];
+      if (!Array.isArray(slot.managersRight)) slot.managersRight = [null];
+
+      const arr = side === 'right' ? slot.managersRight : slot.managersLeft;
+      arr[mIdx] = val ? parseInt(val, 10) : null;
+
+      const filled = arr.filter(Boolean);
+      const next = filled.slice(0, 3);
+      if (next.length < 3) next.push(null);
+      if (side === 'right') slot.managersRight = next;
+      else slot.managersLeft = next;
+
+      if (store.todayCard.locked) syncSlotToMatch(slot);
+      saveSlotData();
+    }
+
+    function normalizeManagers(arr) {
+      const filled = (arr || []).filter(Boolean).slice(0, 3);
+      if (filled.length < 3) filled.push(null);
+      // Si no hay ninguno, solo una casilla vacía
+      if (filled.filter(Boolean).length === 0) return [null];
+      return filled;
+    }
+
     function updateSlotReferee(idx, val) {
       idx = Number(idx);
       if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
@@ -2855,18 +2952,18 @@
     
     function finalizeTodayCard() {
       for (const slot of store.todayCard.slots) {
-  if (slot.type !== 'match') continue;
-  if (isRefereeInMatch(slot)) {
-    alert('Hay un combate donde el árbitro especial también es participante. Corrígelo antes de finalizar.');
-    return;
-  }
-  if (slot.isTitleMatch && slot.titleId && !hasChampionInMatch(slot)) {
-    const title = store.titles.find(t => t.id === slot.titleId);
-    const titleName = title ? title.name : 'un título';
-    const ok = confirm(`⚠️ El campeón no está disputando el combate de "${titleName}".\n\nSi continúas, el ganador se convertirá en el nuevo campeón.\n\n¿Finalizar la parrilla de todas formas?`);
-    if (!ok) return;
-  }
-}
+        if (slot.type !== 'match') continue;
+        if (isRefereeInMatch(slot)) {
+          alert('Hay un combate donde el árbitro especial también es participante. Corrígelo antes de finalizar.');
+          return;
+        }
+        if (slot.isTitleMatch && slot.titleId && !hasChampionInMatch(slot)) {
+          const title = store.titles.find(t => t.id === slot.titleId);
+          const titleName = title ? title.name : 'un título';
+          const ok = confirm(`⚠️ El campeón no está disputando el combate de "${titleName}".\n\nSi continúas, el ganador se convertirá en el nuevo campeón.\n\n¿Finalizar la parrilla de todas formas?`);
+          if (!ok) return;
+        }
+      }
       const event = getCurrentEvent();
       if (!event) return;
       const label = event.showNumber != null ? `${event.name} #${event.showNumber}` : event.name;
@@ -2890,13 +2987,14 @@
             matchType: null,
             subType: null,
             universeDay: getTotalUniverseDays()
+            managersLeft: (slot.managersLeft || []).filter(Boolean),
+            managersRight: (slot.managersRight || []).filter(Boolean),
           };
           store.matches.push(match);
           slot.matchId = matchId;
           applyEloForMatch(match);
           return;
         }
-
         if (slot.type === 'match' && slot.matchType) {
           const cardText = getSummaryText(slot);
           const matchId = Date.now() + Math.random();
@@ -2915,6 +3013,8 @@
             titleId: slot.isTitleMatch ? slot.titleId : null,
             isDefense: false,
             universeDay: getTotalUniverseDays()
+            match.managersLeft = (slot.managersLeft || []).filter(Boolean);
+            match.managersRight = (slot.managersRight || []).filter(Boolean);
           };
           if (slot.isTitleMatch && slot.titleId && slot.winner && slot.winner !== 'Empate' && slot.winner !== 'Pendiente') {
             const title = store.titles.find(t => t.id === slot.titleId);
@@ -2923,7 +3023,8 @@
               const champInMatch = hasChampionInMatch(slot);
               if (champInMatch && title.champions && title.champions.includes(winnerW.id)) {
                 match.isDefense = true;
-              } else {
+              }
+              else {
                 let newChamps = [winnerW.id];
                 if (title.type === 'tag') {
                   const { left, right } = splitSides(slot.participants, slot.matchType, slot.subType, slot.winner);
@@ -3055,7 +3156,9 @@
           matchId: null,
           titleId: null,
           isTitleMatch: false,
-          promoType: null, promoWinner: ''
+          promoType: null, promoWinner: '',
+          managersLeft: [null],
+          managersRight: [null],
         }))
       };
       editingSlotIndex = null;
