@@ -2801,13 +2801,14 @@
             const refOpts = available.map(w => ({ value: w.id, label: w.name }));
             html += buildSelect(refOpts, slot.specialReferee, `updateSlotReferee(${idx},this.value)`, '-- Sin árbitro especial --');
           }
-         html += `<div class="slot-section-label" style="display:block;text-align:center;">👥 Luchadores</div>`;
+          if (slot.subType || slot.matchType === '3 Stages of Hell') {
+            html += `<div class="slot-section-label" style="display:block;text-align:center;">👥 Luchadores</div>`;
+            html += await getParticipantBoxes(slot, idx, available);
+            html += await getManagerBoxesHTML(slot, idx, available);
+            html += getRefereeWarning(slot);
+            html += getWinnerBox(slot, idx);
+          }
         }
-      } else {
-        if (slot.matchType) {
-          html += `<div class="match-type-label">${slot.matchType}${slot.subType ? ' · ' + slot.subType : ''}</div>`;
-        }
-      }
 
       const summary = getSummaryText(slot);
       if (summary) html += `<div class="slot-summary">${summary}</div>`;
