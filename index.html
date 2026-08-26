@@ -2986,7 +2986,7 @@
             participants: (slot.participants || []).filter(Boolean),
             matchType: null,
             subType: null,
-            universeDay: getTotalUniverseDays()
+            universeDay: getTotalUniverseDays(),
             managersLeft: (slot.managersLeft || []).filter(Boolean),
             managersRight: (slot.managersRight || []).filter(Boolean),
           };
@@ -3012,7 +3012,7 @@
             specialReferee: slot.specialReferee,
             titleId: slot.isTitleMatch ? slot.titleId : null,
             isDefense: false,
-            universeDay: getTotalUniverseDays()
+            universeDay: getTotalUniverseDays(),
             match.managersLeft = (slot.managersLeft || []).filter(Boolean);
             match.managersRight = (slot.managersRight || []).filter(Boolean);
           };
