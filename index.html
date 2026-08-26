@@ -4093,11 +4093,11 @@ const teamCards = await Promise.all((store.teams || []).map(async t => {
         </div>
       </div>
     </div>`;
-}));
+  }));
 
-document.getElementById('list-teams').innerHTML = teamCards.length
-  ? teamCards.join('')
-  : `<div class="team-empty"><span>🤝</span>Aún no hay Tag Teams.<br>Crea el primero arriba.</div>`;
+    document.getElementById('list-teams').innerHTML = teamCards.length
+      ? teamCards.join('')
+      : `<div class="team-empty"><span>🤝</span>Aún no hay Tag Teams.<br>Crea el primero arriba.</div>`;
       
       const currentDays = getTotalUniverseDays();
       const titleCards = await Promise.all(store.titles.map(async t => {
