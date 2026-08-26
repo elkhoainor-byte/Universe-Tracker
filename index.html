@@ -2830,7 +2830,6 @@
           if (slot.subType || slot.matchType === '3 Stages of Hell') {
             html += `<div class="slot-section-label" style="display:block;text-align:center;">👥 Luchadores</div>`;
             html += await getParticipantBoxes(slot, idx, available);
-            html += await getManagerBoxesHTML(slot, idx, available);
             html += getRefereeWarning(slot);
             html += getWinnerBox(slot, idx);
           }
