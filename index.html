@@ -2248,8 +2248,8 @@
   async function getManagerBoxesHTML(slot, slotIdx, available) {
       if (!Array.isArray(slot.managersLeft)) slot.managersLeft = [null];
       if (!Array.isArray(slot.managersRight)) slot.managersRight = [null];
-      slot.managersLeft: normalizeManagers(slot.managersLeft);
-      slot.managersRight: normalizeManagers(slot.managersRight);
+      slot.managersLeft = normalizeManagers(slot.managersLeft);
+      slot.managersRight = normalizeManagers(slot.managersRight);
 
       const opts = available.map(w => ({ value: w.id, label: w.name }));
 
