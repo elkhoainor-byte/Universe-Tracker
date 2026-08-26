@@ -1,1 +1,1244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Hiruda 3D - Impresión 3D de alta calidad en Navarra. Figuras personalizadas, piezas de gran formato y acabados profesionales. Tecnología 3D con alma artesanal.">
+  <title>Hiruda 3D | Impresión 3D Premium en Navarra</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0d0d0d;
+      --bg-card: #161616;
+      --bg-section: #111111;
+      --orange: #ff6b1a;
+      --orange-hover: #ff8533;
+      --orange-soft: rgba(255, 107, 26, 0.15);
+      --text: #f5f5f5;
+      --text-muted: #a0a0a0;
+      --border: #2a2a2a;
+      --white: #ffffff;
+      --radius: 12px;
+      --shadow: 0 10px 40px rgba(0,0,0,0.4);
+    }
 
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+      transition: color 0.25s ease;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.9rem 1.8rem;
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .btn-primary {
+      background: var(--orange);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      background: var(--orange-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 107, 26, 0.35);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--white);
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--orange);
+      border: 2px solid var(--orange);
+    }
+
+    .btn-outline:hover {
+      background: var(--orange);
+      color: var(--white);
+    }
+
+    /* Header / Nav */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(13, 13, 13, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .logo {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span {
+      color: var(--orange);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--orange);
+    }
+
+    .nav-cta {
+      display: none;
+    }
+
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--white);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-top: 72px;
+      background: 
+        linear-gradient(135deg, rgba(13,13,13,0.92) 0%, rgba(13,13,13,0.75) 50%, rgba(255,107,26,0.15) 100%),
+        url('https://images.unsplash.com/photo-1631545806608-6e0a1b0b0b0b?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+      background-image: 
+        linear-gradient(160deg, rgba(10,10,10,0.95) 0%, rgba(20,12,8,0.85) 40%, rgba(40,20,10,0.7) 100%),
+        url('https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(255,107,26,0.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 680px;
+      padding: 4rem 0;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: var(--orange-soft);
+      color: var(--orange);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(255,107,26,0.3);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 5.5vw, 3.8rem);
+      margin-bottom: 1.25rem;
+      letter-spacing: -1px;
+    }
+
+    .hero h1 span {
+      color: var(--orange);
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      margin-bottom: 2.5rem;
+      max-width: 540px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .hero-visual {
+      position: absolute;
+      right: 5%;
+      bottom: 10%;
+      width: 38%;
+      max-width: 420px;
+      opacity: 0.9;
+      filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
+      display: none;
+    }
+
+    /* Sections common */
+    section {
+      padding: 5.5rem 0;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 3.5rem;
+    }
+
+    .section-header .label {
+      display: inline-block;
+      color: var(--orange);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-header h2 {
+      font-size: clamp(1.9rem, 4vw, 2.6rem);
+      margin-bottom: 1rem;
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    /* About */
+    .about {
+      background: var(--bg-section);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5rem;
+      align-items: center;
+    }
+
+    .about-text h3 {
+      font-size: 1.6rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .about-text p {
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .about-text p:last-of-type {
+      margin-bottom: 2rem;
+    }
+
+    .about-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: var(--bg-card);
+      padding: 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .feature-item .icon {
+      width: 36px;
+      height: 36px;
+      background: var(--orange-soft);
+      color: var(--orange);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.1rem;
+    }
+
+    .feature-item span {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .about-image {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      aspect-ratio: 4/5;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+
+    .about-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .about-image .overlay-badge {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 1.5rem;
+      background: rgba(13,13,13,0.9);
+      backdrop-filter: blur(8px);
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .about-image .overlay-badge span {
+      color: var(--orange);
+    }
+
+    /* Services */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.75rem;
+    }
+
+    .service-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem 1.75rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--orange);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .service-card:hover {
+      border-color: rgba(255,107,26,0.4);
+      transform: translateY(-6px);
+      box-shadow: var(--shadow);
+    }
+
+    .service-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .service-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--orange-soft);
+      color: var(--orange);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .service-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .service-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .service-card a {
+      color: var(--orange);
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .service-card a:hover {
+      gap: 0.6rem;
+    }
+
+    /* Portfolio */
+    .portfolio {
+      background: var(--bg-section);
+    }
+
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+
+    .project-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .project-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow);
+      border-color: rgba(255,107,26,0.35);
+    }
+
+    .project-image {
+      aspect-ratio: 16/11;
+      background: linear-gradient(135deg, #1a1a1a, #2a1a10);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .project-card:hover .project-image img {
+      transform: scale(1.05);
+    }
+
+    .project-tag {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: rgba(13,13,13,0.85);
+      color: var(--orange);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .project-content {
+      padding: 1.5rem;
+    }
+
+    .project-content h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .project-content p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Process */
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      position: relative;
+    }
+
+    .process-steps::before {
+      content: '';
+      position: absolute;
+      top: 36px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      z-index: 0;
+    }
+
+    .step {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-number {
+      width: 72px;
+      height: 72px;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--orange);
+      transition: all 0.3s ease;
+    }
+
+    .step:hover .step-number {
+      background: var(--orange);
+      color: var(--white);
+      border-color: var(--orange);
+      box-shadow: 0 0 25px rgba(255,107,26,0.4);
+    }
+
+    .step h3 {
+      font-size: 1.15rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .step p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* CTA Banner */
+    .cta-banner {
+      background: linear-gradient(135deg, #1a1008 0%, #0d0d0d 50%, #1a1008 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 4rem 0;
+      text-align: center;
+    }
+
+    .cta-banner h2 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      margin-bottom: 1rem;
+    }
+
+    .cta-banner p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 560px;
+      margin: 0 auto 2rem;
+    }
+
+    /* Contact */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    .contact-info h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .contact-info > p {
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .contact-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .contact-method {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--bg-card);
+      padding: 1.1rem 1.25rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      transition: border-color 0.25s ease;
+    }
+
+    .contact-method:hover {
+      border-color: var(--orange);
+    }
+
+    .contact-method .icon {
+      width: 44px;
+      height: 44px;
+      background: var(--orange-soft);
+      color: var(--orange);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .contact-method .text strong {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .contact-method .text span {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .contact-form {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: var(--text-muted);
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.25s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--orange);
+    }
+
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* Footer */
+    footer {
+      background: #080808;
+      border-top: 1px solid var(--border);
+      padding: 3.5rem 0 2rem;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.5fr;
+      gap: 2.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .footer-brand .logo {
+      margin-bottom: 1rem;
+    }
+
+    .footer-brand p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 280px;
+    }
+
+    .footer-col h4 {
+      font-size: 1rem;
+      margin-bottom: 1.25rem;
+      color: var(--white);
+    }
+
+    .footer-col ul {
+      list-style: none;
+    }
+
+    .footer-col li {
+      margin-bottom: 0.6rem;
+    }
+
+    .footer-col a {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .footer-col a:hover {
+      color: var(--orange);
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .social-btn {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: all 0.25s ease;
+    }
+
+    .social-btn:hover {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: var(--white);
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    /* Mobile */
+    @media (max-width: 900px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 72px;
+        left: 0;
+        right: 0;
+        background: var(--bg-dark);
+        flex-direction: column;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        gap: 1rem;
+      }
+
+      .nav-links.open {
+        display: flex;
+      }
+
+      .menu-toggle {
+        display: block;
+      }
+
+      .nav-cta {
+        display: inline-flex;
+      }
+
+      .about-grid,
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .about-image {
+        order: -1;
+        aspect-ratio: 16/10;
+        max-height: 320px;
+      }
+
+      .process-steps {
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+
+      .process-steps::before {
+        display: none;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .hero-visual {
+        display: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+      section {
+        padding: 4rem 0;
+      }
+
+      .process-steps {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+      }
+
+      .hero-buttons .btn {
+        width: 100%;
+      }
+
+      .about-features {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container nav">
+      <a href="#inicio" class="logo">Hiruda<span>3D</span></a>
+      <nav>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#inicio">Inicio</a></li>
+          <li><a href="#nosotros">Quiénes somos</a></li>
+          <li><a href="#servicios">Servicios</a></li>
+          <li><a href="#trabajos">Trabajos</a></li>
+          <li><a href="#proceso">Proceso</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+        </ul>
+      </nav>
+      <a href="#contacto" class="btn btn-primary nav-cta" style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">Presupuesto</a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menú">☰</button>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero" id="inicio">
+    <div class="container">
+      <div class="hero-content">
+        <span class="hero-badge">✦ Impresión 3D premium en Navarra</span>
+        <h1>Donde la tecnología 3D se encuentra con el <span>acabado artesanal</span></h1>
+        <p>Figuras personalizadas, piezas de gran formato y proyectos especiales con la máxima calidad. En Hiruda 3D unimos precisión digital y cuidado manual para crear piezas que destacan.</p>
+        <div class="hero-buttons">
+          <a href="#contacto" class="btn btn-primary">Solicitar presupuesto</a>
+          <a href="#trabajos" class="btn btn-secondary">Ver trabajos</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiénes somos -->
+  <section class="about" id="nosotros">
+    <div class="container">
+      <div class="section-header">
+        <span class="label">Quiénes somos</span>
+        <h2>Tecnología con alma artesanal</h2>
+        <p>Nacimos de la pasión por la impresión 3D y el respeto por el detalle. En Navarra, cerca de Pamplona y Berriozar, damos vida a ideas que combinan innovación y tradición.</p>
+      </div>
+      <div class="about-grid">
+        <div class="about-text">
+          <h3>Calidad que se nota al tacto y a la vista</h3>
+          <p>En Hiruda 3D no solo imprimimos. Diseñamos, fabricamos, ensamblamos, enmasillamos, lijamos y acabamos cada pieza con un nivel de exigencia que nos define. Trabajamos con filamento PLA de alta calidad y dedicamos el tiempo necesario para que el resultado final sea impecable.</p>
+          <p>Creemos en la unión de lo digital y lo manual: la precisión de la tecnología 3D y el cuidado artesanal del acabado. También nos ilusiona colaborar en proyectos que conectan con nuestra cultura y tradiciones locales, como las manos de los gigantes de Berriozar.</p>
+          <div class="about-features">
+            <div class="feature-item">
+              <div class="icon">🎯</div>
+              <span>Detalle y precisión</span>
+            </div>
+            <div class="feature-item">
+              <div class="icon">✋</div>
+              <span>Acabado a mano</span>
+            </div>
+            <div class="feature-item">
+              <div class="icon">📐</div>
+              <span>Gran formato</span>
+            </div>
+            <div class="feature-item">
+              <div class="icon">❤️</div>
+              <span>Cultura local</span>
+            </div>
+          </div>
+        </div>
+        <div class="about-image">
+          <img src="https://images.unsplash.com/photo-1612810806695-30aa001be5c0?auto=format&fit=crop&w=800&q=80" alt="Pieza 3D de alta calidad con acabado profesional">
+          <div class="overlay-badge">Navarra · <span>Pamplona / Berriozar</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Servicios -->
+  <section id="servicios">
+    <div class="container">
+      <div class="section-header">
+        <span class="label">Servicios</span>
+        <h2>Lo que hacemos por ti</h2>
+        <p>Desde una figura coleccionable personalizada hasta una pieza de gran tamaño para un proyecto especial. Todo con el mismo estándar de calidad.</p>
+      </div>
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-icon">🖨️</div>
+          <h3>Impresión 3D personalizada</h3>
+          <p>Imprimimos en PLA de alta calidad según tu diseño o idea. Prototipos, piezas funcionales o elementos decorativos con acabados limpios y precisos.</p>
+          <a href="#contacto">Pedir presupuesto →</a>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">🎨</div>
+          <h3>Figuras y coleccionables</h3>
+          <p>Figuras impresas y pintadas a mano, barnizadas para proteger el color y el detalle. Ideales para coleccionistas o regalos únicos (como nuestra capibara con gorro de fresa).</p>
+          <a href="#contacto">Encargar figura →</a>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">🏗️</div>
+          <h3>Piezas de gran formato</h3>
+          <p>Impresión por partes, ensamblaje, enmasillado, lijado y acabado profesional. Perfecto para esculturas, moldes o elementos de gran tamaño.</p>
+          <a href="#contacto">Consultar proyecto →</a>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">🤝</div>
+          <h3>Proyectos especiales</h3>
+          <p>Colaboraciones culturales, moldes para tradiciones locales y encargos a medida. Unimos tecnología 3D con el respeto por la cultura y el oficio artesanal.</p>
+          <a href="#contacto">Hablar del proyecto →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Portfolio -->
+  <section class="portfolio" id="trabajos">
+    <div class="container">
+      <div class="section-header">
+        <span class="label">Portfolio</span>
+        <h2>Trabajos que nos enorgullecen</h2>
+        <p>Algunos de los proyectos reales que hemos realizado. Cada uno con su historia, su reto y su acabado profesional.</p>
+      </div>
+      <div class="portfolio-grid">
+        <article class="project-card">
+          <div class="project-image">
+            <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=800&q=80" alt="Manos a gran escala impresas en 3D">
+            <span class="project-tag">Gran formato</span>
+          </div>
+          <div class="project-content">
+            <h3>Manos de los Gigantes de Berriozar</h3>
+            <p>Impresión en PLA a gran escala de las manos para los moldes de los gigantes medianos de Berriozar, en colaboración con Sortuz Taller. Impresión por partes, unión, enmasillado y lijado para un acabado uniforme. Tecnología 3D al servicio de la tradición y la cultura local.</p>
+          </div>
+        </article>
+        <article class="project-card">
+          <div class="project-image">
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80" alt="Figura coleccionable personalizada">
+            <span class="project-tag">Coleccionable</span>
+          </div>
+          <div class="project-content">
+            <h3>Capibara con gorro de fresa</h3>
+            <p>Figura de colección impresa en filamento de alta calidad, pintada a mano con todo el detalle y barnizada para proteger el acabado. Un ejemplo de personalización y cuidado artesanal que convierte una idea simpática en una pieza única.</p>
+          </div>
+        </article>
+        <article class="project-card">
+          <div class="project-image">
+            <img src="https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?auto=format&fit=crop&w=800&q=80" alt="Pieza 3D personalizada con acabado profesional">
+            <span class="project-tag">Personalizado</span>
+          </div>
+          <div class="project-content">
+            <h3>Encargos a medida</h3>
+            <p>Desde prototipos hasta piezas decorativas o funcionales. Cada proyecto empieza con una conversación: entendemos lo que necesitas, proponemos la mejor solución y entregamos un resultado que cumple (y suele superar) las expectativas.</p>
+          </div>
+        </article>
+      </div>
+      <div style="text-align: center; margin-top: 2.5rem;">
+        <a href="https://www.instagram.com/hiruda_3d/" target="_blank" rel="noopener" class="btn btn-outline">Ver más en Instagram</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Proceso -->
+  <section id="proceso">
+    <div class="container">
+      <div class="section-header">
+        <span class="label">Proceso</span>
+        <h2>De la idea a la pieza terminada</h2>
+        <p>Un flujo claro y transparente para que sepas en todo momento en qué punto está tu proyecto.</p>
+      </div>
+      <div class="process-steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Consulta</h3>
+          <p>Nos cuentas tu idea, medidas, uso y plazos. Te orientamos y te damos un presupuesto sin compromiso.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Diseño e impresión</h3>
+          <p>Preparamos o adaptamos el modelo 3D y lo imprimimos en PLA de calidad, por partes si el tamaño lo requiere.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Acabado</h3>
+          <p>Ensamblaje, enmasillado, lijado, pintura a mano y barnizado. El toque artesanal que marca la diferencia.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <h3>Entrega</h3>
+          <p>Revisamos contigo el resultado y te entregamos la pieza lista. En Navarra, con la cercanía que nos caracteriza.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <div class="cta-banner">
+    <div class="container">
+      <h2>¿Tienes un proyecto en mente?</h2>
+      <p>Da igual si es una figura coleccionable, una pieza grande o una colaboración especial. Cuéntanoslo y te respondemos con una propuesta clara.</p>
+      <a href="#contacto" class="btn btn-primary">Solicitar presupuesto</a>
+    </div>
+  </div>
+
+  <!-- Contacto -->
+  <section id="contacto">
+    <div class="container">
+      <div class="section-header">
+        <span class="label">Contacto</span>
+        <h2>Hablemos de tu próxima pieza</h2>
+        <p>Estamos en Navarra, en la zona de Pamplona / Berriozar. Escríbenos o envíanos un WhatsApp. Respondemos con ganas y con detalle.</p>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-info">
+          <h3>Encarga tu pieza personalizada</h3>
+          <p>Figuras, prototipos, gran formato o proyectos culturales. Si buscas calidad, detalle y un trato cercano, estás en el sitio adecuado.</p>
+          <div class="contact-methods">
+            <a href="https://wa.me/34XXXXXXXXX" class="contact-method" target="_blank" rel="noopener">
+              <div class="icon">💬</div>
+              <div class="text">
+                <strong>WhatsApp</strong>
+                <span>Respuesta rápida · Ideal para fotos y dudas</span>
+              </div>
+            </a>
+            <a href="https://www.instagram.com/hiruda_3d/" class="contact-method" target="_blank" rel="noopener">
+              <div class="icon">📷</div>
+              <div class="text">
+                <strong>Instagram @hiruda_3d</strong>
+                <span>Mira nuestros trabajos y escríbenos por DM</span>
+              </div>
+            </a>
+            <div class="contact-method">
+              <div class="icon">📍</div>
+              <div class="text">
+                <strong>Ubicación</strong>
+                <span>Navarra · Zona Pamplona / Berriozar</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <form class="contact-form" id="contactForm" onsubmit="handleSubmit(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">Nombre</label>
+              <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" required placeholder="tu@email.com">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="tipo">Tipo de proyecto</label>
+            <select id="tipo" name="tipo">
+              <option value="">Selecciona una opción</option>
+              <option value="figura">Figura / coleccionable</option>
+              <option value="impresion">Impresión 3D personalizada</option>
+              <option value="gran-formato">Pieza de gran formato</option>
+              <option value="especial">Proyecto especial / colaboración</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="mensaje">Cuéntanos tu idea</label>
+            <textarea id="mensaje" name="mensaje" required placeholder="Describe lo que necesitas: tamaño aproximado, uso, plazos, referencias..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Enviar mensaje</button>
+          <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">O escríbenos directamente por WhatsApp o Instagram para una respuesta más ágil.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#inicio" class="logo">Hiruda<span>3D</span></a>
+          <p>Impresión 3D de alta calidad, figuras personalizadas y proyectos a gran escala. Tecnología con acabado artesanal en Navarra.</p>
+          <div class="footer-social">
+            <a href="https://www.instagram.com/hiruda_3d/" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram">📷</a>
+            <a href="https://wa.me/34XXXXXXXXX" target="_blank" rel="noopener" class="social-btn" aria-label="WhatsApp">💬</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navegación</h4>
+          <ul>
+            <li><a href="#inicio">Inicio</a></li>
+            <li><a href="#nosotros">Quiénes somos</a></li>
+            <li><a href="#servicios">Servicios</a></li>
+            <li><a href="#trabajos">Trabajos</a></li>
+            <li><a href="#proceso">Proceso</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Servicios</h4>
+          <ul>
+            <li><a href="#servicios">Impresión personalizada</a></li>
+            <li><a href="#servicios">Figuras pintadas</a></li>
+            <li><a href="#servicios">Gran formato</a></li>
+            <li><a href="#servicios">Proyectos especiales</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contacto</h4>
+          <ul>
+            <li><a href="https://www.instagram.com/hiruda_3d/" target="_blank" rel="noopener">@hiruda_3d</a></li>
+            <li>Navarra · Pamplona / Berriozar</li>
+            <li><a href="#contacto">Solicitar presupuesto</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Hiruda 3D. Todos los derechos reservados.</span>
+        <span>Hecho con ❤️ y filamento en Navarra</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+    menuToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('open');
+    });
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => navLinks.classList.remove('open'));
+    });
+
+    // Form handler (demo)
+    function handleSubmit(e) {
+      e.preventDefault();
+      const nombre = document.getElementById('nombre').value;
+      alert('¡Gracias, ' + nombre + '! Tu mensaje se ha preparado. En una web real se enviaría por email o a un CRM. Mientras tanto, escríbenos por WhatsApp o Instagram @hiruda_3d para una respuesta más rápida.');
+      e.target.reset();
+    }
+
+    // Smooth active link (optional)
+    const sections = document.querySelectorAll('section[id]');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const top = section.offsetTop - 100;
+        if (scrollY >= top) current = section.getAttribute('id');
+      });
+      document.querySelectorAll('.nav-links a').forEach(a => {
+        a.classList.remove('active');
+        if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
