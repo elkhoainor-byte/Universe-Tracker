@@ -2688,6 +2688,79 @@
       if (m.managersLeft) slot.managersLeft = normalizeManagers([...m.managersLeft]);
       if (m.managersRight) slot.managersRight = normalizeManagers([...m.managersRight]);
     }
+
+    function normalizeManagers(arr) {
+      const filled = (Array.isArray(arr) ? arr : []).filter(Boolean).slice(0, 3);
+      if (filled.length === 0) return [null];
+      if (filled.length < 3) return filled.concat([null]);
+      return filled;
+    }
+
+    function updateSlotManager(idx, side, mIdx, val) {
+      idx = Number(idx);
+      mIdx = Number(mIdx);
+      if (store.todayCard.locked && !isSlotBeingEdited(idx)) return;
+      const slot = store.todayCard.slots[idx];
+      if (!slot) return;
+      if (!Array.isArray(slot.managersLeft)) slot.managersLeft = [null];
+      if (!Array.isArray(slot.managersRight)) slot.managersRight = [null];
+      const arr = side === 'right' ? slot.managersRight : slot.managersLeft;
+      arr[mIdx] = val ? parseInt(val, 10) : null;
+      const filled = arr.filter(Boolean).slice(0, 3);
+      if (filled.length === 0) {
+        if (side === 'right') slot.managersRight = [null];
+        else slot.managersLeft = [null];
+      } else {
+        const next = filled.length < 3 ? filled.concat([null]) : filled;
+        if (side === 'right') slot.managersRight = next;
+        else slot.managersLeft = next;
+      }
+      if (store.todayCard.locked) syncSlotToMatch(slot);
+      saveSlotData();
+    }
+
+    async function getManagerBoxesHTML(slot, slotIdx, available) {
+      if (!slot) return '';
+      try {
+        if (!Array.isArray(slot.managersLeft)) slot.managersLeft = [null];
+        if (!Array.isArray(slot.managersRight)) slot.managersRight = [null];
+        slot.managersLeft = normalizeManagers(slot.managersLeft);
+        slot.managersRight = normalizeManagers(slot.managersRight);
+        const opts = (available || []).map(w => ({ value: w.id, label: w.name }));
+        const imgCache = {};
+        const allIds = [...slot.managersLeft, ...slot.managersRight].filter(Boolean);
+        await Promise.all(allIds.map(async id => {
+          imgCache[id] = await getImageFromDB('wrestler_' + id);
+        }));
+        function photoHTML(id) {
+          if (!id) return `<div class="participant-photo empty" style="width:48px;height:60px;font-size:1.2rem;">👤</div>`;
+          const src = imgCache[id];
+          if (src) return `<img src="${src}" class="participant-photo" style="width:48px;height:60px;" alt="" onerror="this.outerHTML='<div class=\\'participant-photo empty\\' style=\\'width:48px;height:60px;\\'>👤</div>'">`;
+          return `<div class="participant-photo empty" style="width:48px;height:60px;font-size:1.2rem;">👤</div>`;
+        }
+        function sideManagers(side, arr) {
+          let h = `<div class="managers-column managers-${side}">`;
+          h += `<div class="managers-label">👔 Mánagers</div>`;
+          (arr || [null]).forEach((id, i) => {
+            h += `<div class="participant-box participant-with-photo manager-box">
+              ${photoHTML(id)}
+              <label>Mánager ${i + 1}</label>
+              ${buildSelect(opts, id, `updateSlotManager(${slotIdx},'${side}',${i},this.value)`, '-- Ninguno --')}
+            </div>`;
+          });
+          h += `</div>`;
+          return h;
+        }
+        return `<div class="managers-row">
+          ${sideManagers('left', slot.managersLeft)}
+          <div class="managers-gap"></div>
+          ${sideManagers('right', slot.managersRight)}
+        </div>`;
+      } catch (e) {
+        console.error('getManagerBoxesHTML', e);
+        return '';
+      }
+    }
   
     async function renderTodayCard() {
   ensureTodaySlots();
