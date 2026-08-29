@@ -807,6 +807,8 @@
         <input type="text" id="cal-ple-name" placeholder="Ej. Backlash, Royal Rumble..." autocapitalize="words" required>
         <label style="font-size:0.75rem; color:var(--text-dim);">NÚMERO DE PARRILLAS:</label>
         <input type="number" id="cal-ple-parrillas" min="1" max="20" value="7">
+        <label style="font-size:0.75rem; color:var(--text-dim);">PRESUPUESTO DEL SHOW ($):</label>
+        <input type="number" id="show-budget" min="0" step="100000" value="5000000">
         <label style="font-size:0.75rem; color:var(--text-dim);">COLOR REPRESENTATIVO DEL EVENTO:</label>
         <input type="color" id="cal-ple-color" value="#ffd700" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
         <label style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">MARCAS QUE PARTICIPAN EN ESTE PLE:</label>
@@ -1186,9 +1188,9 @@
 
   const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
     let defaultShows = [
-      { id: 'raw', name: 'RAW', color: '#b20710', day: 1, parrillas: 6 },
-      { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2, parrillas: 5 },
-      { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5, parrillas: 6 }
+      { id: 'raw', name: 'RAW', color: '#b20710', day: 1, parrillas: 6, budget: 5000000 },
+      { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2, parrillas: 5, budget: 5000000 },
+      { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5, parrillas: 6, budget: 5000000 }
     ];
   
   function createEmptyStore() {
@@ -1209,7 +1211,10 @@
     if (!store.calendar.ppvs) store.calendar.ppvs = {};
     if (store.calendar.currentDay === undefined) store.calendar.currentDay = 1;
     if (!store.todayCard) store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
-    store.shows.forEach(s => { if (s.parrillas === undefined) s.parrillas = 6; });
+    store.shows.forEach(s => {
+      if (s.parrillas === undefined) s.parrillas = 6;
+      if (s.budget === undefined || s.budget === null || s.budget === '') s.budget = 5000000;
+    });
     
   Object.keys(store.calendar.ppvs).forEach(k => {
     const v = store.calendar.ppvs[k];
@@ -1915,7 +1920,8 @@
       const name = document.getElementById('cal-show-name').value.trim();
       const day = parseInt(document.getElementById('cal-show-day').value);
       const color = document.getElementById('cal-show-color').value;
-      if (selectVal === 'NEW') store.shows.push({ id: 'show_' + Date.now(), name, day, color, parrillas: 6 });
+      if (selectVal === 'NEW')
+        store.shows.push({ id: 'show_' + Date.now(), name, day, color, parrillas: 6, budget: 5000000 });
       else {
         const show = store.shows.find(s => s.id === selectVal);
         if (show) {
@@ -1942,6 +1948,7 @@
         document.getElementById('show-name').value = '';
         document.getElementById('show-day').value = "1";
         document.getElementById('show-parrillas').value = 6;
+        document.getElementById('show-budget').value = 5000000;
         document.getElementById('show-color').value = '#e50914';
         btnDelete.style.display = 'none';
       } else {
@@ -1951,6 +1958,7 @@
         document.getElementById('show-name').value = show.name;
         document.getElementById('show-day').value = show.day || 1;
         document.getElementById('show-parrillas').value = show.parrillas || 6;
+        document.getElementById('show-budget').value = getShowBudget(show);
         document.getElementById('show-color').value = show.color || '#e50914';
         btnDelete.innerText = `Eliminar "${show.name}"?`;
         btnDelete.style.display = 'block';
@@ -1969,18 +1977,22 @@
       const day = parseInt(document.getElementById('show-day').value);
       const parrillas = parseInt(document.getElementById('show-parrillas').value) || 6;
       const color = document.getElementById('show-color').value;
+      let budget = parseInt(document.getElementById('show-budget').value, 10);
+      if (!Number.isFinite(budget) || budget < 0) budget = 5000000;
       const logoFile = document.getElementById('show-logo-file').files[0];
       const bgFile = document.getElementById('show-bg-file').files[0];
       if (activeShowId === null) {
         const newId = 'show_' + Date.now();
         if (logoFile) await saveImageToDB('show_logo_' + newId, await fileToBase64(logoFile));
         if (bgFile) await saveImageToDB('show_bg_' + newId, await fileToBase64(bgFile));
-        store.shows.push({ id: newId, name, day, color, parrillas });
+        store.shows.push({ id: newId, name, day, color, parrillas, budget });
       } else {
         const show = store.shows.find(s => s.id === activeShowId);
         if (show) {
           const oldName = show.name;
-          show.name = name; show.day = day; show.color = color; show.parrillas = parrillas;
+          show.name = name; show.day = day; show.color = color;
+          show.parrillas = parrillas;
+          show.budget = budget;
           if (logoFile) await saveImageToDB('show_logo_' + show.id, await fileToBase64(logoFile));
           if (bgFile) await saveImageToDB('show_bg_' + show.id, await fileToBase64(bgFile));
           if (oldName !== name) store.roster.forEach(r => { if (r.brands) { const idx = r.brands.indexOf(oldName); if (idx !== -1) r.brands[idx] = name; } });
@@ -3163,6 +3175,19 @@
           .map(s => s.matchId)
           .filter(Boolean)
       );
+
+      function formatBudget(n) {
+        const v = Number(n);
+        if (!Number.isFinite(v)) return '5.000.000 $';
+        return v.toLocaleString('es-ES') + ' $';
+      }
+      
+      function getShowBudget(show) {
+        if (!show) return 5000000;
+        const n = Number(show.budget);
+        return Number.isFinite(n) ? Math.round(n) : 5000000;
+      }
+      
       store.matches = store.matches.filter(m => {
         if (matchIdsToRemove.has(m.id)) return false;
         if (m.show === label) return false;
@@ -4114,7 +4139,7 @@
         const dayNames = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
         const logoHTML = logo ? `<img src="${logo}" class="show-logo-img">` : '';
         const bgStyle = bg ? `background-image:url('${bg}');` : '';
-        return `<div class="card" style="${bgStyle}" onclick="openShowModal('${s.id}')"><div class="card-left" style="padding-left:12px;">${logoHTML}<div class="card-info"><span class="card-title">${s.name}</span><span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span></div></div></div>`;
+        return `<div class="card" style="${bgStyle}" onclick="openShowModal('${s.id}')"><div class="card-left" style="padding-left:12px;">${logoHTML}<div class="card-info"><span class="card-title">${s.name}</span><span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span><span class="card-sub" style="color:var(--gold-end);font-weight:700;">💰 ${formatBudget(getShowBudget(s))}</span></div></div></div>`;
       }));
       document.getElementById('list-shows').innerHTML = showCards.length ? showCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay shows.</p>`;
       
