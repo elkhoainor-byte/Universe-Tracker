@@ -888,6 +888,9 @@
           <span id="wrestler-elo-badge" class="wrestler-elo-badge" title="Puntuación ELO">
             ELO <span class="elo-num" id="wrestler-elo-value">1200</span>
           </span>
+          <span id="wrestler-pop-badge" class="wrestler-elo-badge" title="Popularidad">
+            POP <span class="elo-num" id="wrestler-pop-value">50</span>
+          </span>
           <button type="button" class="modal-edit-btn" id="btn-edit-wrestler" style="display:none;" onclick="enterWrestlerEditMode()" title="Editar">✏️</button>
           <button class="modal-close" onclick="closeWrestlerModal()">✕</button>
         </div>
@@ -937,6 +940,8 @@
         <input type="text" id="edit-name" placeholder="Nombre" autocapitalize="words" required>
         <label style="font-size:0.75rem; color:var(--text-dim);">PUNTUACIÓN ELO (base 1200)</label>
         <input type="number" id="edit-elo" min="0" max="9999" step="1" value="1200" placeholder="1200">
+        <label style="font-size:0.75rem; color:var(--text-dim);">POPULARIDAD (0–100, base 50)</label>
+        <input type="number" id="edit-popularity" min="0" max="100" step="1" value="50" placeholder="50">
         <label style="font-size:0.75rem; color:var(--text-dim);">IMAGEN DE FOTO:</label>
         <input type="file" id="edit-image-file" accept="image/*">
         <div class="option-selector-wrapper">
@@ -1259,6 +1264,7 @@
   ];
   
   const DEFAULT_ELO = 1200;
+  const DEFAULT_POPULARITY = 50;
   
   const ELO_K_FACTOR = 32;
   const PROMO_ELO_SCALE = 0.25;
@@ -1315,6 +1321,12 @@
     if (!w) return DEFAULT_ELO;
     const n = Number(w.elo);
     return Number.isFinite(n) ? Math.round(n) : DEFAULT_ELO;
+  }
+
+  function getWrestlerPopularity(w) {
+    if (!w) return DEFAULT_POPULARITY;
+    const n = Number(w.popularity);
+    return Number.isFinite(n) ? Math.round(n) : DEFAULT_POPULARITY;
   }
 
   function eloExpectedScore(eloA, eloB) {
@@ -1561,6 +1573,7 @@
 
   (store.roster || []).forEach(r => {
     if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
+    if (r.popularity === undefined || r.popularity === null || r.popularity === '') r.popularity = DEFAULT_POPULARITY;
   });
 
   if (!store.teams) store.teams = [];
@@ -3247,12 +3260,14 @@
       const editBtn = document.getElementById('btn-edit-wrestler');
       const cancelBtn = document.getElementById('btn-cancel-edit-wrestler');
       const titleEl = document.getElementById('modal-wrestler-title');
+      const popBadge = document.getElementById('wrestler-pop-badge');
       if (mode === 'view') {
         viewPanel.style.display = 'flex';
         form.style.display = 'none';
         if (editBtn) editBtn.style.display = activeWrestlerId ? 'block' : 'none';
         if (cancelBtn) cancelBtn.style.display = 'none';
         if (eloBadge) eloBadge.classList.toggle('visible', !!activeWrestlerId);
+        if (popBadge) popBadge.classList.toggle('visible', !!activeWrestlerId);
       } else if (mode === 'edit') {
         viewPanel.style.display = 'none';
         form.style.display = 'flex';
@@ -3260,6 +3275,7 @@
         if (cancelBtn) cancelBtn.style.display = 'block';
         if (titleEl) titleEl.innerText = 'Editar Luchador';
         if (titleEl) titleEl.classList.remove('ficha-wrestler-name');
+        if (popBadge) popBadge.classList.remove('visible');
         const logosElEdit = document.getElementById('ficha-header-logos');
         if (logosElEdit) logosElEdit.innerHTML = '';
         const modalBoxEdit = document.querySelector('#modal-wrestler .modal-box');
@@ -3303,6 +3319,9 @@
         setWrestlerModalMode('add');
         document.getElementById('edit-name').value = '';
         document.getElementById('edit-elo').value = DEFAULT_ELO;
+        document.getElementById('edit-popularity').value = DEFAULT_POPULARITY;
+        const popVal = document.getElementById('wrestler-pop-value');
+        if (popVal) popVal.textContent = DEFAULT_POPULARITY;
         const eloVal = document.getElementById('wrestler-elo-value');
         if (eloVal) eloVal.textContent = DEFAULT_ELO;
         document.querySelectorAll('#edit-brands-container input').forEach(cb => cb.checked = false);
@@ -3319,6 +3338,10 @@
         document.getElementById('edit-name').value = wrestler.name;
         const elo = getWrestlerElo(wrestler);
         document.getElementById('edit-elo').value = elo;
+        const pop = getWrestlerPopularity(wrestler);
+        document.getElementById('edit-popularity').value = pop;
+        const popVal = document.getElementById('wrestler-pop-value');
+        if (popVal) popVal.textContent = pop;
         const eloVal = document.getElementById('wrestler-elo-value');
         if (eloVal) eloVal.textContent = elo;
         const wrestlerBrands = wrestler.brands || (wrestler.brand ? [wrestler.brand] : []);
@@ -3431,6 +3454,10 @@
         tagsHTML += `<span class="tag" style="background:${showObj ? showObj.color : '#555'}; color:#fff;">${b}</span>`;
         const eloVal = document.getElementById('wrestler-elo-value');
       if (eloVal) eloVal.textContent = getWrestlerElo(wrestler);
+        const popVal = document.getElementById('wrestler-pop-value');
+        if (popVal) popVal.textContent = getWrestlerPopularity(wrestler);
+        const popBadge = document.getElementById('wrestler-pop-badge');
+        if (popBadge && wrestlerModalMode === 'view') popBadge.classList.add('visible');
       const eloBadge = document.getElementById('wrestler-elo-badge');
       if (eloBadge && wrestlerModalMode === 'view') eloBadge.classList.add('visible');
       });
@@ -3527,6 +3554,9 @@
       let elo = parseInt(document.getElementById('edit-elo').value, 10);
       if (!Number.isFinite(elo)) elo = DEFAULT_ELO;
       elo = Math.max(0, Math.min(9999, elo));
+      let popularity = parseInt(document.getElementById('edit-popularity').value, 10);
+      if (!Number.isFinite(popularity)) popularity = DEFAULT_POPULARITY;
+      popularity = Math.max(0, Math.min(100, popularity));
       const brands = Array.from(document.querySelectorAll('#edit-brands-container input:checked')).map(cb => cb.value);
       const alignment = getRadioValue('edit-alignment') || 'Face';
       const gender = getRadioValue('edit-gender') || 'Men';
@@ -3538,7 +3568,7 @@
       if (activeWrestlerId === null) {
         const newId = Date.now();
         if (fileInput.files[0]) await saveImageToDB('wrestler_' + newId, await fileToBase64(fileInput.files[0]));
-        store.roster.push({ id: newId, name, brands, alignment, gender, division, teamId, elo });
+        store.roster.push({ id: newId, name, brands, alignment, gender, division, teamId, elo, popularity });
         if (teamId) {
           const team = store.teams.find(t => t.id === teamId);
           if (team) {
@@ -3561,6 +3591,7 @@
           wrestler.division = division;
           wrestler.teamId = teamId;
           wrestler.elo = elo;
+          wrestler.popularity = popularity;
 
           if (oldTeamId && oldTeamId !== teamId) {
             const oldTeam = store.teams.find(t => t.id === oldTeamId);
