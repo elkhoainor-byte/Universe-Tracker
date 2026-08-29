@@ -1328,6 +1328,18 @@
     return Number.isFinite(n) ? Math.round(n) : DEFAULT_ELO;
   }
 
+  function formatBudget(n) {
+    const v = Number(n);
+    if (!Number.isFinite(v)) return '5.000.000 $';
+    return v.toLocaleString('es-ES') + ' $';
+  }
+
+  function getShowBudget(show) {
+    if (!show) return 5000000;
+    const n = Number(show.budget);
+    return Number.isFinite(n) ? Math.round(n) : 5000000;
+  }
+
   function getWrestlerPopularity(w) {
     if (!w) return DEFAULT_POPULARITY;
     const n = Number(w.popularity);
@@ -3175,18 +3187,6 @@
           .map(s => s.matchId)
           .filter(Boolean)
       );
-
-      function formatBudget(n) {
-        const v = Number(n);
-        if (!Number.isFinite(v)) return '5.000.000 $';
-        return v.toLocaleString('es-ES') + ' $';
-      }
-
-      function getShowBudget(show) {
-        if (!show) return 5000000;
-        const n = Number(show.budget);
-        return Number.isFinite(n) ? Math.round(n) : 5000000;
-      }
       
       store.matches = store.matches.filter(m => {
         if (matchIdsToRemove.has(m.id)) return false;
