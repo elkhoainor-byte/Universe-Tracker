@@ -2044,7 +2044,7 @@ async function openWeeklySummary(forUniverseDay) {
 
   // Rating del show (esquina superior derecha)
   const showRatingEl = document.getElementById('past-show-rating');
-  const showRating = calculateShowRating(matches);
+  const showRating = (typeof calculateShowRating === 'function') ? calculateShowRating(matches) : null;
   if (showRatingEl) {
     if (showRating != null) {
       showRatingEl.style.display = 'inline-flex';
@@ -2062,7 +2062,7 @@ async function openWeeklySummary(forUniverseDay) {
     return;
   }
 
-  const cards = await Promise.all(matches.map(async m => {
+  const cards = await Promise.all(matches.map(async (m) => {
     if (m.inactivityPenalty || m.winner === 'Inactividad') {
       return `<div class="past-promo-card">${m.card || '⏸ Sin participación'}</div>`;
     }
@@ -2070,13 +2070,25 @@ async function openWeeklySummary(forUniverseDay) {
       return `<div class="past-promo-card">${m.card || '🎤 Segmento de promo'}</div>`;
     }
 
-    const rating = (typeof m.rating === 'number') ? m.rating : calculateMatchRating(m);
+    const rating = (typeof m.rating === 'number')
+      ? m.rating
+      : (typeof calculateMatchRating === 'function' ? calculateMatchRating(m) : null);
     const ratingBadge = rating != null
       ? `<div class="past-match-rating">${starsHTML(rating)}</div>`
       : '';
 
-    const parts = m.participants || [];
-    const { left, right } = splitSides(parts, m.matchType, m.subType, m.winner);
+    const parts = (m.participants || []).filter(Boolean);
+    const sides = splitSides(parts, m.matchType, m.subType, m.winner);
+    let left = sides.left || [];
+    let right = sides.right || [];
+
+    // Fallback si no es combate por equipos
+    if (!left.length && !right.length && parts.length) {
+      const mid = Math.ceil(parts.length / 2);
+      left = parts.slice(0, mid);
+      right = parts.slice(mid);
+    }
+
     const winnerName = m.winner || '';
     const isTeam = isTeamBasedMatch(m.matchType, m.subType);
     let winningSideIds = [];
@@ -2084,51 +2096,66 @@ async function openWeeklySummary(forUniverseDay) {
       const winnerW = store.roster.find(r => r.name === winnerName);
       if (winnerW) {
         if (isTeam) {
-          if (left.includes(winnerW.id)) winningSideIds = left;
-          else if (right.includes(winnerW.id)) winningSideIds = right;
-        } else winningSideIds = [winnerW.id];
+          if (left.some(id => Number(id) === Number(winnerW.id))) winningSideIds = left;
+          else if (right.some(id => Number(id) === Number(winnerW.id))) winningSideIds = right;
+        } else {
+          winningSideIds = [winnerW.id];
+        }
       }
     }
 
     async function sideHTML(ids, sideClass) {
-      const wraps = await Promise.all(ids.map(async id => {
-        const w = store.roster.find(r => r.id == id);
+      const list = (ids || []).filter(Boolean);
+      const wraps = await Promise.all(list.map(async (id) => {
+        const w = store.roster.find(r => Number(r.id) === Number(id));
         const name = w ? w.name : '?';
         const img = w ? await getImageFromDB('wrestler_' + w.id) : null;
-        const isWinner = winningSideIds.includes(Number(id)) || winningSideIds.includes(id);
+        const isWinner = winningSideIds.some(x => Number(x) === Number(id));
         const imgTag = img
-          ? `<img src="${img}" class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" alt="">`
+          ? `<img src="${img}" class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" alt="${name}">`
           : `<div class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;">👤</div>`;
-        return `<div class="past-wrestler-wrap">${imgTag}${isWinner ? '<span class="past-winner-label">WIN</span>' : ''}<span class="past-wrestler-name">${name}</span></div>`;
+        return `<div class="past-wrestler-wrap">${isWinner ? '<span class="past-winner-label">GANADOR</span>' : '<span style="height:16px;"></span>'}${imgTag}<span class="past-wrestler-name">${name}</span></div>`;
       }));
       return `<div class="past-side ${sideClass}"><div class="past-side-imgs">${wraps.join('')}</div></div>`;
     }
 
-    const leftIds = left.length ? left : parts.slice(0, Math.ceil(parts.length / 2));
-    const rightIds = right.length ? right : parts.slice(Math.ceil(parts.length / 2));
-    const leftH = await sideHTML(leftIds, 'left');
-    const rightH = await sideHTML(rightIds, 'right');
-    const typeLine = [m.matchType, m.subType].filter(Boolean).join(' · ');
-    const titleLine = (m.isTitleMatch && m.titleId)
-      ? (() => {
-          const t = store.titles.find(x => x.id === m.titleId);
-          return t ? `<span class="past-match-title-gold">🏆 ${t.name}</span>` : '';
-        })()
-      : '';
+    const leftH = await sideHTML(left, 'left');
+    const rightH = await sideHTML(right, 'right');
+
+    let typeLine = [m.matchType, m.subType].filter(Boolean).join(' · ');
+    if (m.matchType === '3 Stages of Hell' && m.stages) {
+      const st = (m.stages || []).filter(Boolean).join(' → ');
+      if (st) typeLine += (typeLine ? ' · ' : '') + st;
+    }
+
+    let titleGold = '';
+    if (m.titleId) {
+      const t = store.titles.find(tt => tt.id === m.titleId);
+      if (t) titleGold = `<span class="past-match-title-gold">🏆 ${t.name}</span>`;
+    }
+
+    let namesLine = m.card || winnerName || '';
+    if (typeof formatMatchSummary === 'function') {
+      const nameList = parts.map(id => {
+        const w = store.roster.find(r => Number(r.id) === Number(id));
+        return w ? w.name : '?';
+      });
+      namesLine = formatMatchSummary(nameList, m.matchType, m.subType) || namesLine;
+    }
 
     return `
       <div class="past-match-card">
         ${ratingBadge}
         <div class="past-match-header">
           <div class="past-match-type">${typeLine || 'Combate'}</div>
-          ${titleLine}
+          ${titleGold}
         </div>
         <div class="past-match-body">
           ${leftH}
           <div class="past-vs"><span class="past-vs-text">VS</span></div>
           ${rightH}
         </div>
-        <div class="past-match-names">${m.card || winnerName || ''}</div>
+        <div class="past-match-names">${namesLine}</div>
       </div>`;
   }));
 
