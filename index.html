@@ -69,7 +69,7 @@
     .card > * { position: relative; z-index: 2; }
     #list-roster .card { height: 110px; min-height: 110px; max-height: 110px; background-size: cover; background-position: center; background-repeat: no-repeat; }
     #list-roster .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 1; }
-    #list-shows .card { height: 130px; min-height: 130px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
+    #list-shows .card { height: 150px; min-height: 150px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
     .show-rank { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); z-index: 3; min-width: 36px; height: 36px; padding: 0 8px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; color: #fff; background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.25); text-shadow: 0 1px 2px rgba(0,0,0,0.8); pointer-events: none; }
     #list-shows .card.podium-1 .show-rank { background: linear-gradient(145deg, #ffd700, #b8860b); color: #1a1a1a; border-color: #ffe566; }
     #list-shows .card.podium-2 .show-rank { background: linear-gradient(145deg, #e8e8e8, #9e9e9e); color: #1a1a1a; border-color: #f5f5f5; }
@@ -1385,14 +1385,165 @@
   return (viewers * 0.925) + (budget * 0.075);
 }
 
-function getShowsRankedByScore() {
-  return (store.shows || [])
-    .map(s => ({ id: s.id, score: getShowScore(s) }))
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return String(a.id).localeCompare(String(b.id));
-    });
+  function getBrandModifier(show) {
+  if (!show) return 0;
+  // Ajuste fino por marca (puedes cambiarlo luego)
+  const name = String(show.name || '').toLowerCase();
+  if (name.includes('raw')) return 0.3;
+  if (name.includes('smack')) return 0.25;
+  if (name.includes('nxt')) return 0.1;
+  return 0.15;
 }
+
+/** Bonus de promos: 0 – 0.15 según POP media y si hay provocación */
+function calcPromoBonusFromSlot(slot) {
+  if (!slot || slot.type !== 'promo') return 0;
+  const parts = (slot.participants || []).filter(Boolean);
+  if (!parts.length) return 0.02;
+
+  let popSum = 0, n = 0;
+  parts.forEach(id => {
+    const w = store.roster.find(r => Number(r.id) === Number(id));
+    if (!w) return;
+    popSum += getWrestlerPopularity(w);
+    n++;
+  });
+  const avgPop = n ? popSum / n : 50;
+  // Base 0.05–0.12 por popularidad
+  let bonus = 0.05 + (avgPop / 99) * 0.07;
+  // Provocación con ganador = un poco más (rivalidad)
+  if (slot.promoType === 'provocacion' && slot.promoWinner) bonus += 0.03;
+  return Math.min(0.15, bonus);
+}
+
+/**
+ * Calidad del show (0–5★) a partir de los slots de la cartelera.
+ * Opening 20% · Midcard reparte 30% · Main Event 50% · + bonus promos
+ */
+function calculateCardShowQuality(slots) {
+  const list = slots || [];
+  const matchSlots = [];
+  let promoBonus = 0;
+
+  list.forEach((slot, idx) => {
+    if (!slot) return;
+    if (slot.type === 'promo') {
+      promoBonus += calcPromoBonusFromSlot(slot);
+      return;
+    }
+    if (slot.type !== 'match' || !slot.matchType) return;
+
+    // Rating del combate (ya guardado en el match o calculado)
+    let rating = null;
+    if (slot.matchId) {
+      const m = store.matches.find(x => x.id === slot.matchId);
+      if (m) {
+        if (typeof m.rating === 'number') rating = m.rating;
+        else if (typeof calculateMatchRating === 'function') rating = calculateMatchRating(m);
+      }
+    }
+    if (rating == null) {
+      // Fallback: intentar con datos del slot
+      const fake = {
+        participants: (slot.participants || []).filter(Boolean),
+        matchType: slot.matchType,
+        subType: slot.subType,
+        winner: slot.winner,
+        titleId: slot.isTitleMatch ? slot.titleId : null,
+        isTitleMatch: !!slot.isTitleMatch
+      };
+      rating = typeof calculateMatchRating === 'function' ? calculateMatchRating(fake) : 2.5;
+    }
+    if (rating == null) rating = 2.5;
+    matchSlots.push({ idx, rating: clampStars(rating) });
+  });
+
+  if (!matchSlots.length) {
+    // Solo promos / vacío
+    return clampStars(Math.min(5, 1.5 + promoBonus * 2));
+  }
+
+  const n = matchSlots.length;
+  let quality = 0;
+
+  if (n === 1) {
+    // Un solo combate = main event
+    quality = matchSlots[0].rating;
+  } else if (n === 2) {
+    // Opening 30% + Main 70% (aprox. 20/50 normalizado)
+    quality = matchSlots[0].rating * 0.30 + matchSlots[1].rating * 0.70;
+  } else {
+    const open = matchSlots[0].rating;
+    const main = matchSlots[n - 1].rating;
+    const mids = matchSlots.slice(1, n - 1);
+    const midAvg = mids.reduce((s, x) => s + x.rating, 0) / mids.length;
+    // Opening 20% · Mid 30% · Main 50%
+    quality = open * 0.20 + midAvg * 0.30 + main * 0.50;
+  }
+
+  // Bonus promos (tope ~0.15–0.25 total)
+  promoBonus = Math.min(0.25, promoBonus);
+  quality = Math.min(5, quality + promoBonus);
+  return clampStars(quality);
+}
+
+function calculateTvRating(showQuality, show) {
+  const q = Number(showQuality) || 0;
+  return Math.round((q * 1.6 + getBrandModifier(show)) * 100) / 100;
+}
+
+/**
+ * Nueva audiencia a partir de la base actual y la calidad del show.
+ * Audiencia = Base × (0.7 + (Quality/5) × 0.6)
+ * 1★ ≈ 82% · 2.5★ = 100% · 5★ = 130%
+ */
+function calculateNewViewers(baseViewers, showQuality) {
+  const base = Math.max(0, Number(baseViewers) || 5000000);
+  const q = Math.max(0, Math.min(5, Number(showQuality) || 0));
+  const factor = 0.7 + (q / 5) * 0.6;
+  return Math.max(0, Math.round(base * factor));
+}
+
+/**
+ * Aplica variabilidad de espectadores al show de la cartelera finalizada.
+ * Solo shows semanales (no PLE), salvo que quieras ampliarlo después.
+ */
+function applyWeeklyViewersVariation(event) {
+  if (!event || event.type === 'ple') return null; // PLEs: no tocan base de marca semanal
+  if (!event.name) return null;
+
+  const show = (store.shows || []).find(s => s.name === event.name);
+  if (!show) return null;
+
+  const slots = (store.todayCard && store.todayCard.slots) ? store.todayCard.slots : [];
+  const quality = calculateCardShowQuality(slots);
+  const tvRating = calculateTvRating(quality, show);
+  const base = getShowViewers(show);
+  const newViewers = calculateNewViewers(base, quality);
+
+  show.viewers = newViewers;
+  show.lastShowQuality = quality;
+  show.lastTvRating = tvRating;
+  show.lastViewersDelta = newViewers - base;
+
+  return {
+    showName: show.name,
+    quality,
+    tvRating,
+    base,
+    newViewers,
+    delta: newViewers - base
+  };
+}
+  
+  function getShowsRankedByScore() {
+    return (store.shows || [])
+      .map(s => ({ id: s.id, score: getShowScore(s) }))
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return String(a.id).localeCompare(String(b.id));
+      });
+  }
 
 function getShowPosition(showId) {
   const ranked = getShowsRankedByScore();
@@ -3736,11 +3887,25 @@ function closePastEventModal() {
         store.matches.push(match);
         applyEloForMatch(match);
       }
-      
-      store.todayCard.locked = true;
-      editingSlotIndex = null;
-      saveData();
-      renderTodayCard();
+        // Variabilidad semanal de espectadores (calidad del show → audiencia)
+  try {
+    const viewerResult = applyWeeklyViewersVariation(event);
+    if (viewerResult) {
+      console.log(
+        `[Audiencia] ${viewerResult.showName}: ` +
+        `${viewerResult.quality.toFixed(1)}★ · Rating ${viewerResult.tvRating} · ` +
+        `${viewerResult.base.toLocaleString('es-ES')} → ${viewerResult.newViewers.toLocaleString('es-ES')} ` +
+        `(${viewerResult.delta >= 0 ? '+' : ''}${viewerResult.delta.toLocaleString('es-ES')})`
+      );
+    }
+  } catch (err) {
+    console.error('applyWeeklyViewersVariation', err);
+  }
+
+  store.todayCard.locked = true;
+  editingSlotIndex = null;
+  saveData();
+  renderTodayCard();
     }
     
     function goToNextShow() {
@@ -4777,6 +4942,7 @@ const showCards = await Promise.all(showsOrdered.map(async s => {
               <span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span>
               <span class="card-sub" style="color:var(--gold-end);font-weight:700;">💰 ${formatBudget(getShowBudget(s))}</span>
               <span class="card-sub" style="color:#64b5f6;font-weight:700;">👁 ${formatViewers(getShowViewers(s))} espectadores</span>
+              ${(typeof s.lastShowQuality === 'number') ? `<span class="card-sub" style="color:#ce93d8;font-weight:700;">★ ${Number(s.lastShowQuality).toFixed(1)} · TV ${Number(s.lastTvRating || 0).toFixed(1)}${(typeof s.lastViewersDelta === 'number' && s.lastViewersDelta !== 0) ? ` · ${s.lastViewersDelta > 0 ? '▲' : '▼'}${formatViewers(Math.abs(s.lastViewersDelta))}` : ''}</span>` : ''}
             </div>
           </div>
         </div>`;
