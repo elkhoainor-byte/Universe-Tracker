@@ -552,6 +552,10 @@
       opacity: 0.92;
       background: #1a1a1a;
     }
+    .title-type-badge { display: inline-block; font-size: 0.62rem; font-weight: 900; padding: 2px 7px; border-radius: 10px; letter-spacing: 0.4px; text-transform: uppercase; margin-top: 2px; margin-left: 4px; }
+    .title-type-major { background: linear-gradient(90deg, #ffd700, #ffec8b); color: #1a1a1a; }
+    .title-type-minor { background: #455a64; color: #eceff1; }
+    .title-type-tag { background: #ff9800; color: #000; }
   </style>
 </head>
 <body>
@@ -749,8 +753,9 @@
         <input type="text" id="title-name-input" placeholder="Ej. WWE Championship..." autocapitalize="words" required>
         <label style="font-size:0.75rem; color:var(--text-dim);">TIPO DE TÍTULO</label>
         <select id="title-type-select" onchange="onTitleTypeChange()">
-          <option value="individual">Individual (1 Campeón)</option>
-          <option value="tag">Por Parejas / Tag Team (2 Campeones)</option>
+          <option value="major">Campeonato mayor (1 campeón)</option>
+          <option value="minor">Campeonato menor (1 campeón)</option>
+          <option value="tag">Por parejas (2 campeones)</option>
         </select>
         <label style="font-size:0.75rem; color:var(--text-dim);">CAMPEÓN 1 (DEL ROSTER) — deja vacío para Vacante</label>
         <select id="title-champ1-select"><option value="">-- Vacante / Ninguno --</option></select>
@@ -1214,6 +1219,10 @@
     store.shows.forEach(s => {
       if (s.parrillas === undefined) s.parrillas = 6;
       if (s.budget === undefined || s.budget === null || s.budget === '') s.budget = 5000000;
+      (store.titles || []).forEach(t => {
+        if (!t.type || t.type === 'individual') t.type = 'major';
+        if (t.type !== 'major' && t.type !== 'minor' && t.type !== 'tag') t.type = 'major';
+      });  
     });
     
   Object.keys(store.calendar.ppvs).forEach(k => {
@@ -2140,7 +2149,7 @@
       if (id === null) {
         document.getElementById('modal-title-header').innerText = 'Añadir Campeonato';
         document.getElementById('title-name-input').value = '';
-        document.getElementById('title-type-select').value = 'individual';
+        document.getElementById('title-type-select').value = 'major';
         onTitleTypeChange();
         document.getElementById('title-champ1-select').value = '';
         document.getElementById('title-champ2-select').value = '';
@@ -2152,7 +2161,8 @@
         if (!title) return;
         document.getElementById('modal-title-header').innerText = 'Editar Campeonato';
         document.getElementById('title-name-input').value = title.name;
-        document.getElementById('title-type-select').value = title.type || 'individual';
+        const tType = (title.type === 'tag') ? 'tag' : (title.type === 'minor' ? 'minor' : 'major');
+        document.getElementById('title-type-select').value = tType;
         onTitleTypeChange();
         document.getElementById('title-champ1-select').value = title.champions[0] || '';
         document.getElementById('title-champ2-select').value = title.champions[1] || '';
@@ -4224,8 +4234,11 @@
         }));
         const days = Math.max(0, currentDays - (t.reignStartDay || 0));
         const badge = t.isInaugural ? `<span class="title-inaugural-badge">INAUGURAL</span>` : '';
+        const typeKey = t.type === 'tag' ? 'tag' : (t.type === 'minor' ? 'minor' : 'major');
+        const typeLabel = typeKey === 'tag' ? 'PAREJAS' : (typeKey === 'minor' ? 'MENOR' : 'MAYOR');
+        const typeBadge = `<span class="title-type-badge title-type-${typeKey}">${typeLabel}</span>`;
         return `<div class="title-card" onclick="openTitleModal(${t.id})"><div class="title-card-left">${titleImgHTML}<div class="title-card-champs-avatars">${avatars.join('')}</div>
-          <div class="card-info"><span class="card-title">${t.name}</span><span class="card-sub">🏆 ${champsNames}</span>${badge}</div></div>
+          <div class="card-info"><span class="card-title">${t.name}</span><span class="card-sub">🏆 ${champsNames}</span>${badge}${typeBadge}</div></div>
           <div class="title-card-days-counter"><span class="title-card-days-num">${days}</span><span class="title-card-days-label">DÍAS</span></div></div>`;
       }));
       document.getElementById('list-titles').innerHTML = titleCards.length ? titleCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay campeonatos.</p>`;
