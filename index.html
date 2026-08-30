@@ -1205,9 +1205,9 @@
 
   const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
     let defaultShows = [
-      { id: 'raw', name: 'RAW', color: '#b20710', day: 1, parrillas: 6, budget: 5000000 },
-      { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2, parrillas: 5, budget: 5000000 },
-      { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5, parrillas: 6, budget: 5000000 }
+      { id: 'raw', name: 'RAW', color: '#b20710', day: 1, parrillas: 6, budget: 5000000, viewers: 5000000 },
+      { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2, parrillas: 5, budget: 5000000, viewers: 5000000 },
+      { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5, parrillas: 6, budget: 5000000, viewers: 5000000 }
     ];
   
   function createEmptyStore() {
@@ -1228,14 +1228,15 @@
     if (!store.calendar.ppvs) store.calendar.ppvs = {};
     if (store.calendar.currentDay === undefined) store.calendar.currentDay = 1;
     if (!store.todayCard) store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
-    store.shows.forEach(s => {
-      if (s.parrillas === undefined) s.parrillas = 6;
-      if (s.budget === undefined || s.budget === null || s.budget === '') s.budget = 5000000;
-      (store.titles || []).forEach(t => {
-        if (!t.type || t.type === 'individual') t.type = 'major';
-        if (t.type !== 'major' && t.type !== 'minor' && t.type !== 'tag') t.type = 'major';
-      });  
-    });
+  store.shows.forEach(s => {
+    if (s.parrillas === undefined) s.parrillas = 6;
+    if (s.budget === undefined || s.budget === null || s.budget === '') s.budget = 5000000;
+    if (s.viewers === undefined || s.viewers === null || s.viewers === '') s.viewers = 5000000;
+    (store.titles || []).forEach(t => {
+      if (!t.type || t.type === 'individual') t.type = 'major';
+      if (t.type !== 'major' && t.type !== 'minor' && t.type !== 'tag') t.type = 'major';
+    });  
+  });
     
   Object.keys(store.calendar.ppvs).forEach(k => {
     const v = store.calendar.ppvs[k];
@@ -1359,6 +1360,18 @@
     if (!show) return 5000000;
     const n = Number(show.budget);
     return Number.isFinite(n) ? Math.round(n) : 5000000;
+  }
+
+  function getShowViewers(show) {
+    if (!show) return 5000000;
+    const n = Number(show.viewers);
+    return Number.isFinite(n) ? Math.round(n) : 5000000;
+  }
+
+  function formatViewers(n) {
+    const v = Number(n);
+    if (!Number.isFinite(v)) return '5.000.000';
+    return v.toLocaleString('es-ES');
   }
 
   function getWrestlerPopularity(w) {
@@ -1754,222 +1767,225 @@ function calculateShowRating(matches, totalParrillas) {
     }
   }
   
-  function applyEloForMatch(match) {
-    if (!match) return;
-    if (match.eloApplied) return;
-    if (match.inactivityPenalty || match.winner === 'Inactividad') {
-      const parts = (match.participants || []).filter(Boolean);
-      parts.forEach(id => {
-        const w = store.roster.find(r => r.id === id);
-        if (!w) return;
-        const my = getWrestlerElo(w);
-        const delta = -ELO_ABSENCE_PENALTY;
-        setWrestlerElo(id, my + delta, delta);
-      });
-      match.eloApplied = true;
-      applyPopularityForPromo(match);
-      return;
-    }
+  function applyEloForMatch(match, opts) {
+  if (!match) return;
+  if (match.eloApplied) return;
+  const doPop = !opts || opts.applyPop !== false;
 
-    if (match.winner === 'Promo' || match.promoType) {
-      const parts = (match.participants || []).filter(Boolean);
-      if (match.promoType === 'autobombo') {
-        if (parts.length < 1) return;
-        const id = parts[0];
-        const w = store.roster.find(r => r.id === id);
-        if (!w) return;
-        const my = getWrestlerElo(w);
-        const delta = PROMO_AUTOBOMBO_GAIN;
-        setWrestlerElo(id, my + delta, delta);
-        match.eloApplied = true;
-        applyPopularityForInactivity(match);
-        return;
-      }
-      if (match.promoType === 'provocacion') {
-        if (parts.length < 2) return;
-        if (!match.promoWinner || match.promoWinner === 'Pendiente') return;
-        const a = store.roster.find(r => r.id === parts[0]);
-        const b = store.roster.find(r => r.id === parts[1]);
-        if (!a || !b) return;
-        const eloA = getWrestlerElo(a);
-        const eloB = getWrestlerElo(b);
-        const aWins = match.promoWinner === a.name;
-        const bWins = match.promoWinner === b.name;
-        if (!aWins && !bWins) return;
-        if (aWins) {
-          const full = calcEloDelta(eloA, eloB, 1);
-          const delta = Math.round(full * PROMO_ELO_SCALE) || (full > 0 ? 1 : 0);
-          setWrestlerElo(a.id, eloA + delta, delta);
-          setWrestlerElo(b.id, eloB - delta, -delta);
-        } else {
-          const full = calcEloDelta(eloB, eloA, 1);
-          const delta = Math.round(full * PROMO_ELO_SCALE) || (full > 0 ? 1 : 0);
-          setWrestlerElo(b.id, eloB + delta, delta);
-          setWrestlerElo(a.id, eloA - delta, -delta);
-        }
-        match.eloApplied = true;
-        applyPopularityForPromo(match);
-        return;
-      }
-      return;
-    }
-
-    if (!match.winner || match.winner === 'Pendiente') return;
-
+  // --- Inactividad ---
+  if (match.inactivityPenalty || match.winner === 'Inactividad') {
     const parts = (match.participants || []).filter(Boolean);
-    if (parts.length < 2) return;
-
-    const isDraw = match.winner === 'Empate';
-    const isTeam = isTeamBasedMatch(match.matchType, match.subType);
-
-    function avgElo(ids) {
-      const elos = ids.map(id => {
-        const w = store.roster.find(r => r.id === id);
-        return getWrestlerElo(w);
-      });
-      if (!elos.length) return DEFAULT_ELO;
-      return elos.reduce((a, b) => a + b, 0) / elos.length;
-    }
-
-    const wrestlerDeltas = {};
-
-    if (isTeam) {
-      const { left, right } = splitSides(parts, match.matchType, match.subType, isDraw ? null : match.winner);
-      if (!left.length || !right.length) return;
-
-      const avgL = avgElo(left);
-      const avgR = avgElo(right);
-
-      let scoreLeft = 0.5;
-      if (!isDraw) {
-        const winnerW = store.roster.find(r => r.name === match.winner);
-        if (!winnerW) return;
-        if (left.includes(winnerW.id)) scoreLeft = 1;
-        else if (right.includes(winnerW.id)) scoreLeft = 0;
-        else return;
-      }
-      const scoreRight = isDraw ? 0.5 : (1 - scoreLeft);
-
-      left.forEach(id => {
-        const w = store.roster.find(r => r.id === id);
-        if (!w) return;
-        const my = getWrestlerElo(w);
-        wrestlerDeltas[id] = calcEloDelta(my, avgR, scoreLeft);
-      });
-      right.forEach(id => {
-        const w = store.roster.find(r => r.id === id);
-        if (!w) return;
-        const my = getWrestlerElo(w);
-        wrestlerDeltas[id] = calcEloDelta(my, avgL, scoreRight);
-      });
-    } else {
-      if (isDraw) {
-        parts.forEach(id => {
-          const others = parts.filter(x => x !== id);
-          const w = store.roster.find(r => r.id === id);
-          if (!w || !others.length) return;
-          const my = getWrestlerElo(w);
-          wrestlerDeltas[id] = calcEloDelta(my, avgElo(others), 0.5);
-        });
-      } else {
-        const winnerW = store.roster.find(r => r.name === match.winner);
-        if (!winnerW || !parts.includes(winnerW.id)) return;
-        const losers = parts.filter(id => id !== winnerW.id);
-        if (!losers.length) return;
-
-        const winElo = getWrestlerElo(winnerW);
-        let totalGain = 0;
-        losers.forEach(id => {
-          const w = store.roster.find(r => r.id === id);
-          if (!w) return;
-          const theirElo = getWrestlerElo(w);
-          const delta = calcEloDelta(winElo, theirElo, 1);
-          totalGain += delta;
-          wrestlerDeltas[id] = -delta;
-        });
-        wrestlerDeltas[winnerW.id] = totalGain;
-      }
-    }
-
-    const { left: leftIds, right: rightIds } = splitSides(
-      parts,
-      match.matchType,
-      match.subType,
-      isDraw ? null : match.winner
-    );
-    const mgrLeft = (match.managersLeft || []).filter(Boolean);
-    const mgrRight = (match.managersRight || []).filter(Boolean);
-    const leftHasMgr = mgrLeft.length > 0;
-    const rightHasMgr = mgrRight.length > 0;
-
-    const bothHaveMgr = leftHasMgr && rightHasMgr;
-    const leftFactor = (leftHasMgr && !bothHaveMgr) ? (1 - MANAGER_ELO_SHARE) : 1;
-    const rightFactor = (rightHasMgr && !bothHaveMgr) ? (1 - MANAGER_ELO_SHARE) : 1;
-
-    function sumSideDelta(ids) {
-      return ids.reduce((s, id) => s + (wrestlerDeltas[id] || 0), 0);
-    }
-
-    leftIds.forEach(id => {
-      const full = wrestlerDeltas[id];
-      if (full === undefined) return;
-      const w = store.roster.find(r => r.id === id);
-      if (!w) return;
-      const applied = Math.round(full * leftFactor);
-      setWrestlerElo(id, getWrestlerElo(w) + applied, applied);
-    });
-    rightIds.forEach(id => {
-      const full = wrestlerDeltas[id];
-      if (full === undefined) return;
-      const w = store.roster.find(r => r.id === id);
-      if (!w) return;
-      const applied = Math.round(full * rightFactor);
-      setWrestlerElo(id, getWrestlerElo(w) + applied, applied);
-    });
-
     parts.forEach(id => {
-      if (leftIds.includes(id) || rightIds.includes(id)) return;
-      const full = wrestlerDeltas[id];
-      if (full === undefined) return;
       const w = store.roster.find(r => r.id === id);
       if (!w) return;
-      setWrestlerElo(id, getWrestlerElo(w) + full, full);
+      const my = getWrestlerElo(w);
+      const delta = -ELO_ABSENCE_PENALTY;
+      setWrestlerElo(id, my + delta, delta);
     });
-
-    function applyManagersShare(managerIds, sideIds, sideHasMgr) {
-      if (!sideHasMgr || !managerIds.length) return;
-      const sideTotal = sumSideDelta(sideIds);
-      const pool = sideTotal * MANAGER_ELO_SHARE;
-      if (pool === 0) return;
-      const each = pool / managerIds.length;
-      managerIds.forEach(mid => {
-        if (parts.includes(mid)) return;
-        const mw = store.roster.find(r => r.id === mid);
-        if (!mw) return;
-        const d = Math.round(each) || (each > 0 ? 1 : (each < 0 ? -1 : 0));
-        if (d === 0) return;
-        setWrestlerElo(mid, getWrestlerElo(mw) + d, d);
-      });
-    }
-
-    applyManagersShare(mgrLeft, leftIds, leftHasMgr);
-    applyManagersShare(mgrRight, rightIds, rightHasMgr);
-
     match.eloApplied = true;
-    applyPopularityForMatch(match);
+    if (doPop) applyPopularityForInactivity(match);
+    return;
   }
 
-  function recalculateAllElos() {
+  // --- Promos ---
+  if (match.winner === 'Promo' || match.promoType) {
+    const parts = (match.participants || []).filter(Boolean);
+    if (match.promoType === 'autobombo') {
+      if (parts.length < 1) return;
+      const id = parts[0];
+      const w = store.roster.find(r => r.id === id);
+      if (!w) return;
+      const my = getWrestlerElo(w);
+      const delta = PROMO_AUTOBOMBO_GAIN;
+      setWrestlerElo(id, my + delta, delta);
+      match.eloApplied = true;
+      if (doPop) applyPopularityForPromo(match);
+      return;
+    }
+    if (match.promoType === 'provocacion') {
+      if (parts.length < 2) return;
+      if (!match.promoWinner || match.promoWinner === 'Pendiente') return;
+      const a = store.roster.find(r => r.id === parts[0]);
+      const b = store.roster.find(r => r.id === parts[1]);
+      if (!a || !b) return;
+      const eloA = getWrestlerElo(a);
+      const eloB = getWrestlerElo(b);
+      const aWins = match.promoWinner === a.name;
+      const bWins = match.promoWinner === b.name;
+      if (!aWins && !bWins) return;
+      if (aWins) {
+        const full = calcEloDelta(eloA, eloB, 1);
+        const delta = Math.round(full * PROMO_ELO_SCALE) || (full > 0 ? 1 : 0);
+        setWrestlerElo(a.id, eloA + delta, delta);
+        setWrestlerElo(b.id, eloB - delta, -delta);
+      } else {
+        const full = calcEloDelta(eloB, eloA, 1);
+        const delta = Math.round(full * PROMO_ELO_SCALE) || (full > 0 ? 1 : 0);
+        setWrestlerElo(b.id, eloB + delta, delta);
+        setWrestlerElo(a.id, eloA - delta, -delta);
+      }
+      match.eloApplied = true;
+      if (doPop) applyPopularityForPromo(match);
+      return;
+    }
+    return;
+  }
+
+  if (!match.winner || match.winner === 'Pendiente') return;
+
+  const parts = (match.participants || []).filter(Boolean);
+  if (parts.length < 2) return;
+
+  const isDraw = match.winner === 'Empate';
+  const isTeam = isTeamBasedMatch(match.matchType, match.subType);
+
+  function avgElo(ids) {
+    const elos = ids.map(id => {
+      const w = store.roster.find(r => r.id === id);
+      return getWrestlerElo(w);
+    });
+    if (!elos.length) return DEFAULT_ELO;
+    return elos.reduce((a, b) => a + b, 0) / elos.length;
+  }
+
+  const wrestlerDeltas = {};
+
+  if (isTeam) {
+    const { left, right } = splitSides(parts, match.matchType, match.subType, isDraw ? null : match.winner);
+    if (!left.length || !right.length) return;
+
+    const avgL = avgElo(left);
+    const avgR = avgElo(right);
+
+    let scoreLeft = 0.5;
+    if (!isDraw) {
+      const winnerW = store.roster.find(r => r.name === match.winner);
+      if (!winnerW) return;
+      if (left.includes(winnerW.id)) scoreLeft = 1;
+      else if (right.includes(winnerW.id)) scoreLeft = 0;
+      else return;
+    }
+    const scoreRight = isDraw ? 0.5 : (1 - scoreLeft);
+
+    left.forEach(id => {
+      const w = store.roster.find(r => r.id === id);
+      if (!w) return;
+      const my = getWrestlerElo(w);
+      wrestlerDeltas[id] = calcEloDelta(my, avgR, scoreLeft);
+    });
+    right.forEach(id => {
+      const w = store.roster.find(r => r.id === id);
+      if (!w) return;
+      const my = getWrestlerElo(w);
+      wrestlerDeltas[id] = calcEloDelta(my, avgL, scoreRight);
+    });
+  } else {
+    if (isDraw) {
+      parts.forEach(id => {
+        const others = parts.filter(x => x !== id);
+        const w = store.roster.find(r => r.id === id);
+        if (!w || !others.length) return;
+        const my = getWrestlerElo(w);
+        wrestlerDeltas[id] = calcEloDelta(my, avgElo(others), 0.5);
+      });
+    } else {
+      const winnerW = store.roster.find(r => r.name === match.winner);
+      if (!winnerW || !parts.includes(winnerW.id)) return;
+      const losers = parts.filter(id => id !== winnerW.id);
+      if (!losers.length) return;
+
+      const winElo = getWrestlerElo(winnerW);
+      let totalGain = 0;
+      losers.forEach(id => {
+        const w = store.roster.find(r => r.id === id);
+        if (!w) return;
+        const theirElo = getWrestlerElo(w);
+        const delta = calcEloDelta(winElo, theirElo, 1);
+        totalGain += delta;
+        wrestlerDeltas[id] = -delta;
+      });
+      wrestlerDeltas[winnerW.id] = totalGain;
+    }
+  }
+
+  const { left: leftIds, right: rightIds } = splitSides(
+    parts,
+    match.matchType,
+    match.subType,
+    isDraw ? null : match.winner
+  );
+  const mgrLeft = (match.managersLeft || []).filter(Boolean);
+  const mgrRight = (match.managersRight || []).filter(Boolean);
+  const leftHasMgr = mgrLeft.length > 0;
+  const rightHasMgr = mgrRight.length > 0;
+
+  const bothHaveMgr = leftHasMgr && rightHasMgr;
+  const leftFactor = (leftHasMgr && !bothHaveMgr) ? (1 - MANAGER_ELO_SHARE) : 1;
+  const rightFactor = (rightHasMgr && !bothHaveMgr) ? (1 - MANAGER_ELO_SHARE) : 1;
+
+  function sumSideDelta(ids) {
+    return ids.reduce((s, id) => s + (wrestlerDeltas[id] || 0), 0);
+  }
+
+  leftIds.forEach(id => {
+    const full = wrestlerDeltas[id];
+    if (full === undefined) return;
+    const w = store.roster.find(r => r.id === id);
+    if (!w) return;
+    const applied = Math.round(full * leftFactor);
+    setWrestlerElo(id, getWrestlerElo(w) + applied, applied);
+  });
+  rightIds.forEach(id => {
+    const full = wrestlerDeltas[id];
+    if (full === undefined) return;
+    const w = store.roster.find(r => r.id === id);
+    if (!w) return;
+    const applied = Math.round(full * rightFactor);
+    setWrestlerElo(id, getWrestlerElo(w) + applied, applied);
+  });
+
+  parts.forEach(id => {
+    if (leftIds.includes(id) || rightIds.includes(id)) return;
+    const full = wrestlerDeltas[id];
+    if (full === undefined) return;
+    const w = store.roster.find(r => r.id === id);
+    if (!w) return;
+    setWrestlerElo(id, getWrestlerElo(w) + full, full);
+  });
+
+  function applyManagersShare(managerIds, sideIds, sideHasMgr) {
+    if (!sideHasMgr || !managerIds.length) return;
+    const sideTotal = sumSideDelta(sideIds);
+    const pool = sideTotal * MANAGER_ELO_SHARE;
+    if (pool === 0) return;
+    const each = pool / managerIds.length;
+    managerIds.forEach(mid => {
+      if (parts.includes(mid)) return;
+      const mw = store.roster.find(r => r.id === mid);
+      if (!mw) return;
+      const d = Math.round(each) || (each > 0 ? 1 : (each < 0 ? -1 : 0));
+      if (d === 0) return;
+      setWrestlerElo(mid, getWrestlerElo(mw) + d, d);
+    });
+  }
+
+  applyManagersShare(mgrLeft, leftIds, leftHasMgr);
+  applyManagersShare(mgrRight, rightIds, rightHasMgr);
+
+  match.eloApplied = true;
+  if (doPop) applyPopularityForMatch(match);
+}
+
+function recalculateAllElos() {
   (store.roster || []).forEach(r => {
     r.elo = DEFAULT_ELO;
     r.lastEloDelta = 0;
-    r.popularity = DEFAULT_POPULARITY;
-    r.lastPopDelta = 0;
+    // NO tocar popularity
   });
 
   (store.matches || []).forEach(m => {
     m.eloApplied = false;
-    m.popApplied = false;
+    // NO tocar popApplied
   });
 
   const ordered = (store.matches || []).slice().sort((a, b) => {
@@ -1980,25 +1996,9 @@ function calculateShowRating(matches, totalParrillas) {
   });
 
   ordered.forEach(m => {
-    applyEloForMatch(m); // aquí dentro se aplica ELO + POP
+    applyEloForMatch(m, { applyPop: false });
   });
 }
-
-  (store.roster || []).forEach(r => {
-    if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
-    if (r.popularity === undefined || r.popularity === null || r.popularity === '') {
-      r.popularity = DEFAULT_POPULARITY;
-    } else {
-      r.popularity = Math.max(0, Math.min(99, Math.round(Number(r.popularity) || DEFAULT_POPULARITY)));
-    }
-  });
-  if (!store.teams) store.teams = [];
-  (store.teams || []).forEach(t => {
-    t.members = normalizeTeamMembers(t.members);
-  });
-
-  recalculateAllElos();
-  localStorage.setItem('universe_data', JSON.stringify(store));
     
     function saveData() { localStorage.setItem('universe_data', JSON.stringify(store)); render(); }
     function unlockNav() {
@@ -2488,6 +2488,7 @@ function closePastEventModal() {
       }
     }
     document.getElementById('form-cal-show').onsubmit = (e) => {
+      store.shows.push({ id: 'show_' + Date.now(), name, day, color, parrillas: 6, budget: 5000000, viewers: 5000000 });
       e.preventDefault();
       const selectVal = document.getElementById('cal-show-select').value;
       const name = document.getElementById('cal-show-name').value.trim();
@@ -2545,6 +2546,7 @@ function closePastEventModal() {
       if (show) showConfirmModal(`¿Seguro que quieres eliminar el show "${show.name}"?`, () => { deleteItem('shows', activeShowId); closeShowModal(); });
     }
     document.getElementById('form-edit-show').onsubmit = async (e) => {
+      store.shows.push({ id: newId, name, day, color, parrillas, budget, viewers: 5000000 });
       e.preventDefault();
       const name = document.getElementById('show-name').value.trim();
       const day = parseInt(document.getElementById('show-day').value);
