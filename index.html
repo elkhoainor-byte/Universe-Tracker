@@ -1544,35 +1544,28 @@ function calculateMatchRating(match) {
   return clampStars(score);
 }
 
-function calculateShowRating(matches) {
+function calculateShowRating(matches, totalParrillas) {
   const list = matches || [];
-  const rated = list
-    .filter(m => m && m.winner !== 'Promo' && !m.promoType && !m.inactivityPenalty && m.winner !== 'Inactividad')
-    .map(m => (typeof m.rating === 'number' ? m.rating : calculateMatchRating(m)))
-    .filter(r => r != null);
+  let sum = 0;
 
-  if (!rated.length) return null;
-
-  // Media ponderada: el combate mejor cuenta un poco más (main event feel)
-  const sorted = rated.slice().sort((a, b) => a - b);
-  let weightSum = 0;
-  let acc = 0;
-  sorted.forEach((r, i) => {
-    const w = 1 + (i / Math.max(1, sorted.length - 1)) * 0.6; // últimos (mejores) pesan más
-    acc += r * w;
-    weightSum += w;
+  list.forEach(m => {
+    if (!m || m.winner === 'Promo' || m.promoType || m.inactivityPenalty || m.winner === 'Inactividad') {
+      return; // promos / inactividad no suman estrellas
+    }
+    const r = (typeof m.rating === 'number')
+      ? m.rating
+      : (typeof calculateMatchRating === 'function' ? calculateMatchRating(m) : null);
+    if (r != null) sum += r;
   });
-  let avg = acc / weightSum;
 
-  // Si el evento es PPV, el show en conjunto sube un poco
-  const anyPpv = list.some(isPpvMatch);
-  if (anyPpv) avg += 0.25;
+  // Denominador = parrillas totales del show (no solo combates hechos)
+  let slots = Number(totalParrillas);
+  if (!Number.isFinite(slots) || slots <= 0) {
+    // fallback: intentar deducir; mínimo 1 para no dividir por 0
+    slots = list.length || 1;
+  }
 
-  // Penalizar carteleras muy cortas o solo relleno
-  if (rated.length <= 2) avg -= 0.20;
-  if (rated.length >= 5) avg += 0.10;
-
-  return clampStars(avg);
+  return clampStars(sum / slots);
 }
 
   function eloExpectedScore(eloA, eloB) {
@@ -2100,7 +2093,23 @@ async function openWeeklySummary(forUniverseDay) {
   document.getElementById('past-event-title').innerText = `📺 ${label}`;
 
   const showRatingEl = document.getElementById('past-show-rating');
-  const showRating = (typeof calculateShowRating === 'function') ? calculateShowRating(matches) : null;
+  // Nº total de parrillas del show (las vacías bajan la media)
+let totalParrillas = matches.length;
+const showObj = (store.shows || []).find(s => s.name === eventName);
+if (showObj && showObj.parrillas) {
+  totalParrillas = showObj.parrillas;
+} else if (showNumber != null && showObj && showObj.parrillas) {
+  totalParrillas = showObj.parrillas;
+}
+// Si en los propios matches se guardó el total, usarlo
+const storedSlots = matches.find(m => m.totalSlots || m.parrillas);
+if (storedSlots) {
+  totalParrillas = storedSlots.totalSlots || storedSlots.parrillas || totalParrillas;
+}
+
+const showRating = (typeof calculateShowRating === 'function')
+  ? calculateShowRating(matches, totalParrillas)
+  : null;
   if (showRatingEl) {
     if (showRating != null) {
       showRatingEl.style.display = 'inline-flex';
@@ -3478,6 +3487,7 @@ function closePastEventModal() {
             applyEloForMatch(match);
             match.rating = calculateMatchRating(match);
             match.feudLevel = getFeudLevelForMatch(match);
+            match.totalSlots = (store.todayCard.slots || []).length;
           }
         }
       });
