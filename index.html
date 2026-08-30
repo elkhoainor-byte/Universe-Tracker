@@ -828,8 +828,6 @@
         <input type="text" id="cal-ple-name" placeholder="Ej. Backlash, Royal Rumble..." autocapitalize="words" required>
         <label style="font-size:0.75rem; color:var(--text-dim);">NÚMERO DE PARRILLAS:</label>
         <input type="number" id="cal-ple-parrillas" min="1" max="20" value="7">
-        <label style="font-size:0.75rem; color:var(--text-dim);">PRESUPUESTO DEL SHOW ($):</label>
-        <input type="number" id="show-budget" min="0" step="100000" value="5000000">
         <label style="font-size:0.75rem; color:var(--text-dim);">COLOR REPRESENTATIVO DEL EVENTO:</label>
         <input type="color" id="cal-ple-color" value="#ffd700" style="width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;">
         <label style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">MARCAS QUE PARTICIPAN EN ESTE PLE:</label>
@@ -1209,9 +1207,9 @@
 
   const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
     let defaultShows = [
-      { id: 'raw', name: 'RAW', color: '#b20710', day: 1, parrillas: 6, budget: 5000000, viewers: 5000000 },
-      { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2, parrillas: 5, budget: 5000000, viewers: 5000000 },
-      { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5, parrillas: 6, budget: 5000000, viewers: 5000000 }
+      { id: 'raw', name: 'RAW', color: '#b20710', day: 1, parrillas: 6, viewers: 5000000 },
+      { id: 'nxt', name: 'NXT', color: '#d4a017', day: 2, parrillas: 5, viewers: 5000000 },
+      { id: 'smackdown', name: 'SmackDown', color: '#0055b8', day: 5, parrillas: 6, viewers: 5000000 }
     ];
   
   function createEmptyStore() {
@@ -1232,14 +1230,14 @@
     if (!store.calendar.ppvs) store.calendar.ppvs = {};
     if (store.calendar.currentDay === undefined) store.calendar.currentDay = 1;
     if (!store.todayCard) store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
-  store.shows.forEach(s => {
+    store.shows.forEach(s => {
     if (s.parrillas === undefined) s.parrillas = 6;
-    if (s.budget === undefined || s.budget === null || s.budget === '') s.budget = 5000000;
     if (s.viewers === undefined || s.viewers === null || s.viewers === '') s.viewers = 5000000;
-    (store.titles || []).forEach(t => {
-      if (!t.type || t.type === 'individual') t.type = 'major';
-      if (t.type !== 'major' && t.type !== 'minor' && t.type !== 'tag') t.type = 'major';
-    });  
+    if (s.budget !== undefined) delete s.budget;
+  });
+  (store.titles || []).forEach(t => {
+    if (!t.type || t.type === 'individual') t.type = 'major';
+    if (t.type !== 'major' && t.type !== 'minor' && t.type !== 'tag') t.type = 'major';
   });
     
   Object.keys(store.calendar.ppvs).forEach(k => {
@@ -1354,18 +1352,6 @@
     return Number.isFinite(n) ? Math.round(n) : DEFAULT_ELO;
   }
 
-  function formatBudget(n) {
-    const v = Number(n);
-    if (!Number.isFinite(v)) return '5.000.000 $';
-    return v.toLocaleString('es-ES') + ' $';
-  }
-
-  function getShowBudget(show) {
-    if (!show) return 5000000;
-    const n = Number(show.budget);
-    return Number.isFinite(n) ? Math.round(n) : 5000000;
-  }
-
   function getShowViewers(show) {
     if (!show) return 5000000;
     const n = Number(show.viewers);
@@ -1379,11 +1365,8 @@
   }
 
   function getShowScore(show) {
-  const viewers = getShowViewers(show);
-  const budget = getShowBudget(show);
-  // 92,5 % espectadores + 7,5 % presupuesto
-  return (viewers * 0.925) + (budget * 0.075);
-}
+    return getShowViewers(show);
+  }
 
   function getBrandModifier(show) {
   if (!show) return 0;
@@ -2671,7 +2654,7 @@ function closePastEventModal() {
       const day = parseInt(document.getElementById('cal-show-day').value);
       const color = document.getElementById('cal-show-color').value;
       if (selectVal === 'NEW') {
-        store.shows.push({ id: 'show_' + Date.now(), name, day, color, parrillas: 6, budget: 5000000, viewers: 5000000 });
+        store.shows.push({ id: 'show_' + Date.now(), name, day, color, parrillas: 6, viewers: 5000000 });
       } else {
         const show = store.shows.find(s => s.id === selectVal);
         if (show) {
@@ -2699,7 +2682,6 @@ function closePastEventModal() {
         document.getElementById('show-name').value = '';
         document.getElementById('show-day').value = "1";
         document.getElementById('show-parrillas').value = 6;
-        document.getElementById('show-budget').value = 5000000;
         document.getElementById('show-color').value = '#e50914';
         btnDelete.style.display = 'none';
       } else {
@@ -2709,7 +2691,6 @@ function closePastEventModal() {
         document.getElementById('show-name').value = show.name;
         document.getElementById('show-day').value = show.day || 1;
         document.getElementById('show-parrillas').value = show.parrillas || 6;
-        document.getElementById('show-budget').value = getShowBudget(show);
         document.getElementById('show-color').value = show.color || '#e50914';
         btnDelete.innerText = `Eliminar "${show.name}"?`;
         btnDelete.style.display = 'block';
@@ -2728,26 +2709,19 @@ function closePastEventModal() {
       const day = parseInt(document.getElementById('show-day').value);
       const parrillas = parseInt(document.getElementById('show-parrillas').value) || 6;
       const color = document.getElementById('show-color').value;
-      let budget = 5000000;
-      const budgetEl = document.getElementById('show-budget');
-      if (budgetEl) {
-        budget = parseInt(budgetEl.value, 10);
-        if (!Number.isFinite(budget) || budget < 0) budget = 5000000;
-      }
       const logoFile = document.getElementById('show-logo-file').files[0];
       const bgFile = document.getElementById('show-bg-file').files[0];
       if (activeShowId === null) {
         const newId = 'show_' + Date.now();
         if (logoFile) await saveImageToDB('show_logo_' + newId, await fileToBase64(logoFile));
         if (bgFile) await saveImageToDB('show_bg_' + newId, await fileToBase64(bgFile));
-        store.shows.push({ id: newId, name, day, color, parrillas, budget, viewers: 5000000 });
+        store.shows.push({ id: newId, name, day, color, parrillas, viewers: 5000000 });
       } else {
         const show = store.shows.find(s => s.id === activeShowId);
           if (show) {
             const oldName = show.name;
             show.name = name; show.day = day; show.color = color;
             show.parrillas = parrillas;
-            show.budget = budget;
             if (show.viewers === undefined || show.viewers === null) show.viewers = 5000000;
             if (logoFile) await saveImageToDB('show_logo_' + show.id, await fileToBase64(logoFile));
             if (bgFile) await saveImageToDB('show_bg_' + show.id, await fileToBase64(bgFile));
@@ -4363,12 +4337,6 @@ function closePastEventModal() {
       const teamVal = document.getElementById('edit-team').value;
       const teamId = teamVal ? parseInt(teamVal) : null;
       const fileInput = document.getElementById('edit-image-file');
-      const oldAlign = wrestler.alignment || 'Face';
-      // ... lees alignment nuevo ...
-      if (alignment && alignment !== oldAlign) {
-        addWrestlerPopularity(wrestler.id, randInt(3, 5));
-      }
-      wrestler.alignment = alignment;
 
       if (activeWrestlerId === null) {
         const newId = Date.now();
@@ -4384,11 +4352,12 @@ function closePastEventModal() {
           }
         }
         closeWrestlerModal();
-      } else {
+            } else {
         const wrestler = store.roster.find(r => r.id === activeWrestlerId);
         if (wrestler) {
           if (fileInput.files[0]) await saveImageToDB('wrestler_' + wrestler.id, await fileToBase64(fileInput.files[0]));
           const oldTeamId = wrestler.teamId;
+          const oldAlign = wrestler.alignment || 'Face';
           wrestler.name = name;
           wrestler.brands = brands;
           wrestler.alignment = alignment;
@@ -4397,6 +4366,9 @@ function closePastEventModal() {
           wrestler.teamId = teamId;
           wrestler.elo = elo;
           wrestler.popularity = popularity;
+          if (alignment && alignment !== oldAlign) {
+            addWrestlerPopularity(wrestler.id, randInt(3, 5));
+          }
 
           if (oldTeamId && oldTeamId !== teamId) {
             const oldTeam = store.teams.find(t => t.id === oldTeamId);
@@ -4940,7 +4912,6 @@ const showCards = await Promise.all(showsOrdered.map(async s => {
             <div class="card-info">
               <span class="card-title">${s.name}</span>
               <span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span>
-              <span class="card-sub" style="color:var(--gold-end);font-weight:700;">💰 ${formatBudget(getShowBudget(s))}</span>
               <span class="card-sub" style="color:#64b5f6;font-weight:700;">👁 ${formatViewers(getShowViewers(s))} espectadores</span>
               ${(typeof s.lastShowQuality === 'number') ? `<span class="card-sub" style="color:#ce93d8;font-weight:700;">★ ${Number(s.lastShowQuality).toFixed(1)} · TV ${Number(s.lastTvRating || 0).toFixed(1)}${(typeof s.lastViewersDelta === 'number' && s.lastViewersDelta !== 0) ? ` · ${s.lastViewersDelta > 0 ? '▲' : '▼'}${formatViewers(Math.abs(s.lastViewersDelta))}` : ''}</span>` : ''}
             </div>
