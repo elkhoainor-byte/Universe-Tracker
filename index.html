@@ -959,8 +959,8 @@
         <input type="text" id="edit-name" placeholder="Nombre" autocapitalize="words" required>
         <label style="font-size:0.75rem; color:var(--text-dim);">PUNTUACIÓN ELO (base 1200)</label>
         <input type="number" id="edit-elo" min="0" max="9999" step="1" value="1200" placeholder="1200">
-        <label style="font-size:0.75rem; color:var(--text-dim);">POPULARIDAD (0–100, base 50)</label>
-        <input type="number" id="edit-popularity" min="0" max="100" step="1" value="50" placeholder="50">
+        <label style="font-size:0.75rem; color:var(--text-dim);">POPULARIDAD (0–99, base 50)</label>
+        <input type="number" id="edit-popularity" min="0" max="99" step="1" value="50" placeholder="50">
         <label style="font-size:0.75rem; color:var(--text-dim);">IMAGEN DE FOTO:</label>
         <input type="file" id="edit-image-file" accept="image/*">
         <div class="option-selector-wrapper">
@@ -1364,7 +1364,8 @@
   function getWrestlerPopularity(w) {
     if (!w) return DEFAULT_POPULARITY;
     const n = Number(w.popularity);
-    return Number.isFinite(n) ? Math.round(n) : DEFAULT_POPULARITY;
+    if (!Number.isFinite(n)) return DEFAULT_POPULARITY;
+    return Math.max(0, Math.min(99, Math.round(n)));
   }
 
   function clampStars(n) {
@@ -1812,9 +1813,12 @@ function calculateShowRating(matches, totalParrillas) {
 
   (store.roster || []).forEach(r => {
     if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
-    if (r.popularity === undefined || r.popularity === null || r.popularity === '') r.popularity = DEFAULT_POPULARITY;
+    if (r.popularity === undefined || r.popularity === null || r.popularity === '') {
+      r.popularity = DEFAULT_POPULARITY;
+    } else {
+      r.popularity = Math.max(0, Math.min(99, Math.round(Number(r.popularity) || DEFAULT_POPULARITY)));
+    }
   });
-
   if (!store.teams) store.teams = [];
   (store.teams || []).forEach(t => {
     t.members = normalizeTeamMembers(t.members);
@@ -3983,7 +3987,7 @@ function closePastEventModal() {
       elo = Math.max(0, Math.min(9999, elo));
       let popularity = parseInt(document.getElementById('edit-popularity').value, 10);
       if (!Number.isFinite(popularity)) popularity = DEFAULT_POPULARITY;
-      popularity = Math.max(0, Math.min(100, popularity));
+      popularity = Math.max(0, Math.min(99, popularity));
       const brands = Array.from(document.querySelectorAll('#edit-brands-container input:checked')).map(cb => cb.value);
       const alignment = getRadioValue('edit-alignment') || 'Face';
       const gender = getRadioValue('edit-gender') || 'Men';
