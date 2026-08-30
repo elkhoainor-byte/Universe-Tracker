@@ -537,25 +537,24 @@
     }
     .managers-left { border-color: #2e7d32; }
     .managers-right { border-color: #c62828; }
-    .managers-label {
-      font-size: 0.68rem;
-      font-weight: 800;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      margin-bottom: 2px;
-    }
+    .managers-label { font-size: 0.68rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
     .managers-gap { min-width: 28px; }
-    .manager-box {
-      max-width: 130px;
-      width: 100%;
-      opacity: 0.92;
-      background: #1a1a1a;
-    }
+    .manager-box { max-width: 130px; width: 100%; opacity: 0.92; background: #1a1a1a; }
     .title-type-badge { display: inline-block; font-size: 0.62rem; font-weight: 900; padding: 2px 7px; border-radius: 10px; letter-spacing: 0.4px; text-transform: uppercase; margin-top: 2px; margin-left: 4px; }
     .title-type-major { background: linear-gradient(90deg, #ffd700, #ffec8b); color: #1a1a1a; }
     .title-type-minor { background: #455a64; color: #eceff1; }
     .title-type-tag { background: #ff9800; color: #000; }
+    .rating-stars { display: inline-flex; align-items: center; gap: 1px; line-height: 1; }
+    .rating-stars .star { color: #555; font-size: 0.95rem; }
+    .rating-stars .star.on { color: var(--gold-end); text-shadow: 0 0 6px rgba(255,215,0,0.45); }
+    .rating-stars .star.half { background: linear-gradient(90deg, var(--gold-end) 50%, #555 50%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .past-match-rating { position: absolute; top: 8px; right: 10px; z-index: 3; }
+    .past-match-card { position: relative; }
+    .past-show-rating { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; margin-right: 8px; padding: 4px 10px; border-radius: 999px; background: linear-gradient(145deg, #2a2a1a, #1a1a1a); border: 1px solid var(--gold-end); color: var(--gold-end); font-size: 0.78rem; font-weight: 900; }
+    .weekly-summary-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    .weekly-summary-card h3 { color: var(--accent); font-size: 1rem; margin-bottom: 8px; }
+    .weekly-match-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px dashed #333; font-size: 0.82rem; }
+    .weekly-match-row:last-child { border-bottom: none; }
   </style>
 </head>
 <body>
@@ -731,13 +730,26 @@
     <div id="list-standings"></div>
   </div>
   <!-- MODAL RESULTADOS DE EVENTO PASADO -->
-  <div id="modal-past-event" class="modal-overlay">
+    <div id="modal-past-event" class="modal-overlay">
     <div class="modal-box wide">
       <div class="modal-header">
         <span class="modal-title" id="past-event-title">Cartelera</span>
+        <span id="past-show-rating" class="past-show-rating" style="display:none;"></span>
         <button class="modal-close" onclick="closePastEventModal()">✕</button>
       </div>
       <div id="past-event-body"></div>
+    </div>
+  </div>
+
+  <!-- RESUMEN SEMANAL -->
+  <div id="modal-weekly-summary" class="modal-overlay">
+    <div class="modal-box wide">
+      <div class="modal-header">
+        <span class="modal-title" id="weekly-summary-title">📊 Resumen semanal</span>
+        <button class="modal-close" onclick="closeWeeklySummary()">✕</button>
+      </div>
+      <div id="weekly-summary-body"></div>
+      <button type="button" class="btn-add" style="margin-top:12px;" onclick="closeWeeklySummary()">Cerrar</button>
     </div>
   </div>
 
@@ -1355,6 +1367,157 @@
     return Number.isFinite(n) ? Math.round(n) : DEFAULT_POPULARITY;
   }
 
+  function clampStars(n) {
+  const x = Math.max(0, Math.min(5, Number(n) || 0));
+  return Math.round(x * 2) / 2; // media estrella
+}
+
+function starsHTML(rating) {
+  const r = clampStars(rating);
+  let h = '<span class="rating-stars" title="' + r.toFixed(1) + ' ★">';
+  for (let i = 1; i <= 5; i++) {
+    if (r >= i) h += '<span class="star on">★</span>';
+    else if (r >= i - 0.5) h += '<span class="star half">★</span>';
+    else h += '<span class="star">★</span>';
+  }
+  h += '</span>';
+  return h;
+}
+
+function getMatchTypeWeight(matchType) {
+  const t = String(matchType || '').toLowerCase();
+  if (/hell in a cell|elimination chamber|cámara de eliminación/.test(t)) return 1.8;
+  if (/tlc|table|mesa|royal rumble|rumble/.test(t)) return 1.5;
+  if (/hardcore|steel cage|jaula|ladder|escaleras/.test(t)) return 1.3;
+  return 1.0;
+}
+
+function getTitleBonus(match) {
+  if (!match || !match.isTitleMatch || !match.titleId) return 0;
+  const title = store.titles.find(t => t.id === match.titleId);
+  if (!title) return 0.5;
+  if (title.type === 'major') return 1.0;
+  if (title.type === 'minor' || title.type === 'tag') return 0.5;
+  return 0.5;
+}
+
+function getFeudLevelForMatch(match) {
+  // Si ya viene guardado, usarlo
+  if (typeof match.feudLevel === 'number') return Math.max(0, Math.min(5, match.feudLevel));
+  // Auto: nº de combates previos entre los mismos participantes (aprox. rivalidad)
+  const parts = (match.participants || []).filter(Boolean).map(Number).sort((a, b) => a - b);
+  if (parts.length < 2) return 0;
+  const key = parts.join('-');
+  const day = typeof match.universeDay === 'number' ? match.universeDay : getTotalUniverseDays();
+  let count = 0;
+  store.matches.forEach(m => {
+    if (m === match) return;
+    if (m.winner === 'Promo' || m.promoType || m.inactivityPenalty) return;
+    if (typeof m.universeDay === 'number' && m.universeDay >= day) return;
+    const p = (m.participants || []).filter(Boolean).map(Number).sort((a, b) => a - b);
+    if (p.join('-') === key) count++;
+  });
+  if (count >= 5) return 5;
+  if (count >= 3) return 3;
+  if (count >= 1) return 1;
+  return 0;
+}
+
+function getFeudModifiers(level) {
+  const lv = Math.max(0, Math.min(5, level | 0));
+  if (lv >= 5) return { mult: 1.6, bonus: 1.5 };
+  if (lv >= 3) return { mult: 1.4, bonus: 1.0 };
+  if (lv >= 1) return { mult: 1.2, bonus: 0.5 };
+  return { mult: 1.0, bonus: 0 };
+}
+
+function hasFaceHeelChemistry(match) {
+  const parts = (match.participants || []).filter(Boolean);
+  if (parts.length < 2) return false;
+  if (isTeamBasedMatch(match.matchType, match.subType)) {
+    const { left, right } = splitSides(parts, match.matchType, match.subType, match.winner);
+    const leftAligns = left.map(id => store.roster.find(r => r.id === id)).filter(Boolean).map(w => w.alignment || 'Face');
+    const rightAligns = right.map(id => store.roster.find(r => r.id === id)).filter(Boolean).map(w => w.alignment || 'Face');
+    if (!leftAligns.length || !rightAligns.length) return false;
+    const leftFace = leftAligns.every(a => a === 'Face');
+    const leftHeel = leftAligns.every(a => a === 'Heel');
+    const rightFace = rightAligns.every(a => a === 'Face');
+    const rightHeel = rightAligns.every(a => a === 'Heel');
+    return (leftFace && rightHeel) || (leftHeel && rightFace);
+  }
+  const aligns = parts.map(id => {
+    const w = store.roster.find(r => r.id === id);
+    return w ? (w.alignment || 'Face') : null;
+  }).filter(Boolean);
+  return aligns.includes('Face') && aligns.includes('Heel');
+}
+
+function getMatchupFatiguePenalty(match) {
+  const parts = (match.participants || []).filter(Boolean).map(Number).sort((a, b) => a - b);
+  if (parts.length < 2) return 0;
+  const key = parts.join('-');
+  const day = typeof match.universeDay === 'number' ? match.universeDay : getTotalUniverseDays();
+  // Combates iguales en los últimos 14 días de universo
+  let repeats = 0;
+  store.matches.forEach(m => {
+    if (m === match) return;
+    if (m.winner === 'Promo' || m.promoType || m.inactivityPenalty) return;
+    if (typeof m.universeDay !== 'number') return;
+    if (m.universeDay >= day || m.universeDay < day - 14) return;
+    const p = (m.participants || []).filter(Boolean).map(Number).sort((a, b) => a - b);
+    if (p.join('-') === key) repeats++;
+  });
+  if (repeats >= 2) return 0.30;
+  if (repeats === 1) return 0.15;
+  return 0;
+}
+
+function calculateMatchRating(match) {
+  if (!match || match.winner === 'Promo' || match.promoType || match.inactivityPenalty || match.winner === 'Inactividad') {
+    return null;
+  }
+  const parts = (match.participants || []).filter(Boolean);
+  if (!parts.length) return null;
+
+  // 1) Pop media
+  let popSum = 0, popN = 0;
+  parts.forEach(id => {
+    const w = store.roster.find(r => r.id === id);
+    if (!w) return;
+    popSum += getWrestlerPopularity(w);
+    popN++;
+  });
+  const avgPop = popN ? popSum / popN : 50;
+  let score = (avgPop / 100) * 2.5; // 0–2.5 base
+
+  // 2) Tipo de combate
+  score *= getMatchTypeWeight(match.matchType);
+
+  // 3) Feud
+  const feudLv = getFeudLevelForMatch(match);
+  const feud = getFeudModifiers(feudLv);
+  score = score * feud.mult + feud.bonus;
+
+  // 4) Título
+  score += getTitleBonus(match);
+
+  // 5) Face vs Heel
+  if (hasFaceHeelChemistry(match)) score *= 1.15;
+
+  // 6) Fatiga
+  const fatigue = getMatchupFatiguePenalty(match);
+  if (fatigue > 0) score *= (1 - fatigue);
+
+  return clampStars(score);
+}
+
+function calculateShowRating(matches) {
+  const rated = (matches || []).map(m => typeof m.rating === 'number' ? m.rating : calculateMatchRating(m)).filter(r => r != null);
+  if (!rated.length) return null;
+  const avg = rated.reduce((a, b) => a + b, 0) / rated.length;
+  return clampStars(avg);
+}
+
   function eloExpectedScore(eloA, eloB) {
     return 1 / (1 + Math.pow(10, (eloB - eloA) / 400));
   }
@@ -1730,6 +1893,7 @@
       }
       return calendarViewMonthIndex;
     }
+  
     async function renderCalendar() {
       const startMonth = store.calendar.startMonth || 0;
       const viewMonthIndex = getCalendarViewMonthIndex();
@@ -1792,36 +1956,187 @@
       renderCalendar();
     }
 
-    async function openPastEvent(eventName, showNumber) {
-      const label = showNumber != null ? `${eventName} #${showNumber}` : eventName;
-      const matches = store.matches.filter(m => m.show === label || (m.eventName === eventName && (showNumber == null || m.showNumber === showNumber)));
-      document.getElementById('past-event-title').innerText = `📺 ${label}`;
-      const body = document.getElementById('past-event-body');
-      if (!matches.length) {
-        body.innerHTML = '<p style="color:var(--text-dim); text-align:center;">No hay combates registrados para este evento.</p>';
-        document.getElementById('modal-past-event').classList.add('active');
+    function getWeekRangeForDay(universeDay) {
+  // Semana = bloques de 7 días (0–6, 7–13, ...)
+  const day = Math.max(0, universeDay | 0);
+  const start = day - (day % 7);
+  return { start, end: start + 6 };
+}
+
+function getMatchesInWeek(start, end) {
+  return (store.matches || []).filter(m => {
+    if (typeof m.universeDay !== 'number') return false;
+    return m.universeDay >= start && m.universeDay <= end;
+  });
+}
+
+function closeWeeklySummary() {
+  document.getElementById('modal-weekly-summary').classList.remove('active');
+}
+
+async function openWeeklySummary(forUniverseDay) {
+  const day = typeof forUniverseDay === 'number' ? forUniverseDay : getTotalUniverseDays();
+  const { start, end } = getWeekRangeForDay(day);
+  const matches = getMatchesInWeek(start, end);
+
+  document.getElementById('weekly-summary-title').innerText =
+    `📊 Resumen semanal (días ${start}–${end})`;
+
+  const body = document.getElementById('weekly-summary-body');
+  if (!matches.length) {
+    body.innerHTML = '<p style="color:var(--text-dim);text-align:center;">No hay actividad registrada esta semana.</p>';
+    document.getElementById('modal-weekly-summary').classList.add('active');
+    return;
+  }
+
+  // Agrupar por show
+  const byShow = {};
+  matches.forEach(m => {
+    const key = m.show || m.eventName || 'Evento';
+    if (!byShow[key]) byShow[key] = [];
+    byShow[key].push(m);
+  });
+
+  let html = '';
+  Object.keys(byShow).forEach(showName => {
+    const list = byShow[showName];
+    const showR = calculateShowRating(list);
+    html += `<div class="weekly-summary-card">
+      <h3>${showName} ${showR != null ? starsHTML(showR) + ' ' + showR.toFixed(1) : ''}</h3>`;
+    list.forEach(m => {
+      if (m.winner === 'Promo' || m.promoType) {
+        html += `<div class="weekly-match-row"><span>🎤 ${m.card || 'Promo'}</span><span style="color:var(--text-dim);">—</span></div>`;
         return;
-        if (m.inactivityPenalty || m.winner === 'Inactividad') {
-          return `<div class="past-promo-card">${m.card || '⏸ Sin participación'}</div>`;
-        }
       }
-      const cards = await Promise.all(matches.map(async m => {
-        if (m.winner === 'Promo' || m.promoType) {
-          return `<div class="past-promo-card">${m.card || '🎤 Segmento de promo'}</div>`;
-        }
-        const parts = m.participants || [];
-        const { left, right } = splitSides(parts, m.matchType, m.subType, m.winner);
-        const winnerName = m.winner || '';
-        const isTeam = isTeamBasedMatch(m.matchType, m.subType);
-        let winningSideIds = [];
-        if (winnerName && winnerName !== 'Empate' && winnerName !== 'Pendiente') {
-          const winnerW = store.roster.find(r => r.name === winnerName);
-          if (winnerW) {
-            if (isTeam) { if (left.includes(winnerW.id)) winningSideIds = left; else if (right.includes(winnerW.id)) winningSideIds = right; }
-            else winningSideIds = [winnerW.id];
-          }
-        }
-        async function sideHTML(ids, sideClass) {
+      if (m.inactivityPenalty || m.winner === 'Inactividad') {
+        html += `<div class="weekly-match-row"><span>⏸ Inactividad</span><span style="color:var(--text-dim);">—</span></div>`;
+        return;
+      }
+      const r = (typeof m.rating === 'number') ? m.rating : calculateMatchRating(m);
+      html += `<div class="weekly-match-row">
+        <span>${m.card || (m.matchType || 'Combate')}</span>
+        <span>${r != null ? starsHTML(r) + ' ' + r.toFixed(1) : '—'}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  // Media de la semana
+  const allShowRatings = Object.values(byShow).map(calculateShowRating).filter(r => r != null);
+  if (allShowRatings.length) {
+    const weekAvg = clampStars(allShowRatings.reduce((a, b) => a + b, 0) / allShowRatings.length);
+    html = `<div style="text-align:center;margin-bottom:14px;font-weight:800;color:var(--gold-end);">
+      Media semanal: ${starsHTML(weekAvg)} ${weekAvg.toFixed(1)}
+    </div>` + html;
+  }
+
+  body.innerHTML = html;
+  document.getElementById('modal-weekly-summary').classList.add('active');
+}
+
+    async function openPastEvent(eventName, showNumber) {
+  const label = showNumber != null ? `${eventName} #${showNumber}` : eventName;
+  const matches = store.matches.filter(m =>
+    m.show === label || (m.eventName === eventName && (showNumber == null || m.showNumber === showNumber))
+  );
+
+  document.getElementById('past-event-title').innerText = `📺 ${label}`;
+
+  // Rating del show (esquina superior derecha)
+  const showRatingEl = document.getElementById('past-show-rating');
+  const showRating = calculateShowRating(matches);
+  if (showRatingEl) {
+    if (showRating != null) {
+      showRatingEl.style.display = 'inline-flex';
+      showRatingEl.innerHTML = starsHTML(showRating) + ' <span>' + showRating.toFixed(1) + '</span>';
+    } else {
+      showRatingEl.style.display = 'none';
+      showRatingEl.innerHTML = '';
+    }
+  }
+
+  const body = document.getElementById('past-event-body');
+  if (!matches.length) {
+    body.innerHTML = '<p style="color:var(--text-dim); text-align:center;">No hay combates registrados para este evento.</p>';
+    document.getElementById('modal-past-event').classList.add('active');
+    return;
+  }
+
+  const cards = await Promise.all(matches.map(async m => {
+    if (m.inactivityPenalty || m.winner === 'Inactividad') {
+      return `<div class="past-promo-card">${m.card || '⏸ Sin participación'}</div>`;
+    }
+    if (m.winner === 'Promo' || m.promoType) {
+      return `<div class="past-promo-card">${m.card || '🎤 Segmento de promo'}</div>`;
+    }
+
+    const rating = (typeof m.rating === 'number') ? m.rating : calculateMatchRating(m);
+    const ratingBadge = rating != null
+      ? `<div class="past-match-rating">${starsHTML(rating)}</div>`
+      : '';
+
+    const parts = m.participants || [];
+    const { left, right } = splitSides(parts, m.matchType, m.subType, m.winner);
+    const winnerName = m.winner || '';
+    const isTeam = isTeamBasedMatch(m.matchType, m.subType);
+    let winningSideIds = [];
+    if (winnerName && winnerName !== 'Empate' && winnerName !== 'Pendiente') {
+      const winnerW = store.roster.find(r => r.name === winnerName);
+      if (winnerW) {
+        if (isTeam) {
+          if (left.includes(winnerW.id)) winningSideIds = left;
+          else if (right.includes(winnerW.id)) winningSideIds = right;
+        } else winningSideIds = [winnerW.id];
+      }
+    }
+
+    async function sideHTML(ids, sideClass) {
+      const wraps = await Promise.all(ids.map(async id => {
+        const w = store.roster.find(r => r.id == id);
+        const name = w ? w.name : '?';
+        const img = w ? await getImageFromDB('wrestler_' + w.id) : null;
+        const isWinner = winningSideIds.includes(Number(id)) || winningSideIds.includes(id);
+        const imgTag = img
+          ? `<img src="${img}" class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" alt="">`
+          : `<div class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;">👤</div>`;
+        return `<div class="past-wrestler-wrap">${imgTag}${isWinner ? '<span class="past-winner-label">WIN</span>' : ''}<span class="past-wrestler-name">${name}</span></div>`;
+      }));
+      return `<div class="past-side ${sideClass}"><div class="past-side-imgs">${wraps.join('')}</div></div>`;
+    }
+
+    const leftIds = left.length ? left : parts.slice(0, Math.ceil(parts.length / 2));
+    const rightIds = right.length ? right : parts.slice(Math.ceil(parts.length / 2));
+    const leftH = await sideHTML(leftIds, 'left');
+    const rightH = await sideHTML(rightIds, 'right');
+    const typeLine = [m.matchType, m.subType].filter(Boolean).join(' · ');
+    const titleLine = (m.isTitleMatch && m.titleId)
+      ? (() => {
+          const t = store.titles.find(x => x.id === m.titleId);
+          return t ? `<span class="past-match-title-gold">🏆 ${t.name}</span>` : '';
+        })()
+      : '';
+
+    return `
+      <div class="past-match-card">
+        ${ratingBadge}
+        <div class="past-match-header">
+          <div class="past-match-type">${typeLine || 'Combate'}</div>
+          ${titleLine}
+        </div>
+        <div class="past-match-body">
+          ${leftH}
+          <div class="past-vs"><span class="past-vs-text">VS</span></div>
+          ${rightH}
+        </div>
+        <div class="past-match-names">${m.card || winnerName || ''}</div>
+      </div>`;
+  }));
+
+  body.innerHTML = cards.join('');
+  document.getElementById('modal-past-event').classList.add('active');
+}
+        
+  async function sideHTML(ids, sideClass) {
           const wraps = await Promise.all(ids.map(async id => {
             const w = store.roster.find(r => r.id == id);
             const name = w ? w.name : '?';
@@ -3108,6 +3423,8 @@
           slot.matchId = matchId;
           if (match.winner && match.winner !== 'Pendiente' && match.winner !== 'Promo') {
             applyEloForMatch(match);
+            match.rating = calculateMatchRating(match);
+            match.feudLevel = getFeudLevelForMatch(match);
           }
         }
       });
@@ -3157,22 +3474,34 @@
     }
     
     function goToNextShow() {
-      editingSlotIndex = null;
-      let safety = 0;
-      do {
-        store.calendar.currentDay++;
-        if (store.calendar.currentDay > 28) {
-          store.calendar.currentDay = 1;
-          store.calendar.currentMonthIndex = (store.calendar.currentMonthIndex || 0) + 1;
-        }
-        safety++;
-        if (safety > 60) break;
-      } while (!getCurrentEvent());
-      store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
-      calendarViewMonthIndex = store.calendar.currentMonthIndex || 0;
-      saveData();
-      renderTodayCard();
+  editingSlotIndex = null;
+
+  const dayBefore = getTotalUniverseDays();
+  const weekBefore = Math.floor(dayBefore / 7);
+
+  let safety = 0;
+  do {
+    store.calendar.currentDay++;
+    if (store.calendar.currentDay > 28) {
+      store.calendar.currentDay = 1;
+      store.calendar.currentMonthIndex = (store.calendar.currentMonthIndex || 0) + 1;
     }
+    safety++;
+    if (safety > 60) break;
+  } while (!getCurrentEvent());
+
+  store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
+  calendarViewMonthIndex = store.calendar.currentMonthIndex || 0;
+  saveData();
+  renderTodayCard();
+
+  // Si hemos cambiado de semana, mostrar resumen de la semana que acaba de terminar
+  const dayAfter = getTotalUniverseDays();
+  const weekAfter = Math.floor(dayAfter / 7);
+  if (weekAfter > weekBefore && typeof openWeeklySummary === 'function') {
+    openWeeklySummary(dayBefore);
+  }
+}
 
     function confirmRedoTodayCard() {
       const event = getCurrentEvent();
