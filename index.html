@@ -5066,11 +5066,6 @@ const showCards = await Promise.all(showsOrdered.map(async s => {
         showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
       }));
 
-            const showBgCacheTeams = {};
-      await Promise.all(store.shows.map(async s => {
-        showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
-      }));
-
       const teamCards = await Promise.all((store.teams || []).map(async t => {
         const members = normalizeTeamMembers(t.members);
         const memberIds = members.map(m => m.id);
@@ -5144,10 +5139,6 @@ const showCards = await Promise.all(showsOrdered.map(async s => {
       document.getElementById('list-teams').innerHTML = teamCards.length
         ? teamCards.join('')
         : `<div class="team-empty"><span>🤝</span>Aún no hay Tag Teams.<br>Crea el primero arriba.</div>`;
-
-    document.getElementById('list-teams').innerHTML = teamCards.length
-      ? teamCards.join('')
-      : `<div class="team-empty"><span>🤝</span>Aún no hay Tag Teams.<br>Crea el primero arriba.</div>`;
       
       const currentDays = getTotalUniverseDays();
       const titleCards = await Promise.all(store.titles.map(async t => {
