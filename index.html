@@ -5066,74 +5066,84 @@ const showCards = await Promise.all(showsOrdered.map(async s => {
         showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
       }));
 
+            const showBgCacheTeams = {};
+      await Promise.all(store.shows.map(async s => {
+        showBgCacheTeams[s.id] = await getImageFromDB('show_bg_' + s.id);
+      }));
+
       const teamCards = await Promise.all((store.teams || []).map(async t => {
-        const membersLine = memberData.map(m => m.name).join(' · ') || 'Sin miembros';
-  const safeName = String(t.name).replace(/'/g, "\\'");
-  const memberCount = memberData.length;
-  const tagLine = tagReps || '—';
-  const teamElo = (typeof getTeamTagElo === 'function') ? getTeamTagElo(t) : null;
+        const members = normalizeTeamMembers(t.members);
+        const memberIds = members.map(m => m.id);
 
-  return `
-    <div class="team-card" style="${bgStyle} border-image: linear-gradient(to right, ${brandColor}, #000) 1;">
-      <div class="team-card-inner">
-        <div class="team-avatars">${avatarsHTML}</div>
-        <div class="team-info">
-          <div class="team-name">${t.name}</div>
-          <div class="team-members-line">${membersLine}</div>
-          <div class="team-meta-row">
-            <span class="team-chip team-chip-tag">🤝 ${tagLine}</span>
-            <span class="team-chip team-chip-count">${memberCount} miembro${memberCount === 1 ? '' : 's'}</span>
-            ${teamElo != null ? `<span class="team-chip team-chip-elo">ELO ${teamElo}</span>` : ''}
-          </div>
-        </div>
-        <div class="team-side-actions">
-          <div class="team-actions-btns">
-            <button type="button" class="team-btn-edit" onclick="event.stopPropagation(); openEditTeam(${t.id})" title="Editar">✏️</button>
-            <button type="button" class="team-btn-del" onclick="event.stopPropagation(); showConfirmModal('¿Eliminar el equipo ${safeName}?', () => deleteItem('teams', ${t.id}))" title="Eliminar">🗑</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
+        const memberData = await Promise.all(memberIds.map(async id => {
+          const w = store.roster.find(r => r.id === id || Number(r.id) === Number(id));
+          if (!w) return null;
+          const img = await getImageFromDB('wrestler_' + w.id);
+          const brands = w.brands || (w.brand ? [w.brand] : []);
+          return { id: w.id, name: w.name, img, brands };
+        }));
+        const validMembers = memberData.filter(Boolean);
 
-  let bgStyle = '';
-  let brandColor = '#e50914';
-  const firstWithBrand = memberData.find(m => m.brands && m.brands.length > 0);
-  if (firstWithBrand) {
-    const showObj = store.shows.find(s => s.name === firstWithBrand.brands[0]);
-    if (showObj) {
-      brandColor = showObj.color || '#e50914';
-      if (showBgCacheTeams[showObj.id]) {
-        bgStyle = `background-image:url('${showBgCacheTeams[showObj.id]}'); background-size:cover; background-position:center;`;
-      }
-    }
-  }
+        const tagIds = getTeamTagRepIds(t);
+        const tagReps = tagIds
+          .map(id => {
+            const w = store.roster.find(r => r.id === id || Number(r.id) === Number(id));
+            return w ? w.name : null;
+          })
+          .filter(Boolean)
+          .join(' & ') || '—';
 
-  const avatarsHTML = memberData.slice(0, 2).map(m => {
-    if (m.img) return `<img src="${m.img}" class="team-avatar-img" alt="${m.name}" onerror="this.outerHTML='<div class=\\'team-avatar-placeholder\\'>👤</div>'">`;
-    return `<div class="team-avatar-placeholder">👤</div>`;
-  }).join('') || `<div class="team-avatar-placeholder">👤</div>`;
+        let bgStyle = '';
+        let brandColor = '#e50914';
+        const firstWithBrand = validMembers.find(m => m.brands && m.brands.length > 0);
+        if (firstWithBrand) {
+          const showObj = store.shows.find(s => s.name === firstWithBrand.brands[0]);
+          if (showObj) {
+            brandColor = showObj.color || '#e50914';
+            if (showBgCacheTeams[showObj.id]) {
+              bgStyle = `background-image:url('${showBgCacheTeams[showObj.id]}'); background-size:cover; background-position:center;`;
+            }
+          }
+        }
 
-  const membersLine = memberData.map(m => m.name).join(' · ') || 'Sin miembros';
-  const safeName = String(t.name).replace(/'/g, "\\'");
+        const avatarsHTML = validMembers.slice(0, 2).map(m => {
+          if (m.img) {
+            return `<img src="${m.img}" class="team-avatar-img" alt="${m.name}" onerror="this.outerHTML='<div class=\\'team-avatar-placeholder\\'>👤</div>'">`;
+          }
+          return `<div class="team-avatar-placeholder">👤</div>`;
+        }).join('') || `<div class="team-avatar-placeholder">👤</div>`;
 
-  return `
-    <div class="team-card" style="${bgStyle} border-image: linear-gradient(to right, ${brandColor}, #000) 1;">
-      <div class="team-card-inner">
-        <div class="team-avatars">${avatarsHTML}</div>
-        <div class="team-info">
-          <div class="team-name">${t.name}</div>
-          <div class="team-members-line">${membersLine}</div>
-          <div class="team-tag-line">Tag: ${tagReps || '—'}</div>
-        </div>
-        <div class="team-side-actions">
-          <div class="team-actions-btns">
-            <button type="button" class="team-btn-edit" onclick="event.stopPropagation(); openEditTeam(${t.id})" title="Editar">✏️</button>
-            <button type="button" class="team-btn-del" onclick="event.stopPropagation(); showConfirmModal('¿Eliminar el equipo ${safeName}?', () => deleteItem('teams', ${t.id}))" title="Eliminar">🗑</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }));
+        const membersLine = validMembers.map(m => m.name).join(' · ') || 'Sin miembros';
+        const safeName = String(t.name || '').replace(/'/g, "\\'");
+        const memberCount = validMembers.length;
+        const teamElo = (typeof getTeamTagElo === 'function') ? getTeamTagElo(t) : null;
+
+        return `
+          <div class="team-card" style="${bgStyle} border-image: linear-gradient(to right, ${brandColor}, #000) 1;">
+            <div class="team-card-inner">
+              <div class="team-avatars">${avatarsHTML}</div>
+              <div class="team-info">
+                <div class="team-name">${t.name || 'Sin nombre'}</div>
+                <div class="team-members-line">${membersLine}</div>
+                <div class="team-meta-row">
+                  <span class="team-chip team-chip-tag">🤝 ${tagReps}</span>
+                  <span class="team-chip team-chip-count">${memberCount} miembro${memberCount === 1 ? '' : 's'}</span>
+                  ${teamElo != null ? `<span class="team-chip team-chip-elo">ELO ${teamElo}</span>` : ''}
+                </div>
+              </div>
+              <div class="team-side-actions">
+                <div class="team-actions-btns">
+                  <button type="button" class="team-btn-edit" onclick="event.stopPropagation(); openEditTeam(${t.id})" title="Editar">✏️</button>
+                  <button type="button" class="team-btn-del" onclick="event.stopPropagation(); showConfirmModal('¿Eliminar el equipo ${safeName}?', () => deleteItem('teams', ${t.id}))" title="Eliminar">🗑</button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }));
+
+      document.getElementById('list-teams').innerHTML = teamCards.length
+        ? teamCards.join('')
+        : `<div class="team-empty"><span>🤝</span>Aún no hay Tag Teams.<br>Crea el primero arriba.</div>`;
 
     document.getElementById('list-teams').innerHTML = teamCards.length
       ? teamCards.join('')
