@@ -1525,18 +1525,17 @@ function randInt(min, max) {
   }
 
   function isPpvMatch(match) {
-    if (!match) return false;
-    if (match.isPpv === true) return true;
-  // PLE/PPV suelen ir sin showNumber de marca semanal
-    if (match.showNumber == null && match.eventName) {
-    const name = String(match.eventName || match.show || '').toLowerCase();
-    // Si el evento no es un show semanal conocido, lo tratamos como PPV
-    const weekly = (store.shows || []).some(s => s.name === match.eventName || s.name === match.show);
-    if (!weekly) return true;
-    }
-    const label = String(match.show || match.eventName || '').toLowerCase();
-    return /ppv|ple|wrestlemania|summerslam|survivor|royal rumble|money in the bank|hell in a cell|elimination chamber|clash|bash| Starrcade|payback|fastlane|extreme rules/i.test(label);
+  if (!match) return false;
+  if (match.isPpv === true) return true;
+  // Solo PPV si está marcado en el calendario de PLEs, no por adivinanza de nombre
+  const label = String(match.show || match.eventName || '');
+  const ppvMap = (store.calendar && store.calendar.ppvs) ? store.calendar.ppvs : {};
+  for (const key of Object.keys(ppvMap)) {
+    const list = ppvMap[key] || [];
+    if (list.some(p => p && (p.name === label || p.name === match.eventName))) return true;
   }
+  return false;
+}
 
 function starsHTML(rating) {
   const r = clampStars(rating);
@@ -1570,23 +1569,28 @@ function getTitleBonus(match) {
 }
 
 function getFeudLevelForMatch(match) {
-  // Si ya viene guardado, usarlo
-  if (typeof match.feudLevel === 'number') return Math.max(0, Math.min(5, match.feudLevel));
-  // Auto: nº de combates previos entre los mismos participantes (aprox. rivalidad)
+  if (typeof match.feudLevel === 'number') {
+    return Math.max(0, Math.min(5, match.feudLevel));
+  }
   const parts = (match.participants || []).filter(Boolean).map(Number).sort((a, b) => a - b);
   if (parts.length < 2) return 0;
   const key = parts.join('-');
   const day = typeof match.universeDay === 'number' ? match.universeDay : getTotalUniverseDays();
+
+  // Solo cuenta 1v1 previos (mismos dos luchadores), no multi-mans
+  if (parts.length !== 2) return 0;
+
   let count = 0;
-  store.matches.forEach(m => {
+  (store.matches || []).forEach(m => {
     if (m === match) return;
     if (m.winner === 'Promo' || m.promoType || m.inactivityPenalty) return;
     if (typeof m.universeDay === 'number' && m.universeDay >= day) return;
     const p = (m.participants || []).filter(Boolean).map(Number).sort((a, b) => a - b);
-    if (p.join('-') === key) count++;
+    if (p.length === 2 && p.join('-') === key) count++;
   });
-  if (count >= 5) return 5;
-  if (count >= 3) return 3;
+
+  if (count >= 4) return 3; // techo más bajo
+  if (count >= 2) return 2;
   if (count >= 1) return 1;
   return 0;
 }
@@ -1647,7 +1651,7 @@ function calculateMatchRating(match) {
   const parts = (match.participants || []).filter(Boolean);
   if (!parts.length) return null;
 
-  // 1) Popularidad → base MÁS AMPLIA (aprox. 1.2 ★ … 4.0 ★)
+  // 1) POP manda de verdad
   let popSum = 0, popN = 0;
   parts.forEach(id => {
     const w = store.roster.find(r => r.id === id);
@@ -1656,43 +1660,53 @@ function calculateMatchRating(match) {
     popN++;
   });
   const avgPop = popN ? popSum / popN : 50;
-  // Curva: pop baja se nota floja; pop alta sube fuerte
-  // 20 pop → ~1.4 | 50 → ~2.5 | 70 → ~3.2 | 90 → ~3.9
-  let score = 1.0 + Math.pow(avgPop / 100, 0.85) * 3.0;
 
-  // 2) Tipo de combate
-  score *= getMatchTypeWeight(match.matchType);
+  // Curva más separada:
+  // 15 → ~1.3 | 30 → ~1.9 | 50 → ~2.6 | 70 → ~3.4 | 90 → ~4.2
+  let score = 0.8 + Math.pow(avgPop / 99, 0.9) * 3.6;
 
-  // 3) Feud
+  // 2) Tipo de combate (bonos más suaves)
+  const t = String(match.matchType || '').toLowerCase();
+  if (/hell in a cell|elimination chamber/.test(t)) score += 0.35;
+  else if (/tlc|ladder|escaleras|cage|jaula|hardcore/.test(t)) score += 0.25;
+  else if (/table|mesa|rumble|battle/.test(t)) score += 0.20;
+  // 2v2 / fatal normal: sin bonus extra
+
+  // 3) Feud (mucho más contenido)
   const feudLv = getFeudLevelForMatch(match);
-  const feud = getFeudModifiers(feudLv);
-  score = score * feud.mult + feud.bonus * 0.65; // bonus algo más suave para no saturar
+  if (feudLv >= 3) score += 0.40;
+  else if (feudLv >= 2) score += 0.25;
+  else if (feudLv >= 1) score += 0.15;
 
   // 4) Título
-  score += getTitleBonus(match);
+  if (match.isTitleMatch && match.titleId) {
+    const title = store.titles.find(x => x.id === match.titleId);
+    if (title && title.type === 'major') score += 0.50;
+    else score += 0.30;
+  }
 
-  // 5) Face vs Heel
-  if (hasFaceHeelChemistry(match)) score += 0.35;
+  // 5) Face vs Heel (pequeño)
+  if (hasFaceHeelChemistry(match)) score += 0.20;
 
-  // 6) Fatiga por repetición
+  // 6) Fatiga
   const fatigue = getMatchupFatiguePenalty(match);
   if (fatigue > 0) score *= (1 - fatigue);
 
-  // 7) PPV / PLE vs show semanal
-  if (isPpvMatch(match)) {
-    score += 0.55;          // empujón de gran evento
-    score *= 1.08;
-  } else {
-    // Semanal: techo un poco más bajo si no hay pop/feud/título
-    if (avgPop < 55 && feudLv === 0 && !match.isTitleMatch) {
-      score *= 0.90;
-    }
-  }
+  // 7) PPV real solamente
+  if (isPpvMatch(match)) score += 0.40;
 
-  // 8) Multiman pequeño bonus de espectáculo
-  if (parts.length >= 4) score += 0.15;
-  if (parts.length >= 6) score += 0.15;
+  // 8) Tope según pop: sin pop no hay 4★+
+  //    media < 35 → máx 3.0
+  //    media < 50 → máx 3.5
+  //    media < 65 → máx 4.0
+  //    media < 80 → máx 4.5
+  let cap = 5;
+  if (avgPop < 35) cap = 3.0;
+  else if (avgPop < 50) cap = 3.5;
+  else if (avgPop < 65) cap = 4.0;
+  else if (avgPop < 80) cap = 4.5;
 
+  score = Math.min(score, cap);
   return clampStars(score);
 }
 
@@ -2298,9 +2312,7 @@ const showRating = (typeof calculateShowRating === 'function')
       return '<div class="past-promo-card">' + (m.card || '🎤 Segmento de promo') + '</div>';
     }
 
-    var rating = (typeof m.rating === 'number')
-      ? m.rating
-      : (typeof calculateMatchRating === 'function' ? calculateMatchRating(m) : null);
+    const rating = (typeof calculateMatchRating === 'function') ? calculateMatchRating(m) : null;
     var ratingBadge = (rating != null)
       ? '<div class="past-match-rating">' + starsHTML(rating) + '</div>'
       : '';
