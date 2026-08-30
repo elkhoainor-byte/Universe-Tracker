@@ -69,7 +69,7 @@
     .card > * { position: relative; z-index: 2; }
     #list-roster .card { height: 110px; min-height: 110px; max-height: 110px; background-size: cover; background-position: center; background-repeat: no-repeat; }
     #list-roster .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 1; }
-    #list-shows .card { height: 110px; min-height: 110px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
+    #list-shows .card { height: 130px; min-height: 130px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
     #list-shows .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); z-index: 1; }
     #list-standings .card { height: 110px; min-height: 110px; max-height: 110px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; padding-right: 12px; }
     #list-standings .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 1; }
@@ -2488,15 +2488,14 @@ function closePastEventModal() {
       }
     }
     document.getElementById('form-cal-show').onsubmit = (e) => {
-      store.shows.push({ id: 'show_' + Date.now(), name, day, color, parrillas: 6, budget: 5000000, viewers: 5000000 });
       e.preventDefault();
       const selectVal = document.getElementById('cal-show-select').value;
       const name = document.getElementById('cal-show-name').value.trim();
       const day = parseInt(document.getElementById('cal-show-day').value);
       const color = document.getElementById('cal-show-color').value;
-      if (selectVal === 'NEW')
-        store.shows.push({ id: 'show_' + Date.now(), name, day, color, parrillas: 6, budget: 5000000 });
-      else {
+      if (selectVal === 'NEW') {
+        store.shows.push({ id: 'show_' + Date.now(), name, day, color, parrillas: 6, budget: 5000000, viewers: 5000000 });
+      } else {
         const show = store.shows.find(s => s.id === selectVal);
         if (show) {
           const oldName = show.name;
@@ -2507,6 +2506,7 @@ function closePastEventModal() {
       closeCalendarEditModal();
       saveData();
     };
+    
     function deleteShowFromModal() {
       const selectVal = document.getElementById('cal-show-select').value;
       if (selectVal !== 'NEW') { deleteItem('shows', selectVal); closeCalendarEditModal(); }
@@ -2546,32 +2546,36 @@ function closePastEventModal() {
       if (show) showConfirmModal(`¿Seguro que quieres eliminar el show "${show.name}"?`, () => { deleteItem('shows', activeShowId); closeShowModal(); });
     }
     document.getElementById('form-edit-show').onsubmit = async (e) => {
-      store.shows.push({ id: newId, name, day, color, parrillas, budget, viewers: 5000000 });
       e.preventDefault();
       const name = document.getElementById('show-name').value.trim();
       const day = parseInt(document.getElementById('show-day').value);
       const parrillas = parseInt(document.getElementById('show-parrillas').value) || 6;
       const color = document.getElementById('show-color').value;
-      let budget = parseInt(document.getElementById('show-budget').value, 10);
-      if (!Number.isFinite(budget) || budget < 0) budget = 5000000;
+      let budget = 5000000;
+      const budgetEl = document.getElementById('show-budget');
+      if (budgetEl) {
+        budget = parseInt(budgetEl.value, 10);
+        if (!Number.isFinite(budget) || budget < 0) budget = 5000000;
+      }
       const logoFile = document.getElementById('show-logo-file').files[0];
       const bgFile = document.getElementById('show-bg-file').files[0];
       if (activeShowId === null) {
         const newId = 'show_' + Date.now();
         if (logoFile) await saveImageToDB('show_logo_' + newId, await fileToBase64(logoFile));
         if (bgFile) await saveImageToDB('show_bg_' + newId, await fileToBase64(bgFile));
-        store.shows.push({ id: newId, name, day, color, parrillas, budget });
+        store.shows.push({ id: newId, name, day, color, parrillas, budget, viewers: 5000000 });
       } else {
         const show = store.shows.find(s => s.id === activeShowId);
-        if (show) {
-          const oldName = show.name;
-          show.name = name; show.day = day; show.color = color;
-          show.parrillas = parrillas;
-          show.budget = budget;
-          if (logoFile) await saveImageToDB('show_logo_' + show.id, await fileToBase64(logoFile));
-          if (bgFile) await saveImageToDB('show_bg_' + show.id, await fileToBase64(bgFile));
-          if (oldName !== name) store.roster.forEach(r => { if (r.brands) { const idx = r.brands.indexOf(oldName); if (idx !== -1) r.brands[idx] = name; } });
-        }
+          if (show) {
+            const oldName = show.name;
+            show.name = name; show.day = day; show.color = color;
+            show.parrillas = parrillas;
+            show.budget = budget;
+            if (show.viewers === undefined || show.viewers === null) show.viewers = 5000000;
+            if (logoFile) await saveImageToDB('show_logo_' + show.id, await fileToBase64(logoFile));
+            if (bgFile) await saveImageToDB('show_bg_' + show.id, await fileToBase64(bgFile));
+            if (oldName !== name) store.roster.forEach(r => { if (r.brands) { const idx = r.brands.indexOf(oldName); if (idx !== -1) r.brands[idx] = name; } });
+          }
       }
       closeShowModal();
       saveData();
@@ -4724,7 +4728,7 @@ function closePastEventModal() {
         const dayNames = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
         const logoHTML = logo ? `<img src="${logo}" class="show-logo-img">` : '';
         const bgStyle = bg ? `background-image:url('${bg}');` : '';
-        return `<div class="card" style="${bgStyle}" onclick="openShowModal('${s.id}')"><div class="card-left" style="padding-left:12px;">${logoHTML}<div class="card-info"><span class="card-title">${s.name}</span><span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span><span class="card-sub" style="color:var(--gold-end);font-weight:700;">💰 ${formatBudget(getShowBudget(s))}</span></div></div></div>`;
+        return `<div class="card" style="${bgStyle}" onclick="openShowModal('${s.id}')"><div class="card-left" style="padding-left:12px;">${logoHTML}<div class="card-info"><span class="card-title">${s.name}</span><span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span><span class="card-sub" style="color:var(--gold-end);font-weight:700;">💰 ${formatBudget(getShowBudget(s))}</span><span class="card-sub" style="color:#64b5f6;font-weight:700;">👁 ${formatViewers(getShowViewers(s))} espectadores</span></div></div></div>`;
       }));
       document.getElementById('list-shows').innerHTML = showCards.length ? showCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay shows.</p>`;
       
