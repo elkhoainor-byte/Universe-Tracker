@@ -70,6 +70,10 @@
     #list-roster .card { height: 110px; min-height: 110px; max-height: 110px; background-size: cover; background-position: center; background-repeat: no-repeat; }
     #list-roster .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 1; }
     #list-shows .card { height: 130px; min-height: 130px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; }
+    .show-rank { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); z-index: 3; min-width: 36px; height: 36px; padding: 0 8px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; color: #fff; background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.25); text-shadow: 0 1px 2px rgba(0,0,0,0.8); pointer-events: none; }
+    #list-shows .card.podium-1 .show-rank { background: linear-gradient(145deg, #ffd700, #b8860b); color: #1a1a1a; border-color: #ffe566; }
+    #list-shows .card.podium-2 .show-rank { background: linear-gradient(145deg, #e8e8e8, #9e9e9e); color: #1a1a1a; border-color: #f5f5f5; }
+    #list-shows .card.podium-3 .show-rank { background: linear-gradient(145deg, #cd7f32, #8b5a2b); color: #fff; border-color: #e0a060; }
     #list-shows .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); z-index: 1; }
     #list-standings .card { height: 110px; min-height: 110px; max-height: 110px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; padding-right: 12px; }
     #list-standings .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 1; }
@@ -1373,6 +1377,28 @@
     if (!Number.isFinite(v)) return '5.000.000';
     return v.toLocaleString('es-ES');
   }
+
+  function getShowScore(show) {
+  const viewers = getShowViewers(show);
+  const budget = getShowBudget(show);
+  // 92,5 % espectadores + 7,5 % presupuesto
+  return (viewers * 0.925) + (budget * 0.075);
+}
+
+function getShowsRankedByScore() {
+  return (store.shows || [])
+    .map(s => ({ id: s.id, score: getShowScore(s) }))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return String(a.id).localeCompare(String(b.id));
+    });
+}
+
+function getShowPosition(showId) {
+  const ranked = getShowsRankedByScore();
+  const idx = ranked.findIndex(r => r.id === showId);
+  return idx === -1 ? null : idx + 1;
+}
 
   function getWrestlerPopularity(w) {
     if (!w) return DEFAULT_POPULARITY;
@@ -4722,14 +4748,31 @@ function closePastEventModal() {
         return `<div class="card" style="${bgStyle}${borderStyle}" onclick="openWrestlerModal(${r.id})"><div class="card-left"><div class="avatar-wrapper">${avatar}</div><div class="card-info"><span class="card-title">${r.name}</span><div class="tags-container">${tags}</div></div>${titleBadges ? `<div class="card-titles-container">${titleBadges}</div>` : ''}</div></div>`;
       }));
       document.getElementById('list-roster').innerHTML = rosterCards.length ? rosterCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay luchadores.</p>`;
-      const showCards = await Promise.all(store.shows.map(async s => {
-        const logo = await getImageFromDB('show_logo_' + s.id);
-        const bg = await getImageFromDB('show_bg_' + s.id);
-        const dayNames = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-        const logoHTML = logo ? `<img src="${logo}" class="show-logo-img">` : '';
-        const bgStyle = bg ? `background-image:url('${bg}');` : '';
-        return `<div class="card" style="${bgStyle}" onclick="openShowModal('${s.id}')"><div class="card-left" style="padding-left:12px;">${logoHTML}<div class="card-info"><span class="card-title">${s.name}</span><span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span><span class="card-sub" style="color:var(--gold-end);font-weight:700;">💰 ${formatBudget(getShowBudget(s))}</span><span class="card-sub" style="color:#64b5f6;font-weight:700;">👁 ${formatViewers(getShowViewers(s))} espectadores</span></div></div></div>`;
-      }));
+      const showsRanked = getShowsRankedByScore();
+const showPosById = {};
+showsRanked.forEach((r, i) => { showPosById[r.id] = i + 1; });
+
+const showCards = await Promise.all(store.shows.map(async s => {
+  const logo = await getImageFromDB('show_logo_' + s.id);
+  const bg = await getImageFromDB('show_bg_' + s.id);
+  const dayNames = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  const logoHTML = logo ? `<img src="${logo}" class="show-logo-img">` : '';
+  const bgStyle = bg ? `background-image:url('${bg}');` : '';
+  const pos = showPosById[s.id] || '?';
+  const podiumClass = pos === 1 ? 'podium-1' : pos === 2 ? 'podium-2' : pos === 3 ? 'podium-3' : '';
+  return `<div class="card ${podiumClass}" style="${bgStyle}" onclick="openShowModal('${s.id}')">
+    <span class="show-rank">#${pos}</span>
+    <div class="card-left" style="padding-left:12px; padding-right:48px;">
+      ${logoHTML}
+      <div class="card-info">
+        <span class="card-title">${s.name}</span>
+        <span class="card-sub">${dayNames[s.day] || ''} · ${s.parrillas || 6} parrillas</span>
+        <span class="card-sub" style="color:var(--gold-end);font-weight:700;">💰 ${formatBudget(getShowBudget(s))}</span>
+        <span class="card-sub" style="color:#64b5f6;font-weight:700;">👁 ${formatViewers(getShowViewers(s))} espectadores</span>
+      </div>
+    </div>
+  </div>`;
+}));
       document.getElementById('list-shows').innerHTML = showCards.length ? showCards.join('') : `<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay shows.</p>`;
       
       const showBgCacheTeams = {};
