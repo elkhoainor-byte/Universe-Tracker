@@ -2042,7 +2042,6 @@ async function openWeeklySummary(forUniverseDay) {
 
   document.getElementById('past-event-title').innerText = `📺 ${label}`;
 
-  // Rating del show (esquina superior derecha)
   const showRatingEl = document.getElementById('past-show-rating');
   const showRating = (typeof calculateShowRating === 'function') ? calculateShowRating(matches) : null;
   if (showRatingEl) {
@@ -2062,42 +2061,40 @@ async function openWeeklySummary(forUniverseDay) {
     return;
   }
 
-  const cards = await Promise.all(matches.map(async (m) => {
+  const cards = await Promise.all(matches.map(async function(m) {
     if (m.inactivityPenalty || m.winner === 'Inactividad') {
-      return `<div class="past-promo-card">${m.card || '⏸ Sin participación'}</div>`;
+      return '<div class="past-promo-card">' + (m.card || '⏸ Sin participación') + '</div>';
     }
     if (m.winner === 'Promo' || m.promoType) {
-      return `<div class="past-promo-card">${m.card || '🎤 Segmento de promo'}</div>`;
+      return '<div class="past-promo-card">' + (m.card || '🎤 Segmento de promo') + '</div>';
     }
 
-    const rating = (typeof m.rating === 'number')
+    var rating = (typeof m.rating === 'number')
       ? m.rating
       : (typeof calculateMatchRating === 'function' ? calculateMatchRating(m) : null);
-    const ratingBadge = rating != null
-      ? `<div class="past-match-rating">${starsHTML(rating)}</div>`
+    var ratingBadge = (rating != null)
+      ? '<div class="past-match-rating">' + starsHTML(rating) + '</div>'
       : '';
 
-    const parts = (m.participants || []).filter(Boolean);
-    const sides = splitSides(parts, m.matchType, m.subType, m.winner);
-    let left = sides.left || [];
-    let right = sides.right || [];
-
-    // Fallback si no es combate por equipos
+    var parts = (m.participants || []).filter(Boolean);
+    var sides = splitSides(parts, m.matchType, m.subType, m.winner);
+    var left = sides.left || [];
+    var right = sides.right || [];
     if (!left.length && !right.length && parts.length) {
-      const mid = Math.ceil(parts.length / 2);
+      var mid = Math.ceil(parts.length / 2);
       left = parts.slice(0, mid);
       right = parts.slice(mid);
     }
 
-    const winnerName = m.winner || '';
-    const isTeam = isTeamBasedMatch(m.matchType, m.subType);
-    let winningSideIds = [];
+    var winnerName = m.winner || '';
+    var isTeam = isTeamBasedMatch(m.matchType, m.subType);
+    var winningSideIds = [];
     if (winnerName && winnerName !== 'Empate' && winnerName !== 'Pendiente') {
-      const winnerW = store.roster.find(r => r.name === winnerName);
+      var winnerW = store.roster.find(function(r) { return r.name === winnerName; });
       if (winnerW) {
         if (isTeam) {
-          if (left.some(id => Number(id) === Number(winnerW.id))) winningSideIds = left;
-          else if (right.some(id => Number(id) === Number(winnerW.id))) winningSideIds = right;
+          if (left.some(function(id) { return Number(id) === Number(winnerW.id); })) winningSideIds = left;
+          else if (right.some(function(id) { return Number(id) === Number(winnerW.id); })) winningSideIds = right;
         } else {
           winningSideIds = [winnerW.id];
         }
@@ -2105,90 +2102,62 @@ async function openWeeklySummary(forUniverseDay) {
     }
 
     async function sideHTML(ids, sideClass) {
-      const list = (ids || []).filter(Boolean);
-      const wraps = await Promise.all(list.map(async (id) => {
-        const w = store.roster.find(r => Number(r.id) === Number(id));
-        const name = w ? w.name : '?';
-        const img = w ? await getImageFromDB('wrestler_' + w.id) : null;
-        const isWinner = winningSideIds.some(x => Number(x) === Number(id));
-        const imgTag = img
-          ? `<img src="${img}" class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" alt="${name}">`
-          : `<div class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;">👤</div>`;
-        return `<div class="past-wrestler-wrap">${isWinner ? '<span class="past-winner-label">GANADOR</span>' : '<span style="height:16px;"></span>'}${imgTag}<span class="past-wrestler-name">${name}</span></div>`;
+      var list = (ids || []).filter(Boolean);
+      var wraps = await Promise.all(list.map(async function(id) {
+        var w = store.roster.find(function(r) { return Number(r.id) === Number(id); });
+        var name = w ? w.name : '?';
+        var img = w ? await getImageFromDB('wrestler_' + w.id) : null;
+        var isWinner = winningSideIds.some(function(x) { return Number(x) === Number(id); });
+        var imgTag = img
+          ? '<img src="' + img + '" class="past-wrestler-img ' + (isWinner ? 'winner-border' : '') + '" alt="' + name + '">'
+          : '<div class="past-wrestler-img ' + (isWinner ? 'winner-border' : '') + '" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;">👤</div>';
+        var winLabel = isWinner ? '<span class="past-winner-label">GANADOR</span>' : '<span style="height:16px;"></span>';
+        return '<div class="past-wrestler-wrap">' + winLabel + imgTag + '<span class="past-wrestler-name">' + name + '</span></div>';
       }));
-      return `<div class="past-side ${sideClass}"><div class="past-side-imgs">${wraps.join('')}</div></div>`;
+      return '<div class="past-side ' + sideClass + '"><div class="past-side-imgs">' + wraps.join('') + '</div></div>';
     }
 
-    const leftH = await sideHTML(left, 'left');
-    const rightH = await sideHTML(right, 'right');
+    var leftH = await sideHTML(left, 'left');
+    var rightH = await sideHTML(right, 'right');
 
-    let typeLine = [m.matchType, m.subType].filter(Boolean).join(' · ');
+    var typeLine = m.matchType || '';
+    if (m.subType) typeLine += (typeLine ? ' · ' : '') + m.subType;
     if (m.matchType === '3 Stages of Hell' && m.stages) {
-      const st = (m.stages || []).filter(Boolean).join(' → ');
+      var st = (m.stages || []).filter(Boolean).join(' → ');
       if (st) typeLine += (typeLine ? ' · ' : '') + st;
     }
 
-    let titleGold = '';
+    var titleGold = '';
     if (m.titleId) {
-      const t = store.titles.find(tt => tt.id === m.titleId);
-      if (t) titleGold = `<span class="past-match-title-gold">🏆 ${t.name}</span>`;
+      var t = store.titles.find(function(tt) { return tt.id === m.titleId; });
+      if (t) titleGold = '<span class="past-match-title-gold">🏆 ' + t.name + '</span>';
     }
 
-    let namesLine = m.card || winnerName || '';
+    var namesLine = m.card || winnerName || '';
     if (typeof formatMatchSummary === 'function') {
-      const nameList = parts.map(id => {
-        const w = store.roster.find(r => Number(r.id) === Number(id));
+      var nameList = parts.map(function(id) {
+        var w = store.roster.find(function(r) { return Number(r.id) === Number(id); });
         return w ? w.name : '?';
       });
       namesLine = formatMatchSummary(nameList, m.matchType, m.subType) || namesLine;
     }
 
-    return `
-      <div class="past-match-card">
-        ${ratingBadge}
-        <div class="past-match-header">
-          <div class="past-match-type">${typeLine || 'Combate'}</div>
-          ${titleGold}
-        </div>
-        <div class="past-match-body">
-          ${leftH}
-          <div class="past-vs"><span class="past-vs-text">VS</span></div>
-          ${rightH}
-        </div>
-        <div class="past-match-names">${namesLine}</div>
-      </div>`;
+    return '<div class="past-match-card">' +
+      ratingBadge +
+      '<div class="past-match-header"><div class="past-match-type">' + (typeLine || 'Combate') + '</div>' + titleGold + '</div>' +
+      '<div class="past-match-body">' + leftH + '<div class="past-vs"><span class="past-vs-text">VS</span></div>' + rightH + '</div>' +
+      '<div class="past-match-names">' + namesLine + '</div>' +
+      '</div>';
   }));
 
   body.innerHTML = cards.join('');
   document.getElementById('modal-past-event').classList.add('active');
 }
-        
-  async function sideHTML(ids, sideClass) {
-          const wraps = await Promise.all(ids.map(async id => {
-            const w = store.roster.find(r => r.id == id);
-            const name = w ? w.name : '?';
-            const img = w ? await getImageFromDB('wrestler_' + w.id) : null;
-            const isWinner = winningSideIds.includes(id);
-            const imgTag = img ? `<img src="${img}" class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" alt="${name}">` : `<div class="past-wrestler-img ${isWinner ? 'winner-border' : ''}" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;">👤</div>`;
-            return `<div class="past-wrestler-wrap">${isWinner ? '<span class="past-winner-label">GANADOR</span>' : '<span style="height:16px;"></span>'}${imgTag}<span class="past-wrestler-name">${name}</span></div>`;
-          }));
-          return `<div class="past-side ${sideClass}"><div class="past-side-imgs">${wraps.join('')}</div></div>`;
-        }
-        const leftH = await sideHTML(left, 'left');
-        const rightH = await sideHTML(right, 'right');
-        let typeLine = m.matchType || '';
-        if (m.subType) typeLine += (typeLine ? ' · ' : '') + m.subType;
-        if (m.matchType === '3 Stages of Hell' && m.stages) { const st = (m.stages || []).filter(Boolean).join(' → '); if (st) typeLine += (typeLine ? ' · ' : '') + st; }
-        let titleGold = '';
-        if (m.titleId) { const t = store.titles.find(tt => tt.id === m.titleId); if (t) titleGold = `<span class="past-match-title-gold">🏆 ${t.name}</span>`; }
-        const namesLine = formatMatchSummary(parts.map(id => { const w = store.roster.find(r => r.id == id); return w ? w.name : '?'; }), m.matchType, m.subType);
-        return `<div class="past-match-card"><div class="past-match-header"><div class="past-match-type">${typeLine || 'Combate'}</div>${titleGold}</div><div class="past-match-body">${leftH}<div class="past-vs"><span class="past-vs-text">v</span></div>${rightH}</div><div class="past-match-names">${namesLine}</div></div>`;
-      }));
-      body.innerHTML = cards.join('');
-      document.getElementById('modal-past-event').classList.add('active');
-    }
-    function closePastEventModal() { document.getElementById('modal-past-event').classList.remove('active'); }
 
+function closePastEventModal() {
+  document.getElementById('modal-past-event').classList.remove('active');
+}
+  
     function openCalendarEditModal(targetDay = 1, initialMode = 'ple') {
       switchCalendarEditMode(initialMode);
       document.getElementById('cal-ple-day').value = targetDay;
