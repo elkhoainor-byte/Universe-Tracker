@@ -1753,6 +1753,7 @@ function calculateShowRating(matches, totalParrillas) {
         setWrestlerElo(id, my + delta, delta);
       });
       match.eloApplied = true;
+      applyPopularityForPromo(match);
       return;
     }
 
@@ -1767,6 +1768,7 @@ function calculateShowRating(matches, totalParrillas) {
         const delta = PROMO_AUTOBOMBO_GAIN;
         setWrestlerElo(id, my + delta, delta);
         match.eloApplied = true;
+        applyPopularityForInactivity(match);
         return;
       }
       if (match.promoType === 'provocacion') {
@@ -1792,6 +1794,7 @@ function calculateShowRating(matches, totalParrillas) {
           setWrestlerElo(a.id, eloA - delta, -delta);
         }
         match.eloApplied = true;
+        applyPopularityForPromo(match);
         return;
       }
       return;
@@ -1939,36 +1942,33 @@ function calculateShowRating(matches, totalParrillas) {
     applyManagersShare(mgrRight, rightIds, rightHasMgr);
 
     match.eloApplied = true;
+    applyPopularityForMatch(match);
   }
 
   function recalculateAllElos() {
-    (store.roster || []).forEach(r => {
-      r.elo = DEFAULT_ELO;
-      r.lastEloDelta = 0;
-    });
-    (store.matches || []).forEach(m => {
-      m.eloApplied = false;
-    });
+  (store.roster || []).forEach(r => {
+    r.elo = DEFAULT_ELO;
+    r.lastEloDelta = 0;
+    r.popularity = DEFAULT_POPULARITY;
+    r.lastPopDelta = 0;
+  });
 
-    const ordered = (store.matches || []).slice().sort((a, b) => {
-      const da = (typeof a.universeDay === 'number') ? a.universeDay : 0;
-      const db = (typeof b.universeDay === 'number') ? b.universeDay : 0;
-      if (da !== db) return da - db;
-      return String(a.id).localeCompare(String(b.id));
-    });
+  (store.matches || []).forEach(m => {
+    m.eloApplied = false;
+    m.popApplied = false;
+  });
 
-    if (match.winner === 'Promo' || match.promoType) {
-      applyPopularityForPromo(match);
-    } else if (match.inactivityPenalty || match.winner === 'Inactividad') {
-      applyPopularityForInactivity(match);
-    } else {
-      applyPopularityForMatch(match);
-    }
+  const ordered = (store.matches || []).slice().sort((a, b) => {
+    const da = (typeof a.universeDay === 'number') ? a.universeDay : 0;
+    const db = (typeof b.universeDay === 'number') ? b.universeDay : 0;
+    if (da !== db) return da - db;
+    return String(a.id).localeCompare(String(b.id));
+  });
 
-    ordered.forEach(m => {
-      applyEloForMatch(m);
-    });
-  }
+  ordered.forEach(m => {
+    applyEloForMatch(m); // aquí dentro se aplica ELO + POP
+  });
+}
 
   (store.roster || []).forEach(r => {
     if (r.elo === undefined || r.elo === null || r.elo === '') r.elo = DEFAULT_ELO;
