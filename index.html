@@ -1216,7 +1216,7 @@
     return {
       roster: [], teams: [], titles: [], matches: [],
       shows: JSON.parse(JSON.stringify(defaultShows)),
-      calendar: { configured: false, startMonth: 0, currentMonthIndex: 0, currentDay: 1, ppvs: {} },
+      calendar: { configured: false, startMonth: 0, currentMonthIndex: 0, currentDay: 1, currentEventIndex: 0, ppvs: {} },
       todayCard: { locked: false, slots: [], eventName: null, showNumber: null }
     };
   }
@@ -1228,7 +1228,7 @@
     if (!store.shows || store.shows.length === 0) store.shows = JSON.parse(JSON.stringify(defaultShows));
     if (!store.calendar) store.calendar = { configured: false, startMonth: 0, currentMonthIndex: 0, currentDay: 1, ppvs: {} };
     if (!store.calendar.ppvs) store.calendar.ppvs = {};
-    if (store.calendar.currentDay === undefined) store.calendar.currentDay = 1;
+    if (store.calendar.currentEventIndex === undefined) store.calendar.currentEventIndex = 0;
     if (!store.todayCard) store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
     store.shows.forEach(s => {
     if (s.parrillas === undefined) s.parrillas = 6;
@@ -2933,28 +2933,69 @@ function closePastEventModal() {
       saveData();
     };
 
-    function getCurrentEvent() {
-      const startMonth = store.calendar.startMonth || 0;
-      const currentMonthIndex = store.calendar.currentMonthIndex || 0;
-      const day = store.calendar.currentDay || 1;
-      const absoluteMonth = startMonth + currentMonthIndex;
-      const monthDisplayIndex = absoluteMonth % 12;
-      const yearDisplay = Math.floor(absoluteMonth / 12) + 1;
-      const ppvs = store.calendar.ppvs[`Y${yearDisplay}_M${monthDisplayIndex}_D${day}`] || [];
-      if (ppvs.length > 0) {
-        const ppv = ppvs[0];
-        return { type: 'ple', name: ppv.name, brands: ppv.brands && ppv.brands.length ? ppv.brands : store.shows.map(s => s.name), parrillas: ppv.parrillas || 8, showNumber: null };
+    function getEventsForDate(monthIndex, day) {
+  const startMonth = store.calendar.startMonth || 0;
+  const absoluteMonth = startMonth + (monthIndex || 0);
+  const monthDisplayIndex = absoluteMonth % 12;
+  const yearDisplay = Math.floor(absoluteMonth / 12) + 1;
+  const dayOfWeek = ((day - 1) % 7) + 1;
+  const events = [];
+
+  // 1) Shows semanales de ese día de la semana (todos, no solo el primero)
+  const dayShows = (store.shows || []).filter(s => parseInt(s.day) === dayOfWeek);
+  dayShows.forEach(show => {
+    let count = 0;
+    for (let m = 0; m < monthIndex; m++) {
+      for (let d = 1; d <= 28; d++) {
+        if (((d - 1) % 7) + 1 === dayOfWeek) count++;
       }
-      const dayOfWeek = ((day - 1) % 7) + 1;
-      const show = store.shows.find(s => parseInt(s.day) === dayOfWeek);
-      if (show) {
-        let count = 0;
-        for (let m = 0; m < currentMonthIndex; m++) for (let d = 1; d <= 28; d++) if (((d - 1) % 7) + 1 === dayOfWeek) count++;
-        for (let d = 1; d <= day; d++) if (((d - 1) % 7) + 1 === dayOfWeek) count++;
-        return { type: 'show', name: show.name, brands: [show.name], parrillas: show.parrillas || 6, showNumber: count, showId: show.id };
-      }
-      return null;
     }
+    for (let d = 1; d <= day; d++) {
+      if (((d - 1) % 7) + 1 === dayOfWeek) count++;
+    }
+    events.push({
+      type: 'show',
+      name: show.name,
+      brands: [show.name],
+      parrillas: show.parrillas || 6,
+      showNumber: count,
+      showId: show.id
+    });
+  });
+
+  // 2) Todos los PLE de ese día
+  const key = `Y${yearDisplay}_M${monthDisplayIndex}_D${day}`;
+  const ppvs = store.calendar.ppvs[key] || [];
+  ppvs.forEach(ppv => {
+    events.push({
+      type: 'ple',
+      name: ppv.name,
+      brands: (ppv.brands && ppv.brands.length) ? ppv.brands : store.shows.map(s => s.name),
+      parrillas: ppv.parrillas || 8,
+      showNumber: null
+    });
+  });
+
+  return events;
+}
+
+function getEventsForCurrentDay() {
+  return getEventsForDate(
+    store.calendar.currentMonthIndex || 0,
+    store.calendar.currentDay || 1
+  );
+}
+
+function getCurrentEvent() {
+  const events = getEventsForCurrentDay();
+  if (!events.length) return null;
+  let idx = store.calendar.currentEventIndex || 0;
+  if (idx < 0) idx = 0;
+  if (idx >= events.length) idx = events.length - 1;
+  store.calendar.currentEventIndex = idx;
+  return events[idx];
+}
+  
     function getAvailableWrestlers(brands) {
       if (!brands || brands.length === 0) return [...store.roster].sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
       return store.roster.filter(r => (r.brands || (r.brand ? [r.brand] : [])).some(b => brands.includes(b))).sort((a,b) => cleanName(a.name).localeCompare(cleanName(b.name)));
@@ -3414,6 +3455,12 @@ function closePastEventModal() {
       const container = document.getElementById('today-slots-container');
       const btnFin = document.getElementById('btn-finalize-card');
       const btnNext = document.getElementById('btn-next-show');
+      const events = getEventsForCurrentDay();
+      const idx = store.calendar.currentEventIndex || 0;
+      const multi = events.length > 1
+        ? ` · Evento ${idx + 1}/${events.length}`
+        : '';
+      header.innerText = `📺 ${label}${multi}`;
 
       if (!event) {
         header.innerText = 'No hay show programado para hoy';
@@ -3888,6 +3935,21 @@ function closePastEventModal() {
   const dayBefore = getTotalUniverseDays();
   const weekBefore = Math.floor(dayBefore / 7);
 
+  const eventsToday = getEventsForCurrentDay();
+  const idx = store.calendar.currentEventIndex || 0;
+
+  // ¿Queda otro evento el mismo día?
+  if (eventsToday.length > 1 && idx + 1 < eventsToday.length) {
+    store.calendar.currentEventIndex = idx + 1;
+    store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
+    calendarViewMonthIndex = store.calendar.currentMonthIndex || 0;
+    saveData();
+    renderTodayCard();
+    return;
+  }
+
+  // No quedan más → día siguiente y primer evento de ese día
+  store.calendar.currentEventIndex = 0;
   let safety = 0;
   do {
     store.calendar.currentDay++;
@@ -3897,14 +3959,13 @@ function closePastEventModal() {
     }
     safety++;
     if (safety > 60) break;
-  } while (!getCurrentEvent());
+  } while (getEventsForCurrentDay().length === 0);
 
   store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
   calendarViewMonthIndex = store.calendar.currentMonthIndex || 0;
   saveData();
   renderTodayCard();
 
-  // Si hemos cambiado de semana, mostrar resumen de la semana que acaba de terminar
   const dayAfter = getTotalUniverseDays();
   const weekAfter = Math.floor(dayAfter / 7);
   if (weekAfter > weekBefore && typeof openWeeklySummary === 'function') {
