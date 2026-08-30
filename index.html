@@ -3455,13 +3455,6 @@ function getCurrentEvent() {
       const container = document.getElementById('today-slots-container');
       const btnFin = document.getElementById('btn-finalize-card');
       const btnNext = document.getElementById('btn-next-show');
-      const events = getEventsForCurrentDay();
-      const idx = store.calendar.currentEventIndex || 0;
-      const multi = events.length > 1
-        ? ` · Evento ${idx + 1}/${events.length}`
-        : '';
-      header.innerText = `📺 ${label}${multi}`;
-
       if (!event) {
         header.innerText = 'No hay show programado para hoy';
         container.innerHTML = '<p style="color:var(--text-dim); text-align:center;">Avanza el calendario o configura un show para este día.</p>';
@@ -3471,7 +3464,10 @@ function getCurrentEvent() {
       }
 
       const label = event.showNumber != null ? `${event.name} #${event.showNumber}` : event.name;
-      header.innerText = `📺 ${label}`;
+      const events = getEventsForCurrentDay();
+      const evIdx = store.calendar.currentEventIndex || 0;
+      const multi = events.length > 1 ? ` · Evento ${evIdx + 1}/${events.length}` : '';
+      header.innerText = `📺 ${label}${multi}`;
       const available = getAvailableWrestlers(event.brands);
       const locked = store.todayCard.locked;
 
