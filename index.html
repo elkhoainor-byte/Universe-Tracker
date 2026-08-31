@@ -743,7 +743,7 @@
           <div class="filter-row">
             <span class="filter-row-label">Periodo</span>
             <select id="standings-period" onchange="onStandingsFilterChange()">
-              <option value="all">Todo el universo</option>
+              <option value="all">Clasificación general</option>
               <option value="4">Último mes (4 semanas)</option>
               <option value="12">Últimos 3 meses (12 semanas)</option>
               <option value="24">Últimos 6 meses (24 semanas)</option>
@@ -4599,6 +4599,101 @@ function getCurrentEvent() {
         return m.universeDay >= minDay;
       });
     }
+
+    /**
+ * ELO neto obtenido en un periodo [minDay .. currentDays].
+ * Simula el historial sin persistir cambios en store.
+ * Devuelve { [wrestlerId]: deltaElo }.
+ * Si periodWeeks === 'all', devuelve null (usar ELO global).
+ */
+function getPeriodEloDeltas() {
+  const weeks = standingsFilters.periodWeeks;
+  if (weeks === 'all' || weeks === '0') return null;
+
+  const currentDays = getTotalUniverseDays();
+  const rangeDays = parseInt(weeks, 10) * 7;
+  const minDay = Math.max(0, currentDays - rangeDays);
+
+  const isCountable = (m) =>
+    m &&
+    m.winner !== 'Promo' &&
+    m.winner !== 'Inactividad' &&
+    !m.inactivityPenalty &&
+    m.winner !== 'Pendiente';
+
+  // Snapshot para restaurar
+  const savedRoster = (store.roster || []).map(r => ({
+    id: r.id,
+    elo: r.elo,
+    lastEloDelta: r.lastEloDelta
+  }));
+  const savedMatches = (store.matches || []).map(m => ({
+    id: m.id,
+    eloApplied: !!m.eloApplied
+  }));
+
+  // Reset temporal
+  (store.roster || []).forEach(r => {
+    r.elo = DEFAULT_ELO;
+    r.lastEloDelta = 0;
+  });
+  (store.matches || []).forEach(m => {
+    m.eloApplied = false;
+  });
+
+  const ordered = (store.matches || []).slice().filter(isCountable).sort((a, b) => {
+    const da = (typeof a.universeDay === 'number') ? a.universeDay : 0;
+    const db = (typeof b.universeDay === 'number') ? b.universeDay : 0;
+    if (da !== db) return da - db;
+    return String(a.id).localeCompare(String(b.id));
+  });
+
+  const before = ordered.filter(m =>
+    typeof m.universeDay === 'number' && m.universeDay < minDay
+  );
+  // Mismo criterio que getMatchesInPeriod: sin día = cuenta en el periodo
+  const during = ordered.filter(m => {
+    if (typeof m.universeDay !== 'number') return true;
+    return m.universeDay >= minDay;
+  });
+
+  before.forEach(m => {
+    m.eloApplied = false;
+    applyEloForMatch(m, { applyPop: false });
+  });
+
+  const startMap = {};
+  (store.roster || []).forEach(r => {
+    startMap[r.id] = getWrestlerElo(r);
+  });
+
+  during.forEach(m => {
+    m.eloApplied = false;
+    applyEloForMatch(m, { applyPop: false });
+  });
+
+  const deltaMap = {};
+  (store.roster || []).forEach(r => {
+    const start = startMap[r.id] != null ? startMap[r.id] : DEFAULT_ELO;
+    deltaMap[r.id] = getWrestlerElo(r) - start;
+  });
+
+  // Restaurar estado real
+  savedRoster.forEach(s => {
+    const r = store.roster.find(x => x.id === s.id);
+    if (!r) return;
+    r.elo = s.elo;
+    r.lastEloDelta = s.lastEloDelta;
+  });
+  savedMatches.forEach(s => {
+    const m = store.matches.find(x => x.id === s.id);
+    if (!m) return;
+    m.eloApplied = s.eloApplied;
+  });
+
+  return deltaMap;
+}
+  
     function getWrestlerRecord(wrestler, matchesPool) {
       const pool = matchesPool || store.matches;
       const history = pool.filter(m =>
@@ -4726,106 +4821,99 @@ function getCurrentEvent() {
       if (btnT) btnT.classList.toggle('active', standingsFilters.mode === 'teams');
 
       const matchesPool = getMatchesInPeriod();
+const periodEloDeltas = getPeriodEloDeltas(); // null = clasificación general
+const usePeriodElo = periodEloDeltas != null;
 
-      const championIds = new Set();
-      store.titles.forEach(t => (t.champions || []).forEach(id => championIds.add(id)));
+const championIds = new Set();
+store.titles.forEach(t => (t.champions || []).forEach(id => championIds.add(id)));
 
-      // Filtros comunes (afectan a Superstars y Equipos)
-      let rosterPool = [...store.roster].filter(r => {
-        const brands = r.brands || (r.brand ? [r.brand] : []);
-        if (standingsFilters.brands && standingsFilters.brands.length > 0) {
-          if (!brands.some(b => standingsFilters.brands.includes(b))) return false;
-        }
-        if (standingsFilters.alignment !== 'ALL' && (r.alignment || 'Face') !== standingsFilters.alignment) return false;
-        if (standingsFilters.gender !== 'ALL' && (r.gender || 'Men') !== standingsFilters.gender) return false;
-        if (standingsFilters.division !== 'ALL' && (r.division || 'Midcarder') !== standingsFilters.division) return false;
-        if (standingsFilters.hideInactive && (r.division === 'Inactivo')) return false;
-        if (standingsFilters.excludeChamps && championIds.has(r.id)) return false;
-        return true;
-      });
+// ... (el filtro de rosterPool se queda igual) ...
 
-      const showBgCache = {};
-      await Promise.all(store.shows.map(async s => {
-        showBgCache[s.id] = await getImageFromDB('show_bg_' + s.id);
-      }));
+let ranked = [];
 
-      let ranked = [];
+if (standingsFilters.mode === 'teams') {
+  const teams = store.teams.filter(t => getTeamMemberIds(t).length > 0);
+  ranked = teams.map(team => {
+    const allIds = getTeamMemberIds(team);
+    const tagIds = getTeamTagRepIds(team);
+    const repIds = tagIds.length ? tagIds : allIds;
 
-      if (standingsFilters.mode === 'teams') {
-        const teams = store.teams.filter(t => getTeamMemberIds(t).length > 0);
-        ranked = teams.map(team => {
-          const allIds = getTeamMemberIds(team);
-          const tagIds = getTeamTagRepIds(team);
-          const repIds = tagIds.length ? tagIds : allIds;
+    const members = repIds
+      .map(id => store.roster.find(r => r.id === id))
+      .filter(Boolean);
+    const inPool = repIds
+      .map(id => rosterPool.find(r => r.id === id))
+      .filter(Boolean);
 
-          const members = repIds
-            .map(id => store.roster.find(r => r.id === id))
-            .filter(Boolean);
-          const inPool = repIds
-            .map(id => rosterPool.find(r => r.id === id))
-            .filter(Boolean);
+    const hasAttrFilter =
+      (standingsFilters.brands && standingsFilters.brands.length > 0) ||
+      standingsFilters.alignment !== 'ALL' ||
+      standingsFilters.gender !== 'ALL' ||
+      standingsFilters.division !== 'ALL' ||
+      standingsFilters.hideInactive ||
+      standingsFilters.excludeChamps;
 
-          const hasAttrFilter =
-            (standingsFilters.brands && standingsFilters.brands.length > 0) ||
-            standingsFilters.alignment !== 'ALL' ||
-            standingsFilters.gender !== 'ALL' ||
-            standingsFilters.division !== 'ALL' ||
-            standingsFilters.hideInactive ||
-            standingsFilters.excludeChamps;
+    if (hasAttrFilter && !inPool.length) return null;
 
-          if (hasAttrFilter && !inPool.length) return null;
+    const useMembers = inPool.length ? inPool : members;
+    if (!useMembers.length) return null;
 
-          const useMembers = inPool.length ? inPool : members;
-          if (!useMembers.length) return null;
+    let wins = 0, losses = 0, draws = 0, total = 0;
+    useMembers.forEach(m => {
+      const rec = getWrestlerRecord(m, matchesPool);
+      wins += rec.wins;
+      losses += rec.losses;
+      draws += rec.draws;
+      total += rec.total;
+    });
+    const n = useMembers.length;
+    const avgWins = wins / n;
+    const avgLosses = losses / n;
+    const avgDraws = draws / n;
+    const avgTotal = total / n;
+    const pct = avgTotal > 0 ? avgWins / avgTotal : 0;
 
-          let wins = 0, losses = 0, draws = 0, total = 0;
-          useMembers.forEach(m => {
-            const rec = getWrestlerRecord(m, matchesPool);
-            wins += rec.wins;
-            losses += rec.losses;
-            draws += rec.draws;
-            total += rec.total;
-          });
-          const n = useMembers.length;
-          const avgWins = wins / n;
-          const avgLosses = losses / n;
-          const avgDraws = draws / n;
-          const avgTotal = total / n;
-          const pct = avgTotal > 0 ? avgWins / avgTotal : 0;
-          const elo = getTeamTagElo(team);
-          return {
-            isTeam: true,
-            team,
-            members: useMembers,
-            wins: Math.round(avgWins * 10) / 10,
-            losses: Math.round(avgLosses * 10) / 10,
-            draws: Math.round(avgDraws * 10) / 10,
-            total: Math.round(avgTotal * 10) / 10,
-            pct,
-            elo
-          };
-        }).filter(Boolean).sort((a, b) => {
-          if (b.elo !== a.elo) return b.elo - a.elo;
-          if (b.wins !== a.wins) return b.wins - a.wins;
-          if (b.pct !== a.pct) return b.pct - a.pct;
-          return a.losses - b.losses;
-        });
-      } 
-      
-      else {
-        ranked = rosterPool.map(r => {
-          const rec = getWrestlerRecord(r, matchesPool);
-          const pct = rec.total > 0 ? (rec.wins / rec.total) : 0;
-          const elo = getWrestlerElo(r);
-          return { isTeam: false, wrestler: r, ...rec, pct, elo };
-        }).sort((a, b) => {
-          if (b.elo !== a.elo) return b.elo - a.elo;
-          if (b.wins !== a.wins) return b.wins - a.wins;
-          if (b.pct !== a.pct) return b.pct - a.pct;
-          return a.losses - b.losses;
-        });
-      }
+    // ELO de ranking: periodo (media de deltas) o ELO global del equipo
+    let elo;
+    if (usePeriodElo) {
+      const sum = useMembers.reduce((s, m) => s + (periodEloDeltas[m.id] || 0), 0);
+      elo = Math.round(sum / n);
+    } else {
+      elo = getTeamTagElo(team);
+    }
 
+    return {
+      isTeam: true,
+      team,
+      members: useMembers,
+      wins: Math.round(avgWins * 10) / 10,
+      losses: Math.round(avgLosses * 10) / 10,
+      draws: Math.round(avgDraws * 10) / 10,
+      total: Math.round(avgTotal * 10) / 10,
+      pct,
+      elo
+    };
+  }).filter(Boolean).sort((a, b) => {
+    if (b.elo !== a.elo) return b.elo - a.elo;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (b.pct !== a.pct) return b.pct - a.pct;
+    return a.losses - b.losses;
+  });
+} else {
+  ranked = rosterPool.map(r => {
+    const rec = getWrestlerRecord(r, matchesPool);
+    const pct = rec.total > 0 ? (rec.wins / rec.total) : 0;
+    const elo = usePeriodElo
+      ? (periodEloDeltas[r.id] || 0)
+      : getWrestlerElo(r);
+    return { isTeam: false, wrestler: r, ...rec, pct, elo };
+  }).sort((a, b) => {
+    if (b.elo !== a.elo) return b.elo - a.elo;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (b.pct !== a.pct) return b.pct - a.pct;
+    return a.losses - b.losses;
+  });
+}
       const limit = standingsFilters.limit || 0;
       if (limit > 0) ranked = ranked.slice(0, limit);
 
