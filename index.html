@@ -5320,7 +5320,7 @@ if (standingsFilters.mode === 'teams') {
       draws += rec.draws;
       total += rec.total;
     });
-    const n = useMembers.length;
+        const n = useMembers.length;
     const avgWins = wins / n;
     const avgLosses = losses / n;
     const avgDraws = draws / n;
@@ -5342,15 +5342,50 @@ if (standingsFilters.mode === 'teams') {
       wins: Math.round(avgWins * 10) / 10,
       losses: Math.round(avgLosses * 10) / 10,
       draws: Math.round(avgDraws * 10) / 10,
-     ...
-      const limit = standingsFilters.limit || 0;
-      if (limit > 0) ranked = ranked.slice(0, limit);
+      total: Math.round(avgTotal * 10) / 10,
+      pct,
+      elo
+    };
+  }).filter(Boolean).sort((a, b) => {
+    if (b.elo !== a.elo) return b.elo - a.elo;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (b.pct !== a.pct) return b.pct - a.pct;
+    return a.losses - b.losses;
+  });
 
-      if (!ranked.length) {
-        container.innerHTML = '<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay resultados con estos filtros.</p>';
-        return;
-      }
+  } else {
+    // MODO SUPERSTARS
+    ranked = rosterPool.map(r => {
+      const rec = getWrestlerRecord(r, matchesPool);
+      const pct = rec.total > 0 ? (rec.wins / rec.total) : 0;
+      const elo = usePeriodElo
+        ? (periodEloDeltas[r.id] || 0)
+        : getWrestlerElo(r);
+      return {
+        isTeam: false,
+        wrestler: r,
+        wins: rec.wins,
+        losses: rec.losses,
+        draws: rec.draws,
+        total: rec.total,
+        pct,
+        elo
+      };
+    }).sort((a, b) => {
+      if (b.elo !== a.elo) return b.elo - a.elo;
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      if (b.pct !== a.pct) return b.pct - a.pct;
+      return a.losses - b.losses;
+    });
+  }
 
+  const limit = standingsFilters.limit || 0;
+  if (limit > 0) ranked = ranked.slice(0, limit);
+
+  if (!ranked.length) {
+    container.innerHTML = '<p style="color:var(--text-dim); text-align:center; margin-top:20px;">No hay resultados con estos filtros.</p>';
+    return;
+  }
       const cards = await Promise.all(ranked.map(async (row, i) => {
         const pos = i + 1;
         const podiumClass = pos === 1 ? 'podium-1' : pos === 2 ? 'podium-2' : pos === 3 ? 'podium-3' : '';
