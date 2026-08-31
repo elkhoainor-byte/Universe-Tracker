@@ -4852,14 +4852,25 @@ function computeChampionOfTheYear(start, end) {
 }
 
 function computeMatchOfTheYear(start, end) {
-  const yearMatches = getMatchesInDayRange(start, end).filter(m =>
-    m.winner &&
-    m.winner !== 'Promo' &&
-    m.winner !== 'Inactividad' &&
-    !m.inactivityPenalty &&
-    m.winner !== 'Pendiente' &&
-    (m.participants || []).filter(Boolean).length >= 2
-  );
+  const yearMatches = getMatchesInDayRange(start, end).filter(m => {
+    if (!m.winner) return false;
+    if (m.winner === 'Promo' || m.promoType) return false;
+    if (m.winner === 'Inactividad' || m.inactivityPenalty) return false;
+    if (m.winner === 'Pendiente') return false;
+
+    const parts = (m.participants || []).filter(Boolean);
+    // Solo 1 vs 1
+    if (parts.length !== 2) return false;
+    if (isTeamBasedMatch(m.matchType, m.subType)) return false;
+
+    // Excluir multi-mans por si el tipo/subtipo lo indica
+    const blob = `${m.matchType || ''} ${m.subType || ''}`.toLowerCase();
+    if (/triple|fatal|rumble|battle royal|gauntlet|war ?games|elimination chamber|handicap/.test(blob)) {
+      return false;
+    }
+    return true;
+  });
+
   if (!yearMatches.length) return null;
 
   const snaps = getEloSnapshotBeforeEachMatch(yearMatches);
@@ -4869,14 +4880,17 @@ function computeMatchOfTheYear(start, end) {
     const snap = snaps[m.id] || {};
     const parts = (m.participants || []).filter(Boolean);
     let sum = 0;
-    parts.forEach(id => { sum += (snap[id] != null ? snap[id] : DEFAULT_ELO); });
+    parts.forEach(id => {
+      sum += (snap[id] != null ? snap[id] : DEFAULT_ELO);
+    });
     const names = parts.map(id => {
       const w = store.roster.find(r => Number(r.id) === Number(id));
       return w ? w.name : '?';
     });
     const label = typeof formatMatchSummary === 'function'
       ? formatMatchSummary(names, m.matchType, m.subType)
-      : names.join(' vs ');
+      : `${names[0]} vs ${names[1]}`;
+
     if (!best || sum > best.sum) {
       best = { match: m, sum, label, names };
     }
