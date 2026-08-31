@@ -635,6 +635,24 @@
     .weekly-summary-card h3 { color: var(--accent); font-size: 1rem; margin-bottom: 8px; }
     .weekly-match-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px dashed #333; font-size: 0.82rem; }
     .weekly-match-row:last-child { border-bottom: none; }
+    /* ===== SLAMMY AWARDS ===== */
+    .slammy-overlay { display: none; position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.92); align-items: center; justify-content: center; padding: 20px; }
+    .slammy-overlay.active { display: flex; }
+    .slammy-box { width: 100%; max-width: 420px; background: linear-gradient(160deg, #1a1500 0%, #0d0d0d 45%, #1a1000 100%); border: 2px solid var(--gold-end); border-radius: 18px; padding: 28px 22px 22px; text-align: center; box-shadow: 0 0 40px rgba(255,215,0,0.25), 0 12px 40px rgba(0,0,0,0.7); animation: slammyIn 0.35s ease-out; }
+    @keyframes slammyIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .slammy-header { font-family: 'Arial Black', Impact, sans-serif; font-weight: 900; font-style: italic; font-size: 1.55rem; letter-spacing: 2px; color: var(--gold-end); text-shadow: 0 0 18px rgba(255,215,0,0.55), 0 2px 4px rgba(0,0,0,0.9); margin-bottom: 6px; text-transform: uppercase; }
+    .slammy-year { font-size: 0.8rem; color: #c9a227; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 18px; }
+    .slammy-category { font-size: 0.72rem; font-weight: 900; letter-spacing: 1.2px; text-transform: uppercase; color: #fff; background: linear-gradient(90deg, transparent, rgba(255,215,0,0.15), transparent); padding: 8px 6px; margin-bottom: 14px; border-top: 1px solid rgba(255,215,0,0.35); border-bottom: 1px solid rgba(255,215,0,0.35); }
+    .slammy-winner-name { font-family: 'Arial Black', Impact, sans-serif; font-weight: 900; font-style: italic; font-size: 1.45rem; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 12px rgba(229,9,20,0.35); margin: 10px 0 6px; line-height: 1.2; text-transform: uppercase; }
+    .slammy-winner-sub { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 18px; line-height: 1.35; }
+    .slammy-photo { width: 110px; height: 140px; object-fit: cover; object-position: top center; border-radius: 10px; border: 2px solid var(--gold-end); box-shadow: 0 4px 16px rgba(0,0,0,0.6); margin: 0 auto 8px; display: block; background: #222; }
+    .slammy-photo-ph { width: 110px; height: 140px; border-radius: 10px; border: 2px solid var(--gold-end); background: #222; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 8px; color: var(--text-dim); }
+    .slammy-photos-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .slammy-photos-row .slammy-photo,
+    .slammy-photos-row .slammy-photo-ph { width: 72px; height: 92px; margin: 0; }
+    .slammy-btn { width: 100%; padding: 13px; border: none; border-radius: 10px; font-weight: 900; font-size: 0.95rem; cursor: pointer; background: linear-gradient(145deg, #ffd700, #b8860b); color: #1a1a1a; letter-spacing: 0.5px; }
+    .slammy-btn:hover { filter: brightness(1.08); }
+    .slammy-step { font-size: 0.7rem; color: #888; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -4018,7 +4036,6 @@ function getCurrentEvent() {
   const eventsToday = getEventsForCurrentDay();
   const idx = store.calendar.currentEventIndex || 0;
 
-  // ¿Queda otro evento el mismo día?
   if (eventsToday.length > 1 && idx + 1 < eventsToday.length) {
     store.calendar.currentEventIndex = idx + 1;
     store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
@@ -4028,18 +4045,39 @@ function getCurrentEvent() {
     return;
   }
 
-  // No quedan más → día siguiente y primer evento de ese día
+  // Guardar mes actual ANTES de avanzar (para detectar fin de diciembre)
+  const monthBeforeAdvance = store.calendar.currentMonthIndex || 0;
+  const dayBeforeAdvance = store.calendar.currentDay || 1;
+
   store.calendar.currentEventIndex = 0;
   let safety = 0;
+  let finishedDecemberMonthIndex = null;
+
   do {
     store.calendar.currentDay++;
     if (store.calendar.currentDay > 28) {
+      // Acaba de terminar el mes monthBeforeAdvance (o el mes en curso del bucle)
+      const finishedIdx = (store.calendar.currentMonthIndex || 0);
+      const startMonth = store.calendar.startMonth || 0;
+      const absFinished = startMonth + finishedIdx;
+      if ((absFinished % 12) === 11) {
+        finishedDecemberMonthIndex = finishedIdx;
+      }
       store.calendar.currentDay = 1;
       store.calendar.currentMonthIndex = (store.calendar.currentMonthIndex || 0) + 1;
     }
     safety++;
     if (safety > 60) break;
   } while (getEventsForCurrentDay().length === 0);
+
+  // Si el primer salto de mes fue desde día 28, finishedIdx del primer roll es monthBeforeAdvance
+  if (dayBeforeAdvance >= 28) {
+    const startMonth = store.calendar.startMonth || 0;
+    const abs = startMonth + monthBeforeAdvance;
+    if ((abs % 12) === 11) {
+      finishedDecemberMonthIndex = monthBeforeAdvance;
+    }
+  }
 
   store.todayCard = { locked: false, slots: [], eventName: null, showNumber: null };
   calendarViewMonthIndex = store.calendar.currentMonthIndex || 0;
@@ -4050,6 +4088,11 @@ function getCurrentEvent() {
   const weekAfter = Math.floor(dayAfter / 7);
   if (weekAfter > weekBefore && typeof openWeeklySummary === 'function') {
     openWeeklySummary(dayBefore);
+  }
+
+  if (finishedDecemberMonthIndex != null && typeof openSlammyAwards === 'function') {
+    // Pequeño delay para que no pise el resumen semanal
+    setTimeout(() => openSlammyAwards(finishedDecemberMonthIndex), 400);
   }
 }
 
@@ -4600,12 +4643,392 @@ function getCurrentEvent() {
       });
     }
 
-    /**
- * ELO neto obtenido en un periodo [minDay .. currentDays].
- * Simula el historial sin persistir cambios en store.
- * Devuelve { [wrestlerId]: deltaElo }.
- * Si periodWeeks === 'all', devuelve null (usar ELO global).
+  let slammyQueue = [];
+let slammyIndex = 0;
+let slammyYearLabel = '';
+
+/** Días de universo del año que acaba de cerrar (diciembre terminado). */
+function getYearDayRangeForFinishedDecember(finishedMonthIndex) {
+  // 12 meses × 28 días, terminando el día 28 del mes finishedMonthIndex
+  const yearEndDay = finishedMonthIndex * 28 + 27; // día 28 inclusive (0-based)
+  const yearStartDay = Math.max(0, yearEndDay - (12 * 28 - 1));
+  return { start: yearStartDay, end: yearEndDay };
+}
+
+function getMatchesInDayRange(start, end) {
+  return (store.matches || []).filter(m => {
+    if (typeof m.universeDay !== 'number') return false;
+    return m.universeDay >= start && m.universeDay <= end;
+  });
+}
+
+/**
+ * Deltas de ELO en [start, end] sin alterar el store de forma persistente.
+ * Devuelve { [id]: delta }.
  */
+function getEloDeltasInRange(start, end) {
+  const isCountable = (m) =>
+    m &&
+    m.winner !== 'Pendiente' &&
+    (m.winner === 'Promo' || m.promoType || m.inactivityPenalty || m.winner === 'Inactividad' ||
+      (m.winner && m.participants && m.participants.length));
+
+  const savedRoster = (store.roster || []).map(r => ({
+    id: r.id, elo: r.elo, lastEloDelta: r.lastEloDelta
+  }));
+  const savedMatches = (store.matches || []).map(m => ({
+    id: m.id, eloApplied: !!m.eloApplied
+  }));
+
+  (store.roster || []).forEach(r => { r.elo = DEFAULT_ELO; r.lastEloDelta = 0; });
+  (store.matches || []).forEach(m => { m.eloApplied = false; });
+
+  const ordered = (store.matches || []).slice().sort((a, b) => {
+    const da = (typeof a.universeDay === 'number') ? a.universeDay : -1;
+    const db = (typeof b.universeDay === 'number') ? b.universeDay : -1;
+    if (da !== db) return da - db;
+    return String(a.id).localeCompare(String(b.id));
+  });
+
+  const before = ordered.filter(m =>
+    typeof m.universeDay === 'number' && m.universeDay < start
+  );
+  const during = ordered.filter(m =>
+    typeof m.universeDay === 'number' && m.universeDay >= start && m.universeDay <= end
+  );
+
+  before.forEach(m => { m.eloApplied = false; applyEloForMatch(m, { applyPop: false }); });
+
+  const startMap = {};
+  (store.roster || []).forEach(r => { startMap[r.id] = getWrestlerElo(r); });
+
+  during.forEach(m => { m.eloApplied = false; applyEloForMatch(m, { applyPop: false }); });
+
+  const deltaMap = {};
+  (store.roster || []).forEach(r => {
+    const s = startMap[r.id] != null ? startMap[r.id] : DEFAULT_ELO;
+    deltaMap[r.id] = getWrestlerElo(r) - s;
+  });
+
+  savedRoster.forEach(s => {
+    const r = store.roster.find(x => x.id === s.id);
+    if (!r) return;
+    r.elo = s.elo;
+    r.lastEloDelta = s.lastEloDelta;
+  });
+  savedMatches.forEach(s => {
+    const m = store.matches.find(x => x.id === s.id);
+    if (m) m.eloApplied = s.eloApplied;
+  });
+
+  return deltaMap;
+}
+
+/** ELO de cada luchador justo antes de cada combate (simulación). */
+function getEloSnapshotBeforeEachMatch(matchesChronological) {
+  const savedRoster = (store.roster || []).map(r => ({
+    id: r.id, elo: r.elo, lastEloDelta: r.lastEloDelta
+  }));
+  const savedMatches = (store.matches || []).map(m => ({
+    id: m.id, eloApplied: !!m.eloApplied
+  }));
+
+  (store.roster || []).forEach(r => { r.elo = DEFAULT_ELO; r.lastEloDelta = 0; });
+  (store.matches || []).forEach(m => { m.eloApplied = false; });
+
+  const allOrdered = (store.matches || []).slice().sort((a, b) => {
+    const da = (typeof a.universeDay === 'number') ? a.universeDay : -1;
+    const db = (typeof b.universeDay === 'number') ? b.universeDay : -1;
+    if (da !== db) return da - db;
+    return String(a.id).localeCompare(String(b.id));
+  });
+
+  const targetIds = new Set((matchesChronological || []).map(m => m.id));
+  const snapshots = {}; // matchId -> { [wrestlerId]: elo }
+
+  allOrdered.forEach(m => {
+    if (targetIds.has(m.id)) {
+      const snap = {};
+      (m.participants || []).filter(Boolean).forEach(id => {
+        const w = store.roster.find(r => Number(r.id) === Number(id));
+        snap[id] = w ? getWrestlerElo(w) : DEFAULT_ELO;
+      });
+      snapshots[m.id] = snap;
+    }
+    m.eloApplied = false;
+    applyEloForMatch(m, { applyPop: false });
+  });
+
+  savedRoster.forEach(s => {
+    const r = store.roster.find(x => x.id === s.id);
+    if (!r) return;
+    r.elo = s.elo;
+    r.lastEloDelta = s.lastEloDelta;
+  });
+  savedMatches.forEach(s => {
+    const m = store.matches.find(x => x.id === s.id);
+    if (m) m.eloApplied = s.eloApplied;
+  });
+
+  return snapshots;
+}
+
+function teamGender(team) {
+  const ids = getTeamMemberIds(team);
+  const genders = ids.map(id => {
+    const w = store.roster.find(r => r.id === id);
+    return w ? (w.gender || 'Men') : null;
+  }).filter(Boolean);
+  if (!genders.length) return null;
+  if (genders.every(g => g === 'Men')) return 'Men';
+  if (genders.every(g => g === 'Women')) return 'Women';
+  return 'Mixed';
+}
+
+function computeChampionOfTheYear(start, end) {
+  // score = defensas en el año * 10000 + días de reinado solapados con el año
+  const scores = {}; // wrestlerId -> { defenses, days, name }
+
+  function addDays(id, name, days) {
+    if (!id || days <= 0) return;
+    if (!scores[id]) scores[id] = { defenses: 0, days: 0, name };
+    scores[id].days += days;
+    scores[id].name = name || scores[id].name;
+  }
+  function addDefense(id, name) {
+    if (!id) return;
+    if (!scores[id]) scores[id] = { defenses: 0, days: 0, name };
+    scores[id].defenses += 1;
+    scores[id].name = name || scores[id].name;
+  }
+
+  (store.titles || []).forEach(t => {
+    // Reinado actual solapado
+    const reignStart = typeof t.reignStartDay === 'number' ? t.reignStartDay : 0;
+    const reignEnd = end; // hasta fin de año (sigue vigente o cortamos en end)
+    const overlapStart = Math.max(reignStart, start);
+    const overlapEnd = Math.min(reignEnd, end);
+    const days = Math.max(0, overlapEnd - overlapStart + 1);
+    (t.champions || []).forEach(cId => {
+      const w = store.roster.find(r => r.id === cId);
+      addDays(cId, w ? w.name : '?', days);
+    });
+
+    // Historial de reinados previos (días guardados; aproximamos si caen en el año de forma simple)
+    (t.history || []).forEach(h => {
+      // No tenemos fechas exactas de reinados pasados; usamos días del reinado
+      // solo como peso secundario si el nombre aparece — mejor: no inventar.
+      // Solo contamos defensas por matches.
+    });
+  });
+
+  // Defensas en combates del año
+  getMatchesInDayRange(start, end).forEach(m => {
+    if (!m.isDefense || !m.titleId || !m.winner) return;
+    if (m.winner === 'Empate' || m.winner === 'Pendiente' || m.winner === 'Promo') return;
+    const winnerW = store.roster.find(r => r.name === m.winner);
+    if (!winnerW) return;
+    if (isTeamBasedMatch(m.matchType, m.subType)) {
+      const { left, right } = splitSides(m.participants, m.matchType, m.subType, m.winner);
+      const side = left.includes(winnerW.id) ? left : right.includes(winnerW.id) ? right : [winnerW.id];
+      side.filter(Boolean).forEach(id => {
+        const w = store.roster.find(r => r.id === id);
+        addDefense(id, w ? w.name : winnerW.name);
+      });
+    } else {
+      addDefense(winnerW.id, winnerW.name);
+    }
+  });
+
+  let best = null;
+  Object.keys(scores).forEach(id => {
+    const s = scores[id];
+    const rank = s.defenses * 100000 + s.days;
+    if (!best || rank > best.rank) {
+      best = { id: Number(id), name: s.name, defenses: s.defenses, days: s.days, rank };
+    }
+  });
+  return best;
+}
+
+function computeMatchOfTheYear(start, end) {
+  const yearMatches = getMatchesInDayRange(start, end).filter(m =>
+    m.winner &&
+    m.winner !== 'Promo' &&
+    m.winner !== 'Inactividad' &&
+    !m.inactivityPenalty &&
+    m.winner !== 'Pendiente' &&
+    (m.participants || []).filter(Boolean).length >= 2
+  );
+  if (!yearMatches.length) return null;
+
+  const snaps = getEloSnapshotBeforeEachMatch(yearMatches);
+  let best = null;
+
+  yearMatches.forEach(m => {
+    const snap = snaps[m.id] || {};
+    const parts = (m.participants || []).filter(Boolean);
+    let sum = 0;
+    parts.forEach(id => { sum += (snap[id] != null ? snap[id] : DEFAULT_ELO); });
+    const names = parts.map(id => {
+      const w = store.roster.find(r => Number(r.id) === Number(id));
+      return w ? w.name : '?';
+    });
+    const label = typeof formatMatchSummary === 'function'
+      ? formatMatchSummary(names, m.matchType, m.subType)
+      : names.join(' vs ');
+    if (!best || sum > best.sum) {
+      best = { match: m, sum, label, names };
+    }
+  });
+  return best;
+}
+
+async function buildSlammyAwards(finishedMonthIndex) {
+  const startMonth = store.calendar.startMonth || 0;
+  const abs = startMonth + finishedMonthIndex;
+  const yearDisplay = Math.floor(abs / 12) + 1;
+  const { start, end } = getYearDayRangeForFinishedDecember(finishedMonthIndex);
+  const deltas = getEloDeltasInRange(start, end);
+
+  // Superstar Men / Women
+  let bestMen = null, bestWomen = null;
+  (store.roster || []).forEach(r => {
+    const d = deltas[r.id] || 0;
+    const g = r.gender || 'Men';
+    if (g === 'Men') {
+      if (!bestMen || d > bestMen.delta) bestMen = { wrestler: r, delta: d };
+    } else if (g === 'Women') {
+      if (!bestWomen || d > bestWomen.delta) bestWomen = { wrestler: r, delta: d };
+    }
+  });
+
+  // Tag teams Men / Women
+  let bestMenTag = null, bestWomenTag = null;
+  (store.teams || []).forEach(team => {
+    const g = teamGender(team);
+    if (g !== 'Men' && g !== 'Women') return;
+    const ids = getTeamTagRepIds(team);
+    const useIds = ids.length ? ids : getTeamMemberIds(team);
+    if (!useIds.length) return;
+    const avg = useIds.reduce((s, id) => s + (deltas[id] || 0), 0) / useIds.length;
+    const entry = { team, delta: Math.round(avg), memberIds: useIds };
+    if (g === 'Men') {
+      if (!bestMenTag || entry.delta > bestMenTag.delta) bestMenTag = entry;
+    } else {
+      if (!bestWomenTag || entry.delta > bestWomenTag.delta) bestWomenTag = entry;
+    }
+  });
+
+  const champ = computeChampionOfTheYear(start, end);
+  const moty = computeMatchOfTheYear(start, end);
+
+  const awards = [];
+
+  awards.push({
+    category: 'SUPERSTAR OF THE YEAR',
+    name: bestMen ? bestMen.wrestler.name : '—',
+    sub: bestMen ? `ELO neto del año: ${bestMen.delta >= 0 ? '+' : ''}${bestMen.delta}` : 'Sin datos',
+    photoIds: bestMen ? [bestMen.wrestler.id] : []
+  });
+  awards.push({
+    category: 'FEMALE SUPERSTAR OF THE YEAR',
+    name: bestWomen ? bestWomen.wrestler.name : '—',
+    sub: bestWomen ? `ELO neto del año: ${bestWomen.delta >= 0 ? '+' : ''}${bestWomen.delta}` : 'Sin datos',
+    photoIds: bestWomen ? [bestWomen.wrestler.id] : []
+  });
+  awards.push({
+    category: 'MENS TAG TEAM OF THE YEAR',
+    name: bestMenTag ? bestMenTag.team.name : '—',
+    sub: bestMenTag ? `ELO neto medio del año: ${bestMenTag.delta >= 0 ? '+' : ''}${bestMenTag.delta}` : 'Sin datos',
+    photoIds: bestMenTag ? bestMenTag.memberIds.slice(0, 2) : []
+  });
+  awards.push({
+    category: 'FEMALES TAG TEAM OF THE YEAR',
+    name: bestWomenTag ? bestWomenTag.team.name : '—',
+    sub: bestWomenTag ? `ELO neto medio del año: ${bestWomenTag.delta >= 0 ? '+' : ''}${bestWomenTag.delta}` : 'Sin datos',
+    photoIds: bestWomenTag ? bestWomenTag.memberIds.slice(0, 2) : []
+  });
+  awards.push({
+    category: 'CHAMPION OF THE YEAR',
+    name: champ ? champ.name : '—',
+    sub: champ
+      ? `${champ.defenses} defensa${champ.defenses === 1 ? '' : 's'} · ${champ.days} días como campeón/a en el año`
+      : 'Sin datos',
+    photoIds: champ ? [champ.id] : []
+  });
+  awards.push({
+    category: 'MATCH OF THE YEAR',
+    name: moty ? moty.label : '—',
+    sub: moty
+      ? `ELO combinado en el combate: ${moty.sum} · ${moty.match.show || ''}`
+      : 'Sin datos',
+    photoIds: moty ? (moty.match.participants || []).filter(Boolean).slice(0, 4) : []
+  });
+
+  return { yearDisplay, awards };
+}
+
+async function openSlammyAwards(finishedMonthIndex) {
+  const { yearDisplay, awards } = await buildSlammyAwards(finishedMonthIndex);
+  slammyQueue = awards;
+  slammyIndex = 0;
+  slammyYearLabel = `AÑO ${yearDisplay}`;
+  document.getElementById('slammy-year-label').textContent = slammyYearLabel;
+  await showSlammySlide();
+  document.getElementById('modal-slammy').classList.add('active');
+}
+
+async function showSlammySlide() {
+  const a = slammyQueue[slammyIndex];
+  if (!a) {
+    closeSlammyAwards();
+    return;
+  }
+  document.getElementById('slammy-category').textContent = a.category;
+  document.getElementById('slammy-winner-name').textContent = a.name;
+  document.getElementById('slammy-winner-sub').textContent = a.sub || '';
+  document.getElementById('slammy-step').textContent =
+    `${slammyIndex + 1} / ${slammyQueue.length}`;
+
+  const media = document.getElementById('slammy-media');
+  const ids = a.photoIds || [];
+  if (!ids.length) {
+    media.innerHTML = `<div class="slammy-photo-ph">🏆</div>`;
+  } else if (ids.length === 1) {
+    const img = await getImageFromDB('wrestler_' + ids[0]);
+    media.innerHTML = img
+      ? `<img src="${img}" class="slammy-photo" alt="">`
+      : `<div class="slammy-photo-ph">👤</div>`;
+  } else {
+    const parts = await Promise.all(ids.map(async id => {
+      const img = await getImageFromDB('wrestler_' + id);
+      return img
+        ? `<img src="${img}" class="slammy-photo" alt="">`
+        : `<div class="slammy-photo-ph">👤</div>`;
+    }));
+    media.innerHTML = `<div class="slammy-photos-row">${parts.join('')}</div>`;
+  }
+
+  const btn = document.getElementById('slammy-next-btn');
+  btn.textContent = slammyIndex >= slammyQueue.length - 1 ? 'Cerrar' : 'Siguiente premio';
+}
+
+async function advanceSlammyAward() {
+  slammyIndex++;
+  if (slammyIndex >= slammyQueue.length) {
+    closeSlammyAwards();
+    return;
+  }
+  await showSlammySlide();
+}
+
+function closeSlammyAwards() {
+  document.getElementById('modal-slammy').classList.remove('active');
+  slammyQueue = [];
+  slammyIndex = 0;
+}
+
 function getPeriodEloDeltas() {
   const weeks = standingsFilters.periodWeeks;
   if (weeks === 'all' || weeks === '0') return null;
@@ -5253,6 +5676,21 @@ const showCards = await Promise.all(showsOrdered.map(async s => {
       if (document.getElementById('tab-standings') && document.getElementById('tab-standings').classList.contains('active')) await renderStandings();
     }
     if (store.calendar && store.calendar.configured) unlockNav();
+
+      <!-- SLAMMY AWARDS -->
+    <div id="modal-slammy" class="slammy-overlay">
+      <div class="slammy-box">
+        <div class="slammy-header">SLAMMY AWARDS</div>
+        <div class="slammy-year" id="slammy-year-label"></div>
+        <div class="slammy-category" id="slammy-category"></div>
+        <div id="slammy-media"></div>
+        <div class="slammy-winner-name" id="slammy-winner-name">—</div>
+        <div class="slammy-winner-sub" id="slammy-winner-sub"></div>
+        <button type="button" class="slammy-btn" id="slammy-next-btn" onclick="advanceSlammyAward()">Continuar</button>
+        <div class="slammy-step" id="slammy-step"></div>
+      </div>
+    </div>
+  
   </script>
 </body>
 </html>
