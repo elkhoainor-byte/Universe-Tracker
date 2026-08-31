@@ -5264,7 +5264,24 @@ const usePeriodElo = periodEloDeltas != null;
 const championIds = new Set();
 store.titles.forEach(t => (t.champions || []).forEach(id => championIds.add(id)));
 
-// ... (el filtro de rosterPool se queda igual) ...
+const rosterPool = store.roster.filter(r => {
+  if (standingsFilters.hideInactive && (r.division || '') === 'Inactivo') return false;
+  if (standingsFilters.excludeChamps && championIds.has(r.id)) return false;
+  if (standingsFilters.alignment !== 'ALL' && (r.alignment || 'Face') !== standingsFilters.alignment) return false;
+  if (standingsFilters.gender !== 'ALL' && (r.gender || 'Men') !== standingsFilters.gender) return false;
+  if (standingsFilters.division !== 'ALL' && (r.division || '') !== standingsFilters.division) return false;
+  if (standingsFilters.brands && standingsFilters.brands.length > 0) {
+    const brands = r.brands || (r.brand ? [r.brand] : []);
+    if (!brands.some(b => standingsFilters.brands.includes(b))) return false;
+  }
+  return true;
+});
+
+// Fondos de marca para las tarjetas
+const showBgCache = {};
+await Promise.all((store.shows || []).map(async s => {
+  showBgCache[s.id] = await getImageFromDB('show_bg_' + s.id);
+}));
 
 let ranked = [];
 
@@ -5310,7 +5327,6 @@ if (standingsFilters.mode === 'teams') {
     const avgTotal = total / n;
     const pct = avgTotal > 0 ? avgWins / avgTotal : 0;
 
-    // ELO de ranking: periodo (media de deltas) o ELO global del equipo
     let elo;
     if (usePeriodElo) {
       const sum = useMembers.reduce((s, m) => s + (periodEloDeltas[m.id] || 0), 0);
@@ -5326,31 +5342,7 @@ if (standingsFilters.mode === 'teams') {
       wins: Math.round(avgWins * 10) / 10,
       losses: Math.round(avgLosses * 10) / 10,
       draws: Math.round(avgDraws * 10) / 10,
-      total: Math.round(avgTotal * 10) / 10,
-      pct,
-      elo
-    };
-  }).filter(Boolean).sort((a, b) => {
-    if (b.elo !== a.elo) return b.elo - a.elo;
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    if (b.pct !== a.pct) return b.pct - a.pct;
-    return a.losses - b.losses;
-  });
-} else {
-  ranked = rosterPool.map(r => {
-    const rec = getWrestlerRecord(r, matchesPool);
-    const pct = rec.total > 0 ? (rec.wins / rec.total) : 0;
-    const elo = usePeriodElo
-      ? (periodEloDeltas[r.id] || 0)
-      : getWrestlerElo(r);
-    return { isTeam: false, wrestler: r, ...rec, pct, elo };
-  }).sort((a, b) => {
-    if (b.elo !== a.elo) return b.elo - a.elo;
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    if (b.pct !== a.pct) return b.pct - a.pct;
-    return a.losses - b.losses;
-  });
-}
+     ...
       const limit = standingsFilters.limit || 0;
       if (limit > 0) ranked = ranked.slice(0, limit);
 
@@ -5689,22 +5681,19 @@ const showCards = await Promise.all(showsOrdered.map(async s => {
       if (document.getElementById('tab-matches').classList.contains('active')) renderTodayCard();
       if (document.getElementById('tab-standings') && document.getElementById('tab-standings').classList.contains('active')) await renderStandings();
     }
-    if (store.calendar && store.calendar.configured) unlockNav();
-
-      <!-- SLAMMY AWARDS -->
-    <div id="modal-slammy" class="slammy-overlay">
-      <div class="slammy-box">
-        <div class="slammy-header">SLAMMY AWARDS</div>
-        <div class="slammy-year" id="slammy-year-label"></div>
-        <div class="slammy-category" id="slammy-category"></div>
-        <div id="slammy-media"></div>
-        <div class="slammy-winner-name" id="slammy-winner-name">—</div>
-        <div class="slammy-winner-sub" id="slammy-winner-sub"></div>
-        <button type="button" class="slammy-btn" id="slammy-next-btn" onclick="advanceSlammyAward()">Continuar</button>
-        <div class="slammy-step" id="slammy-step"></div>
-      </div>
-    </div>
-  
+        if (store.calendar && store.calendar.configured) unlockNav();
   </script>
+  <div id="modal-slammy" class="slammy-overlay">
+    <div class="slammy-box">
+      <div class="slammy-header">SLAMMY AWARDS</div>
+      <div class="slammy-year" id="slammy-year-label"></div>
+      <div class="slammy-category" id="slammy-category"></div>
+      <div id="slammy-media"></div>
+      <div class="slammy-winner-name" id="slammy-winner-name">—</div>
+      <div class="slammy-winner-sub" id="slammy-winner-sub"></div>
+      <button type="button" class="slammy-btn" id="slammy-next-btn" onclick="advanceSlammyAward()">Continuar</button>
+      <div class="slammy-step" id="slammy-step"></div>
+    </div>
+  </div>
 </body>
 </html>
