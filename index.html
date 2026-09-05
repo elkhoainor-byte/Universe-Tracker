@@ -757,6 +757,14 @@
       <details class="standings-filters-details">
         <summary>⚙️ Ajustes de filtros</summary>
         <div class="standings-filters-body">
+          
+          <div class="filter-row">
+            <span class="filter-row-label">Clasificar por</span>
+            <select id="standings-sortby" onchange="onStandingsFilterChange()">
+              <option value="elo" selected>ELO</option>
+              <option value="popularity">Popularidad</option>
+            </select>
+          </div>
 
           <div class="filter-row">
             <span class="filter-row-label">Periodo</span>
@@ -1365,7 +1373,7 @@
     alignment: 'ALL',
     gender: 'ALL',
     division: 'ALL',
-    popularity: 'ALL',
+    sortBy: 'elo',
     excludeChamps: false,
     hideInactive: true,
     mode: 'superstars',
@@ -5178,13 +5186,13 @@ function getPeriodEloDeltas() {
       const genderEl = document.getElementById('standings-gender');
       const divEl = document.getElementById('standings-division');
       const limitEl = document.getElementById('standings-limit');
-      const popEl = document.getElementById('standings-popularity');
+      const sortByEl = document.getElementById('standings-sortby');
       if (periodEl) standingsFilters.periodWeeks = periodEl.value;
       if (alignEl) standingsFilters.alignment = alignEl.value;
       if (genderEl) standingsFilters.gender = genderEl.value;
       if (divEl) standingsFilters.division = divEl.value;
       if (limitEl) standingsFilters.limit = parseInt(limitEl.value, 10);
-      if (popEl) standingsFilters.popularity = popEl.value;
+      if (sortByEl) standingsFilters.sortBy = sortByEl.value;
 
       const brandChecks = document.querySelectorAll('#standings-brands-container input[type="checkbox"]:checked');
       standingsFilters.brands = Array.from(brandChecks).map(cb => cb.value);
@@ -5349,13 +5357,18 @@ if (standingsFilters.mode === 'teams') {
     const avgTotal = total / n;
     const pct = avgTotal > 0 ? avgWins / avgTotal : 0;
 
-    let elo;
+        let elo;
     if (usePeriodElo) {
       const sum = useMembers.reduce((s, m) => s + (periodEloDeltas[m.id] || 0), 0);
       elo = Math.round(sum / n);
     } else {
       elo = getTeamTagElo(team);
     }
+
+    const popularity = Math.round(
+      useMembers.reduce((s, m) => s + getWrestlerPopularity(m), 0) / n
+    );
+    const score = (standingsFilters.sortBy === 'popularity') ? popularity : elo;
 
     return {
       isTeam: true,
@@ -5366,10 +5379,12 @@ if (standingsFilters.mode === 'teams') {
       draws: Math.round(avgDraws * 10) / 10,
       total: Math.round(avgTotal * 10) / 10,
       pct,
-      elo
+      elo,
+      popularity,
+      score
     };
   }).filter(Boolean).sort((a, b) => {
-    if (b.elo !== a.elo) return b.elo - a.elo;
+    if (b.score !== a.score) return b.score - a.score;
     if (b.wins !== a.wins) return b.wins - a.wins;
     if (b.pct !== a.pct) return b.pct - a.pct;
     return a.losses - b.losses;
@@ -5383,6 +5398,8 @@ if (standingsFilters.mode === 'teams') {
       const elo = usePeriodElo
         ? (periodEloDeltas[r.id] || 0)
         : getWrestlerElo(r);
+      const popularity = getWrestlerPopularity(r);
+      const score = (standingsFilters.sortBy === 'popularity') ? popularity : elo;
       return {
         isTeam: false,
         wrestler: r,
@@ -5391,15 +5408,16 @@ if (standingsFilters.mode === 'teams') {
         draws: rec.draws,
         total: rec.total,
         pct,
-        elo
+        elo,
+        popularity,
+        score
       };
     }).sort((a, b) => {
-      if (b.elo !== a.elo) return b.elo - a.elo;
+      if (b.score !== a.score) return b.score - a.score;
       if (b.wins !== a.wins) return b.wins - a.wins;
       if (b.pct !== a.pct) return b.pct - a.pct;
       return a.losses - b.losses;
     });
-  }
 
   const limit = standingsFilters.limit || 0;
   if (limit > 0) ranked = ranked.slice(0, limit);
