@@ -2391,6 +2391,7 @@ function recalculateAllElos() {
       }
       if (tabId === 'matches') renderTodayCard();
       if (tabId === 'standings') renderStandings();
+      if (typeof closeSideMenu === 'function') closeSideMenu();
     }
     
     function confirmStartMonth() {
