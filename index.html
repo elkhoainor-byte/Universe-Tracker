@@ -804,6 +804,17 @@
           </div>
 
           <div class="filter-row">
+            <span class="filter-row-label">Popularidad</span>
+            <select id="standings-popularity" onchange="onStandingsFilterChange()">
+              <option value="ALL">Todas</option>
+              <option value="70-99">Alta (70–99)</option>
+              <option value="50-69">Media-alta (50–69)</option>
+              <option value="30-49">Media-baja (30–49)</option>
+              <option value="0-29">Baja (0–29)</option>
+            </select>
+          </div>
+
+          <div class="filter-row">
             <span class="filter-row-label">Vista</span>
             <select id="standings-limit" onchange="onStandingsFilterChange()">
               <option value="5">Top 5</option>
@@ -1354,6 +1365,7 @@
     alignment: 'ALL',
     gender: 'ALL',
     division: 'ALL',
+    popularity: 'ALL',
     excludeChamps: false,
     hideInactive: true,
     mode: 'superstars',
@@ -5166,11 +5178,13 @@ function getPeriodEloDeltas() {
       const genderEl = document.getElementById('standings-gender');
       const divEl = document.getElementById('standings-division');
       const limitEl = document.getElementById('standings-limit');
+      const popEl = document.getElementById('standings-popularity');
       if (periodEl) standingsFilters.periodWeeks = periodEl.value;
       if (alignEl) standingsFilters.alignment = alignEl.value;
       if (genderEl) standingsFilters.gender = genderEl.value;
       if (divEl) standingsFilters.division = divEl.value;
       if (limitEl) standingsFilters.limit = parseInt(limitEl.value, 10);
+      if (popEl) standingsFilters.popularity = popEl.value;
 
       const brandChecks = document.querySelectorAll('#standings-brands-container input[type="checkbox"]:checked');
       standingsFilters.brands = Array.from(brandChecks).map(cb => cb.value);
@@ -5274,6 +5288,13 @@ const rosterPool = store.roster.filter(r => {
     const brands = r.brands || (r.brand ? [r.brand] : []);
     if (!brands.some(b => standingsFilters.brands.includes(b))) return false;
   }
+  if (standingsFilters.popularity && standingsFilters.popularity !== 'ALL') {
+    const pop = getWrestlerPopularity(r);
+    const [minStr, maxStr] = standingsFilters.popularity.split('-');
+    const min = parseInt(minStr, 10);
+    const max = parseInt(maxStr, 10);
+    if (!(pop >= min && pop <= max)) return false;
+  }
   return true;
 });
 
@@ -5304,6 +5325,7 @@ if (standingsFilters.mode === 'teams') {
       standingsFilters.alignment !== 'ALL' ||
       standingsFilters.gender !== 'ALL' ||
       standingsFilters.division !== 'ALL' ||
+      (standingsFilters.popularity && standingsFilters.popularity !== 'ALL') ||
       standingsFilters.hideInactive ||
       standingsFilters.excludeChamps;
 
