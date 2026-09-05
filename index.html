@@ -5296,13 +5296,6 @@ const rosterPool = store.roster.filter(r => {
     const brands = r.brands || (r.brand ? [r.brand] : []);
     if (!brands.some(b => standingsFilters.brands.includes(b))) return false;
   }
-  if (standingsFilters.popularity && standingsFilters.popularity !== 'ALL') {
-    const pop = getWrestlerPopularity(r);
-    const [minStr, maxStr] = standingsFilters.popularity.split('-');
-    const min = parseInt(minStr, 10);
-    const max = parseInt(maxStr, 10);
-    if (!(pop >= min && pop <= max)) return false;
-  }
   return true;
 });
 
@@ -5333,7 +5326,6 @@ if (standingsFilters.mode === 'teams') {
       standingsFilters.alignment !== 'ALL' ||
       standingsFilters.gender !== 'ALL' ||
       standingsFilters.division !== 'ALL' ||
-      (standingsFilters.popularity && standingsFilters.popularity !== 'ALL') ||
       standingsFilters.hideInactive ||
       standingsFilters.excludeChamps;
 
@@ -5412,12 +5404,13 @@ if (standingsFilters.mode === 'teams') {
         popularity,
         score
       };
-    }).sort((a, b) => {
+        }).sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
       if (b.wins !== a.wins) return b.wins - a.wins;
       if (b.pct !== a.pct) return b.pct - a.pct;
       return a.losses - b.losses;
     });
+  }
 
   const limit = standingsFilters.limit || 0;
   if (limit > 0) ranked = ranked.slice(0, limit);
